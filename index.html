@@ -163,7 +163,7 @@ const V={world(){return W.html()},
 home(){const sl=Date.now()<S.sleepUntil;
 return `${scene(bear(170,215,1.15)+(S.twin?bear(278,228,.72,false,TWINOPT):"")+(sl?`<text x="210" y="150" font-size="26">💤</text>`:""),300)}
 <div class="msg">${sl?"Степан спит…":msg}</div>
-${sl ? `<div class="card"><button class="b exit-btn" style="background:#5a9a4a" onclick="wake(true)">🔔 Разбудить</button><button class="b exit-btn" onclick="go('world')">🌲 В лес</button></div>` :
+${sl ? `<div class="card"><button class="b exit-btn" style="background:#5a9a4a" onclick="wake(true)">🔔 Разбудить</button></div>` :
 `<div class="card" style="display:grid; grid-template-columns:1fr 1fr; gap:4px;">
     <button class="b" onclick="feed('🫐',5,15,0)">🫐 Ягоды 5🪙</button><button class="b" onclick="feed('🍯',12,30,5)">🍯 Мёд 12🪙</button>
     <button class="b" onclick="feed('💊',25,40,20)">💊 Витамины 25🪙</button><button class="b" onclick="feedFish()">🐟 Рыбка (${S.fish})</button>
@@ -253,8 +253,9 @@ setTimeout(()=>{if(k!==mid)return;m.forEach(i=>G[i]=-1);for(let c=0;c<6;c++){let
 function setupCanvas(id, w, h){
     const c=$(id); if(!c)return null;
     const ctx=c.getContext('2d'), dpr=window.devicePixelRatio||1;
-    c.width=w*dpr; c.height=h*dpr; c.style.width=w+"px"; c.style.height=h+"px";
-    ctx.scale(dpr, dpr); ctx.textAlign='center'; ctx.textBaseline='middle'; return {c, ctx};
+    const cw=(c.parentElement&&c.parentElement.clientWidth-8)||w, ch=Math.round(cw*h/w);
+    c.width=cw*dpr; c.height=ch*dpr; c.style.width=cw+"px"; c.style.height=ch+"px";
+    ctx.setTransform(dpr*cw/w,0,0,dpr*cw/w,0,0); ctx.textAlign='center'; ctx.textBaseline='middle'; return {c, ctx};
 }
 
 // ===== Гонки PRO: настоящий руль, боты, сложности =====
