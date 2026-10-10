@@ -67,16 +67,17 @@ const beep=()=>snd('sine',800,0.1), boop=()=>snd('square',300,0.1), chng=()=>snd
 
 const $=s=>document.querySelector(s),R=n=>Math.random()*n|0;
 
-let S={coins:20,total:0,hunger:80,mood:80,energy:80,house:1,hat:0,owned:[0],items:{},twin:false,fish:0,fishCaught:0,tiles:0,fed:0,claimed:[],t:Date.now(),sleepUntil:0,day:"",streak:0,lvl:1,xp:0,sick:false,qb:null,hiveA:0};
+let S={coins:20,crys:0,total:0,hunger:80,mood:80,energy:80,house:1,hat:0,owned:[0],items:{},twin:false,fish:0,fishCaught:0,tiles:0,fed:0,claimed:[],t:Date.now(),sleepUntil:0,day:"",streak:0,lvl:1,xp:0,sick:false,qb:null,hiveA:0,mapId:0};
 
 try{Object.assign(S,JSON.parse(localStorage.getItem("stepan")||"{}"))}catch(e){}
 if(!Array.isArray(S.owned))S.owned=[0];
 if(!Array.isArray(S.claimed))S.claimed=[];
 if(typeof S.items!=="object"||!S.items)S.items={};
 if(!Array.isArray(S.pos))S.pos=[3,3];
-["coins","total","hunger","mood","energy","fish","fishCaught","tiles","fed","lvl","xp","sleepUntil"].forEach(k=>{if(typeof S[k]!=="number"||!isFinite(S[k]))S[k]=k=="lvl"?1:0});
+if(typeof S.mapId!=="number")S.mapId=0;
+["coins","crys","total","hunger","mood","energy","fish","fishCaught","tiles","fed","lvl","xp","sleepUntil"].forEach(k=>{if(typeof S[k]!=="number"||!isFinite(S[k]))S[k]=k=="lvl"?1:0});
 S.house=Math.max(1,Math.min(4,S.house|0||1));
-S.hat=Math.max(0,Math.min(7,S.hat|0));
+S.hat=Math.max(0,Math.min(9,S.hat|0));
 
 try{tg.CloudStorage.getItem('stepan',(e,v)=>{if(!e&&v){try{Object.assign(S,JSON.parse(v))}catch(_){}hud();if(tab=="world")W.render&&W.render()}})}catch(e){}
 
@@ -115,7 +116,7 @@ setInterval(()=>{
 }, 10000);
 
 let tab="world",msg="";
-const HATS=[["Без шапки",0],["Шапка",40],["Шарф",60],["Корона",120],["Кепка",50],["Венок",90],["Очки",110],["Цилиндр",150]];
+const HATS=[["Без шапки",0],["Шапка",40],["Шарф",60],["Корона",120],["Кепка",50],["Венок",90],["Очки",110],["Цилиндр",150],["👑 VIP Корона","В 🎰"],["🕶 Thug Life","В 🎰"]];
 const HOUSES=["","Разбитая халупа","Берлога с брёвнами","Домик с обоями","Усадьба с ковром"], HC=[0,0,60,160,320];
 const ITEMS=[
  ["rod","🎣 Удочка Pro",150,"Клёв в 2 раза быстрее, больше золотых рыбок"],
@@ -123,6 +124,7 @@ const ITEMS=[
  ["doll","🧸 Мишка-плюш",90,"Настроение падает на 30% медленнее"],
  ["bed","🛏 Мягкая кровать",140,"Сон восстанавливает почти все силы"],
  ["clover","🍀 Клевер удачи",120,"Ягодные кусты дают вдвое больше монет"],
+ ["secret","🗺 Секрет леса",200,"Тайная локация..."]
 ];
 
 function checkState(){
@@ -131,7 +133,9 @@ function checkState(){
     return true;
 }
 
-const HATSV=[``,`<path d="M68 62Q100 20 132 62Q100 52 68 62Z" fill="#c33"/><circle cx="100" cy="28" r="7" fill="#fff"/>`,`<path d="M62 112Q100 128 138 112L142 128Q100 146 58 128Z" fill="#d94"/>`,`<path d="M72 56L76 30L88 46L100 26L112 46L124 30L128 56Z" fill="#fc3" stroke="#a80" stroke-width="2"/>`,`<path d="M70 60Q100 30 130 60L116 50Q100 42 84 50Z" fill="#4a7ab0"/><ellipse cx="132" cy="60" rx="15" ry="5" fill="#3a6a9a"/>`,`<circle cx="78" cy="58" r="7" fill="#e86a9a"/><circle cx="92" cy="50" r="7" fill="#f2d04a"/><circle cx="108" cy="50" r="7" fill="#7ac26a"/><circle cx="122" cy="58" r="7" fill="#e88a4a"/><circle cx="100" cy="46" r="6" fill="#fff"/>`,`<rect x="72" y="70" width="24" height="15" rx="7" fill="#222"/><rect x="104" y="70" width="24" height="15" rx="7" fill="#222"/><rect x="95" y="74" width="10" height="4" fill="#222"/><rect x="66" y="73" width="8" height="3" fill="#222"/><rect x="126" y="73" width="8" height="3" fill="#222"/>`,`<rect x="80" y="14" width="40" height="40" rx="4" fill="#333"/><rect x="80" y="42" width="40" height="9" fill="#a33"/><rect x="66" y="52" width="68" height="8" rx="4" fill="#222"/>`];
+const HATSV=[``,`<path d="M68 62Q100 20 132 62Q100 52 68 62Z" fill="#c33"/><circle cx="100" cy="28" r="7" fill="#fff"/>`,`<path d="M62 112Q100 128 138 112L142 128Q100 146 58 128Z" fill="#d94"/>`,`<path d="M72 56L76 30L88 46L100 26L112 46L124 30L128 56Z" fill="#fc3" stroke="#a80" stroke-width="2"/>`,`<path d="M70 60Q100 30 130 60L116 50Q100 42 84 50Z" fill="#4a7ab0"/><ellipse cx="132" cy="60" rx="15" ry="5" fill="#3a6a9a"/>`,`<circle cx="78" cy="58" r="7" fill="#e86a9a"/><circle cx="92" cy="50" r="7" fill="#f2d04a"/><circle cx="108" cy="50" r="7" fill="#7ac26a"/><circle cx="122" cy="58" r="7" fill="#e88a4a"/><circle cx="100" cy="46" r="6" fill="#fff"/>`,`<rect x="72" y="70" width="24" height="15" rx="7" fill="#222"/><rect x="104" y="70" width="24" height="15" rx="7" fill="#222"/><rect x="95" y="74" width="10" height="4" fill="#222"/><rect x="66" y="73" width="8" height="3" fill="#222"/><rect x="126" y="73" width="8" height="3" fill="#222"/>`,`<rect x="80" y="14" width="40" height="40" rx="4" fill="#333"/><rect x="80" y="42" width="40" height="9" fill="#a33"/><rect x="66" y="52" width="68" height="8" rx="4" fill="#222"/>`,
+`<path d="M65 50 L75 10 L85 40 L100 0 L115 40 L125 10 L135 50 Z" fill="#ffd700" stroke="#b8860b" stroke-width="2"/><circle cx="100" cy="20" r="6" fill="#e74c3c"/>`,
+`<rect x="68" y="70" width="26" height="12" fill="#000"/><rect x="106" y="70" width="26" height="12" fill="#000"/><rect x="94" y="72" width="12" height="4" fill="#000"/><rect x="74" y="72" width="6" height="4" fill="#fff" opacity="0.6"/><rect x="112" y="72" width="6" height="4" fill="#fff" opacity="0.6"/>`];
 
 function bear(x=100,y=130,sc=1,fish=false,opt={}){
 const body=opt.body||(S.sick?'#668a62':'#7a4e26'), belly=opt.belly||(S.sick?'#7c9c73':'#93633a'), head=opt.head||(S.sick?'#7c9c73':'#8a5a2e');
@@ -139,14 +143,14 @@ const hIdx=opt.hat!==undefined?opt.hat:S.hat;
 const sl=Date.now()<S.sleepUntil && !opt.noSleep, eye=sl?`<path d="M82 78q5 5 10 0M108 78q5 5 10 0" stroke="#2a1a10" stroke-width="3" fill="none"/>`:`<circle cx="87" cy="77" r="4.5" fill="#2a1a10"/><circle cx="113" cy="77" r="4.5" fill="#2a1a10"/><circle cx="88.5" cy="75.5" r="1.5" fill="#fff"/><circle cx="114.5" cy="75.5" r="1.5" fill="#fff"/>`;
 const hat=HATSV[hIdx]||"";
 const bow=opt.bow?`<path d="M128 34l-13-9v18zM128 34l13-9v18z" fill="#e85a8a"/><circle cx="128" cy="34" r="4.5" fill="#c23a6a"/>`:"";
-return `<g transform="translate(${x-100} ${y-130}) scale(${sc})"><g class="bear"><ellipse cx="100" cy="168" rx="62" ry="14" fill="#0003"/><ellipse cx="58" cy="160" rx="17" ry="12" fill="#5a3818"/><ellipse cx="142" cy="160" rx="17" ry="12" fill="#5a3818"/><ellipse cx="100" cy="128" rx="55" ry="44" fill="${body}"/><ellipse cx="100" cy="136" rx="34" ry="30" fill="${belly}"/><ellipse cx="52" cy="128" rx="14" ry="26" fill="#6a421f" transform="rotate(18 52 128)"/><ellipse cx="148" cy="128" rx="14" ry="26" fill="#6a421f" transform="rotate(-18 148 128)"/>${hIdx==2?hat:""}<circle cx="72" cy="50" r="14" fill="#6a421f"/><circle cx="128" cy="50" r="14" fill="#6a421f"/><circle cx="72" cy="50" r="7" fill="#c98e62"/><circle cx="128" cy="50" r="7" fill="#c98e62"/><circle cx="100" cy="80" r="38" fill="${head}"/><ellipse cx="100" cy="94" rx="19" ry="15" fill="#d9b48a"/><ellipse cx="100" cy="87" rx="8" ry="5.5" fill="#2a1a10"/><circle cx="77" cy="93" r="6" fill="#e88" opacity=".35"/><circle cx="123" cy="93" r="6" fill="#e88" opacity=".35"/><path d="M100 92v6M93 100q7 5 14 0" stroke="#2a1a10" stroke-width="2.5" fill="none"/>${eye}${hIdx!=2?hat:""}${bow}${fish?`<path d="M150 120L200 40" stroke="#6b4a22" stroke-width="3"/>`:""}</g></g>`}
+const rodSvg=fish?(S.items.rod?`<path d="M145 135 L205 30" stroke="#3498db" stroke-width="4" stroke-linecap="round"/><path d="M150 120 L165 110" stroke="#bdc3c7" stroke-width="2"/><circle cx="165" cy="110" r="7" fill="#ecf0f1" stroke="#2c3e50" stroke-width="2"/><circle cx="165" cy="110" r="2" fill="#e74c3c"/>`:`<path d="M145 135 L200 40" stroke="#6b4a22" stroke-width="3" stroke-linecap="round"/>`):"";
+return `<g transform="translate(${x-100} ${y-130}) scale(${sc})"><g class="bear"><ellipse cx="100" cy="168" rx="62" ry="14" fill="#0003"/><ellipse cx="58" cy="160" rx="17" ry="12" fill="#5a3818"/><ellipse cx="142" cy="160" rx="17" ry="12" fill="#5a3818"/><ellipse cx="100" cy="128" rx="55" ry="44" fill="${body}"/><ellipse cx="100" cy="136" rx="34" ry="30" fill="${belly}"/><ellipse cx="52" cy="128" rx="14" ry="26" fill="#6a421f" transform="rotate(18 52 128)"/><ellipse cx="148" cy="128" rx="14" ry="26" fill="#6a421f" transform="rotate(-18 148 128)"/>${hIdx==2?hat:""}<circle cx="72" cy="50" r="14" fill="#6a421f"/><circle cx="128" cy="50" r="14" fill="#6a421f"/><circle cx="72" cy="50" r="7" fill="#c98e62"/><circle cx="128" cy="50" r="7" fill="#c98e62"/><circle cx="100" cy="80" r="38" fill="${head}"/><ellipse cx="100" cy="94" rx="19" ry="15" fill="#d9b48a"/><ellipse cx="100" cy="87" rx="8" ry="5.5" fill="#2a1a10"/><circle cx="77" cy="93" r="6" fill="#e88" opacity=".35"/><circle cx="123" cy="93" r="6" fill="#e88" opacity=".35"/><path d="M100 92v6M93 100q7 5 14 0" stroke="#2a1a10" stroke-width="2.5" fill="none"/>${eye}${hIdx!=2?hat:""}${bow}${rodSvg}</g></g>`}
 const TWINOPT={body:'#9a6a3a',belly:'#c89a6a',head:'#a97a45',hat:0,bow:true};
 
 // ===== Отрисовка улицы =====
 function scene(inner,h=300){const w=S.house, dens=[``,`<path d="M20 140 C20 70 120 70 120 140 Z" fill="#4a3a30"/><path d="M50 140 C50 90 90 90 90 140 Z" fill="#1a120c"/>`,`<rect x="14" y="90" width="104" height="50" fill="#8a5a38"/><rect x="10" y="85" width="112" height="10" fill="#6a4a28"/><rect x="54" y="105" width="24" height="35" rx="2" fill="#3a2410"/>`,`<polygon points="10,90 66,40 122,90" fill="#a33"/><rect x="18" y="90" width="96" height="50" fill="#c9955e"/><rect x="52" y="110" width="28" height="30" rx="3" fill="#3a2410"/><circle cx="34" cy="110" r="8" fill="#ffd34d"/><circle cx="98" cy="110" r="8" fill="#ffd34d"/>`,`<polygon points="5,80 66,20 127,80" fill="#803333"/><rect x="15" y="80" width="102" height="60" fill="#e6d5b8"/><rect x="50" y="100" width="32" height="40" rx="4" fill="#5a3a20"/><circle cx="30" cy="100" r="10" fill="#ffe270"/><circle cx="102" cy="100" r="10" fill="#ffe270"/><circle cx="48" cy="90" r="3" fill="#ff9"/><circle cx="84" cy="90" r="3" fill="#ff9"/>`];
 return `<svg viewBox="0 0 360 ${h}"><defs><linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9ccbe8"/><stop offset="1" stop-color="#e8f1e0"/></linearGradient></defs><rect width="360" height="${h}" fill="url(#sk)"/><path d="M0 110L70 50L130 100L200 40L280 105L360 60V150H0Z" fill="#6e8aa0"/><path d="M0 130L90 85L170 125L260 80L360 130V160H0Z" fill="#4f7a58"/><rect y="140" width="360" height="${h-140}" fill="#7bb15a"/><ellipse cx="270" cy="230" rx="110" ry="40" fill="#4aa3d6"/><ellipse cx="270" cy="230" rx="96" ry="32" fill="#69bde8"/>${[[330,150],[300,165],[345,185]].map(([a,b])=>`<path d="M${a} ${b}l-14 36h28z" fill="#2f6a3a"/><path d="M${a} ${b-14}l-12 30h24z" fill="#3b8048"/>`).join("")}<g transform="translate(10 0)">${dens[w]}</g>${inner}</svg>`}
 
-// ===== ВСТРОЕННЫЕ КАРТИНКИ (ИНТЕРЬЕР ДОМА) =====
 const ASSETS = {
   bg1: `<image href="Frame 6.svg" x="0" y="0" width="360" height="300" preserveAspectRatio="none"/>`,
   bg2: `<image href="Frame 16.svg" x="0" y="0" width="360" height="300" preserveAspectRatio="none"/>`,
@@ -155,8 +159,8 @@ const ASSETS = {
   boards: `<image href="Frame 21.svg" x="240" y="220" width="100" height="80"/>`,
   rugGreen: `<image href="Frame 26.svg" x="70" y="220" width="220" height="70"/>`,
   rugStar: `<image href="Frame 25.svg" x="50" y="210" width="260" height="80"/>`,
-  bedBlue: `<image href="Frame 27.svg" x="240" y="120" width="110" height="160"/>`,
-  bedPink: `<image href="Frame 28.svg" x="10" y="120" width="110" height="160"/>`,
+  bedBlue: `<image href="Frame 23.svg" x="240" y="120" width="110" height="160"/>`,
+  bedPink: `<image href="Frame 24.svg" x="10" y="120" width="110" height="160"/>`,
   shelf: `<image href="Frame 30.svg" x="30" y="50" width="100" height="100"/>`,
   dresser: `<image href="Frame 29.svg" x="145" y="160" width="70" height="70"/>`
 };
@@ -165,35 +169,15 @@ function int_scene(inner, h=300) {
     const w = S.house || 1; 
     let bg="", dec="", rug="", bed="";
     const twinBed = S.twin ? ASSETS.bedPink : "";
-    
-    if (w === 1) { 
-        bg = ASSETS.bg1; 
-        dec = ASSETS.tumbleweed + ASSETS.boards; 
-        bed = ""; // В первой версии дома кровати нет вообще
-    } 
-    else if (w === 2) { 
-        bg = ASSETS.bg2; 
-        rug = ASSETS.rugGreen; 
-        bed = twinBed + ASSETS.bedBlue;
-    } 
-    else if (w === 3) { 
-        bg = ASSETS.bg3; 
-        rug = ASSETS.rugGreen; 
-        dec = ASSETS.shelf; 
-        bed = twinBed + ASSETS.bedBlue; 
-    } 
-    else { 
-        bg = ASSETS.bg3; 
-        rug = ASSETS.rugStar; 
-        dec = ASSETS.shelf + ASSETS.dresser; // Комод по середине
-        bed = twinBed + ASSETS.bedBlue;
-    }
-    
+    if (w === 1) { bg = ASSETS.bg1; dec = ASSETS.tumbleweed + ASSETS.boards; bed = ""; } 
+    else if (w === 2) { bg = ASSETS.bg2; rug = ASSETS.rugGreen; bed = twinBed + ASSETS.bedBlue; } 
+    else if (w === 3) { bg = ASSETS.bg3; rug = ASSETS.rugGreen; dec = ASSETS.shelf; bed = twinBed + ASSETS.bedBlue; } 
+    else { bg = ASSETS.bg3; rug = ASSETS.rugStar; dec = ASSETS.shelf + ASSETS.dresser; bed = twinBed + ASSETS.bedBlue; }
     return `<svg viewBox="0 0 360 ${h}">${bg}${rug}${dec}${bed}${inner}</svg>`;
 }
 
 function hud(){const el=$("#hud");if(!el)return;const b=(n,v,i,c="")=>`<div class="bar ${c}">${i} ${n}<i><b style="width:${v}%"></b></i></div>`;
-el.innerHTML=`<div class="top"><span>🐻 Ур.${S.lvl} ${S.sick?'🤒':''} (🪙${S.coins})</span><span>${S.twin?'🐻+🎀 ':''}🐟 ${S.fish}</span></div><div class="bars">${b("Опыт",S.xp/(S.lvl*50)*100,"✨","xp-bar")+b("Сытость",S.hunger,"🍯")+b("Настроение",S.mood,"😊")+b("Энергия",S.energy,"⚡","en-bar")}</div>`}
+el.innerHTML=`<div class="top"><span>🐻 Ур.${S.lvl} ${S.sick?'🤒':''} (🪙${S.coins} | 💎${S.crys})</span><span>${S.twin?'🐻+🎀 ':''}🐟 ${S.fish}</span></div><div class="bars">${b("Опыт",S.xp/(S.lvl*50)*100,"✨","xp-bar")+b("Сытость",S.hunger,"🍯")+b("Настроение",S.mood,"😊")+b("Энергия",S.energy,"⚡","en-bar")}</div>`}
 function earn(n){S.coins+=n;S.total+=n;save()}
 function saveAndClose(){save(); hap('heavy'); try{tg.sendData(JSON.stringify({action:"exit",state:S}))}catch(e){try{tg.close()}catch(_){}}}
 function askDonate(){hap('heavy');try{tg.sendData(JSON.stringify({action:"buy_stars"}));tg.close()}catch(e){toast("Откройте в Telegram")}}
@@ -201,30 +185,19 @@ function askDonate(){hap('heavy');try{tg.sendData(JSON.stringify({action:"buy_st
 const V={world(){return W.html()},
 home(){const sl=Date.now()<S.sleepUntil;
 const w=S.house||1;
-// Координаты когда они просто стоят (не спят)
 let bx1=170,by1=215,bs1=1.15,bx2=260,by2=235,bs2=0.72;
 let zzz=sl?`<text x="210" y="150" font-size="26">💤</text>`:"";
-
 if(sl){
-    if(w>1){ // Спят на кроватях (синяя справа, розовая слева)
-        bx1=295; by1=195; bs1=0.85; // Центр синей кровати
-        if(S.twin){ 
-            bx2=65; by2=195; bs2=0.75; // Центр розовой кровати
-            zzz=`<text x="295" y="120" font-size="26">💤</text><text x="65" y="120" font-size="26">💤</text>`;
-        } else { 
-            zzz=`<text x="295" y="120" font-size="26">💤</text>`;
-        }
-    }else{ // Спят на полу (Халупа)
+    if(w>1){ 
+        bx1=295; by1=195; bs1=0.85; 
+        if(S.twin){ bx2=65; by2=195; bs2=0.75; zzz=`<text x="295" y="120" font-size="26">💤</text><text x="65" y="120" font-size="26">💤</text>`; } 
+        else { zzz=`<text x="295" y="120" font-size="26">💤</text>`; }
+    }else{ 
         bx1=170; by1=240; bs1=1.15;
-        if(S.twin){ 
-            bx2=260; by2=250; bs2=0.8;
-            zzz=`<text x="170" y="170" font-size="26">💤</text><text x="260" y="190" font-size="26">💤</text>`;
-        } else {
-            zzz=`<text x="170" y="170" font-size="26">💤</text>`;
-        }
+        if(S.twin){ bx2=260; by2=250; bs2=0.8; zzz=`<text x="170" y="170" font-size="26">💤</text><text x="260" y="190" font-size="26">💤</text>`; } 
+        else { zzz=`<text x="170" y="170" font-size="26">💤</text>`; }
     }
 }
-
 return `${int_scene(bear(bx1,by1,bs1,false,{})+(S.twin?bear(bx2,by2,bs2,false,TWINOPT):"")+zzz,300)}
 <div class="msg">${sl ? (S.twin ? "Они спят…" : "Степан спит…") : msg}</div>
 ${sl ? `<div class="card"><button class="b exit-btn" style="background:#5a9a4a" onclick="wake(true)">🔔 Разбудить</button></div>` :
@@ -237,18 +210,54 @@ ${sl ? `<div class="card"><button class="b exit-btn" style="background:#5a9a4a" 
     <button class="b" onclick="sleep()" style="grid-column: span 2">😴 Уложить спать</button>
 </div>
 <div class="card"><div style="display:flex; gap:4px;"><button class="b exit-btn" onclick="go('world')">🌲 В лес</button><button class="b exit-btn" style="background:#2a1a10;" onclick="saveAndClose()">🚪 Выйти из игры</button></div></div>`}`},
-fish(){return `${scene(bear(90,230,.8,true)+`<g id="bob" style="animation:${fs=="bite"?"bob .3s infinite":"none"}"><path d="M120 232L${fs=="idle"?190:240} ${fs=="idle"?100:200}" stroke="#fff6" fill="none"/><circle cx="${fs=="idle"?190:240}" cy="${fs=="idle"?100:215}" r="7" fill="${fs=="bite"?"#f33":"#fff"}" stroke="#c33" stroke-width="2"/></g>`,300)}
+fish(){
+const tipX=S.items.rod?154:150; const tipY=S.items.rod?124:132;
+return `${scene(bear(90,230,.8,true)+`<g id="bob" style="animation:${fs=="bite"?"bob .3s infinite":"none"}"><path d="M${tipX} ${tipY}L${fs=="idle"?190:240} ${fs=="idle"?100:200}" stroke="#fff6" stroke-width="1.5" fill="none"/><circle cx="${fs=="idle"?190:240}" cy="${fs=="idle"?100:215}" r="7" fill="${fs=="bite"?"#f33":"#fff"}" stroke="#c33" stroke-width="2"/></g>`,300)}
 <div class="msg">${msg||"Закинь удочку"}</div><div class="card"><button class="b" style="width:100%;margin-bottom:8px" onclick="cast()">${fs=="idle"?"🎣 Забросить":fs=="wait"?"…ждём…":"❗ ПОДСЕКАЙ!"}</button><button class="b exit-btn" onclick="go('world')">🌲 В лес</button></div>`},
 m3(){return `<div class="card"><div class="top" id="m3top"><span>Ходы: ${mv}</span><span>Собрано: ${cl}</span></div><div class="grid" id="g"></div><div class="msg">${mv<=0?"Игра окончена! Монеток: "+cl:"Меняй соседние зверушки"}</div>${mv<=0?`<button class="b" style="width:100%;margin-bottom:8px" onclick="newM3()">Ещё раз</button>`:""}<button class="b exit-btn" onclick="go('world')">🌲 В лес</button></div>`},
 quest(){return `<div class="card"><b>Задания дня</b>${Q.map((q,i)=>{const p=Math.min(q.v(),q.n),d=p>=q.n,c=S.claimed.includes(i);return `<div class="row"><span>${q.t} (${p}/${q.n})</span><button class="b" ${!d||c?"disabled":""} onclick="claim(${i})">${c?"✔":"+"+q.r+"🪙"}</button></div>`}).join("")}</div><div class="card" style="padding:0;background:none"><button class="b exit-btn" onclick="go('world')">🌲 В лес</button></div>`},
 shop(){return `<div class="card"><b>🏠 Домик: ${HOUSES[S.house]}</b>${S.house<4?`<div class="row"><span>Улучшить до «${HOUSES[S.house+1]}»</span><button class="b" onclick="upg()">${HC[S.house+1]}🪙</button></div>`:"<div>Макс. уровень!</div>"}</div>
-<div class="card"><b>🎩 Наряды</b>${HATS.map((h,i)=>`<div class="row"><span>${h[0]}</span><button class="b" onclick="hat(${i})">${S.owned.includes(i)?(S.hat==i?"Надето":"Надеть"):h[1]+"🪙"}</button></div>`).join("")}</div>
-<div class="card"><b>🎁 Вещи и друзья</b>${ITEMS.map((it,i)=>`<div class="row"><span>${it[1]}<small>${it[3]}</small></span><button class="b" ${S.items[it[0]]?"disabled":""} onclick="buyItem(${i})">${S.items[it[0]]?"Куплено":it[2]+"🪙"}</button></div>`).join("")}
+<div class="card"><b>🎩 Наряды</b>${HATS.map((h,i)=>`<div class="row"><span>${h[0]}</span><button class="b" ${typeof h[1]==='string'&&!S.owned.includes(i)?"disabled":""} onclick="hat(${i})">${S.owned.includes(i)?(S.hat==i?"Надето":"Надеть"):(typeof h[1]==='number'?h[1]+"🪙":h[1])}</button></div>`).join("")}</div>
+<div class="card"><b>🎁 Вещи и друзья</b>${ITEMS.map((it,i)=>`<div class="row"><span>${it[1]}<small>${(it[0]==='secret'&&S.items[it[0]])?'Жми 5 раз на левое верхнее дерево!':it[3]}</small></span><button class="b" ${S.items[it[0]]?"disabled":""} onclick="buyItem(${i})">${S.items[it[0]]?"Куплено":it[2]+"🪙"}</button></div>`).join("")}
 <div class="row"><span>🎀 Подружка Степана<small>Розовая кровать, спят вместе, ищет монетки</small></span><button class="b" ${S.twin?"disabled":""} onclick="twin()">${S.twin?"Есть":"300🪙"}</button></div></div>
 <div class="card"><b>🛒 Расходники</b>
 <div class="row"><span>🐟 Рыба ×3<small>Запас вкусняшек</small></span><button class="b" onclick="buySnack('fish')">18🪙</button></div>
 <div class="row"><span>🧃 Ягодный сок<small>+25 ⚡ энергии сразу</small></span><button class="b" onclick="buySnack('juice')">8🪙</button></div></div>
-<div class="card"><button class="b" onclick="askDonate()" style="background:#d9534f;width:100%;margin-bottom:8px">🐾 Донат (Stars)</button><button class="b exit-btn" onclick="go('world')">🌲 В лес</button></div>`},
+<div class="card"><button class="b exit-btn" onclick="go('world')">🌲 В лес</button></div>`},
+bar(){return `<div class="card"><b>🍺 Барная Стойка</b>
+<div class="row"><span>🍵 Лесной чай<small>Восстанавливает энергию (+20⚡)</small></span><button class="b" onclick="buyDrinks('tea')">5🪙</button></div>
+<div class="row"><span>🥞 Блинчики<small>Очень сытно (+50🍯)</small></span><button class="b" onclick="buyDrinks('pancakes')">15🪙</button></div>
+<div class="row"><span>🍯 Элитная медовуха<small>Восстанавливает ВСЁ на 100%</small></span><button class="b" style="background:#8e44ad" onclick="buyDrinks('mead')">10💎</button></div>
+</div><div class="card" style="padding:0;background:none"><button class="b exit-btn" onclick="go('world')">❌ Отойти</button></div>`},
+casino(){return `<div class="card"><b>🎡 Колесо Фортуны</b>
+<div class="msg" id="cas-msg">Крути колесо за 💎 Кристаллы!<br>Твой баланс: ${S.crys}💎</div>
+<div style="font-size:50px; text-align:center; margin:10px 0" id="cas-wheel">🎡</div>
+<button class="b" style="width:100%; margin-bottom:8px; background:#8e44ad" onclick="spinWheel()" id="btn-spin">Крутить (5 💎)</button></div>
+<div class="card"><b>💎 Поддержать проект</b>
+<div class="row"><span>Купить 50 💎<small>Донат пойдет на развитие</small></span><button class="b" style="background:#2a9d8f" onclick="buyCrys()">Stars ⭐️</button></div>
+</div><div class="card" style="padding:0;background:none"><button class="b exit-btn" onclick="go('world')">❌ Уйти</button></div>`},
+darts(){return `<div class="card" style="text-align:center;"><b>🎯 Дартс</b>
+<div class="msg" id="dart-msg">Целься в центр! Стоимость: 5🪙</div>
+<div style="position:relative; width:220px; height:40px; margin:20px auto; background:#333; border-radius:20px; overflow:hidden;">
+    <div style="position:absolute; left:50%; top:0; bottom:0; width:130px; background:#2ecc71; transform:translateX(-50%); opacity:0.5;"></div>
+    <div style="position:absolute; left:50%; top:0; bottom:0; width:70px; background:#f1c40f; transform:translateX(-50%); opacity:0.8;"></div>
+    <div style="position:absolute; left:50%; top:0; bottom:0; width:24px; background:#e74c3c; transform:translateX(-50%);"></div>
+    <div id="dart-ind" style="position:absolute; left:50%; top:5px; width:4px; height:30px; background:#fff; box-shadow:0 0 5px #fff; margin-left:-2px;"></div>
+</div>
+<button class="b" style="width:100%; background:#e05a2a;" id="dart-btn" onclick="throwDart()">БРОСОК!</button>
+</div><div class="card" style="padding:0;background:none"><button class="b exit-btn" onclick="go('world')">❌ Уйти</button></div>`},
+thimbles(){return `<div class="card" style="text-align:center;"><b>🎩 Напёрстки</b>
+<div class="msg" id="thim-msg">Угадай, где кристалл! (Стоимость: 3💎)</div>
+<div style="display:flex; justify-content:space-around; margin:30px 0;">
+    <div class="thim-cup" style="font-size:50px; cursor:pointer; transition:transform 0.1s;" onclick="pickThimble(0)">🎩</div>
+    <div class="thim-cup" style="font-size:50px; cursor:pointer; transition:transform 0.1s;" onclick="pickThimble(1)">🎩</div>
+    <div class="thim-cup" style="font-size:50px; cursor:pointer; transition:transform 0.1s;" onclick="pickThimble(2)">🎩</div>
+</div>
+</div><div class="card" style="padding:0;background:none"><button class="b exit-btn" onclick="go('world')">❌ Уйти</button></div>`},
+slots(){ return `<div class="card" style="text-align:center;"><b>🎰 Слот-Машина</b><div class="msg" id="sl-msg">Ставка: 10🪙</div><div style="font-size:50px;letter-spacing:8px;margin:20px 0;background:#222;border-radius:10px;padding:10px;color:#fff;" id="sl-reels">🍒🍒🍒</div><button class="b" id="sl-btn" style="width:100%;background:#e05a2a;" onclick="spinSlots()">КРУТИТЬ (10🪙)</button></div><div class="card" style="padding:0;background:none"><button class="b exit-btn" onclick="go('world')">❌ Уйти</button></div>`},
+hilo(){ return `<div class="card" style="text-align:center;"><b>🃏 Больше / Меньше</b><div class="msg" id="hl-msg">Карта: ${hlCard}. Следующая больше или меньше? (10🪙)</div><div style="font-size:60px;margin:20px 0;background:#fff;color:#000;border-radius:10px;display:inline-block;padding:10px 20px;border:2px solid #333;" id="hl-card">${hlCard}</div><div style="display:flex;gap:10px;"><button class="b" style="flex:1;background:#2980b9;" onclick="playHiLo(-1)">Меньше 🔻</button><button class="b" style="flex:1;background:#c0392b;" onclick="playHiLo(1)">Больше 🔺</button></div></div><div class="card" style="padding:0;background:none"><button class="b exit-btn" onclick="go('world')">❌ Уйти</button></div>`},
+coinflip(){ return `<div class="card" style="text-align:center;"><b>🪙 Орёл или Решка</b><div class="msg" id="cf-msg">Ставка: 10🪙</div><div style="font-size:70px;margin:20px 0;transition:transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);display:inline-block;" id="cf-coin">🪙</div><div style="display:flex;gap:10px;"><button class="b" style="flex:1;background:#f39c12" onclick="playCF(0)">Орёл 🦅</button><button class="b" style="flex:1;background:#8e44ad" onclick="playCF(1)">Решка 🔟</button></div></div><div class="card" style="padding:0;background:none"><button class="b exit-btn" onclick="go('world')">❌ Уйти</button></div>` },
+catchgame() { return `<div class="card" style="text-align:center;"><b>🐹 Ловец Кротов</b><div class="msg" id="cg-msg">Лови как можно больше! (10🪙)</div><div style="position:relative;height:200px;background:#7db85c;border-radius:10px;overflow:hidden;margin:10px 0;box-shadow:inset 0 0 10px #0005;" id="cg-area"><button class="b" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);" onclick="startCatch()" id="cg-btn">СТАРТ</button></div></div><div class="card" style="padding:0;background:none"><button class="b exit-btn" onclick="go('world')">❌ Уйти</button></div>` },
 race(){return `<div class="card" style="padding:4px"><canvas id="rcanvas"></canvas></div><div class="msg" id="rmsg"></div><button class="b exit-btn" onclick="go('world')">🌲 Выйти в лес</button>`},
 bubble(){return `<div class="card" style="padding:4px"><canvas id="bcanvas"></canvas></div><div class="msg" id="bmsg">Тяни, целься и отпускай — шар полетит!</div><button class="b exit-btn" onclick="go('world')">🌲 Выйти в лес</button>`}
 };
@@ -270,18 +279,185 @@ function feedFish(){if(!S.fish){boop();return say("Рыбы нет");}S.fish--;S
 function sleep(){S.sleepUntil=Date.now()+30000;go("home");}
 function wake(f=false){if(S.sleepUntil&&(f||Date.now()>=S.sleepUntil)){S.sleepUntil=0;if(!f){S.energy=clamp(S.energy+(S.items.bed?80:45));S.mood=clamp(S.mood+10);toast("☀️ Выспались!");}else toast("🔔 Разбужен!"); hud();if(tab=="home")go("home");}}
 
-function chk(){const d=new Date().toDateString();if(S.day!==d){const yd=new Date(Date.now()-86400000).toDateString(); S.streak=(S.day===yd)?(S.streak||0)+1:1; S.day=d;S.claimed=[];S.qb={f:S.fishCaught,t:S.tiles,e:S.fed,o:S.total}; weather=R(2); setTimeout(()=>{const r=S.streak*10; earn(r); addXp(10); hap('success'); chng(); try{tg.showAlert(`☀️ С возвращением!\nСтрик: ${S.streak} дн.\nБонус: +${r}🪙`)}catch(e){toast(`☀️ Стрик: ${S.streak} дн. Бонус: +${r}🪙`)}},1500)}}
+function chk(){const d=new Date().toDateString();if(S.day!==d){const yd=new Date(Date.now()-86400000).toDateString(); S.streak=(S.day===yd)?(S.streak||0)+1:1; S.day=d;S.claimed=[];S.qb={f:S.fishCaught,t:S.tiles,e:S.fed,o:S.total}; weather=R(2); setTimeout(()=>{const r=S.streak*3; S.crys=(S.crys||0)+r; save(); addXp(10); hap('success'); chng(); hud(); try{tg.showAlert(`☀️ С возвращением!\nСтрик: ${S.streak} дн.\nБонус: +${r}💎 кристаллов!`)}catch(e){toast(`☀️ Стрик: ${S.streak} дн. Бонус: +${r}💎`)}},1500)}}
 function toast(t){const d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2000)}
 function play(){if(S.energy<10)return say("Устали 🥱"); S.mood=clamp(S.mood+15);S.energy=clamp(S.energy-5); addXp(3); hap('medium');say("🧸 Весело!")}
 function playConsole(){if(S.energy<20)return say("Слишком устал 🥱"); S.mood=clamp(S.mood+30);S.energy=clamp(S.energy-15); addXp(8); hap('heavy');beep();say("🎮 Рубится в игры!")}
 function upg(){const c=HC[S.house+1];if(S.coins<c)return toast("Нет монет");S.coins-=c;S.house++; addXp(50); chng();go("shop")}
-function hat(i){if(!S.owned.includes(i)){if(S.coins<HATS[i][1])return toast("Нет монет");S.coins-=HATS[i][1];S.owned.push(i)}S.hat=i;hap();go("shop")}
+function hat(i){
+    if(!S.owned.includes(i)){
+        if(typeof HATS[i][1] === 'string') return toast("Доступно только в 🎰");
+        if(S.coins<HATS[i][1]) return toast("Нет монет");
+        S.coins-=HATS[i][1]; S.owned.push(i);
+    }
+    S.hat=i; hap(); go("shop");
+}
 function twin(){if(S.twin)return;if(S.coins<300)return toast("Нет монет");S.coins-=300;S.twin=true; addXp(100); chng();toast("🎀 У Степана появилась подружка!");go("shop")}
 function buyItem(i){const[k,n,p]=ITEMS[i];if(S.items[k])return;if(S.coins<p)return toast("Нет монет");S.coins-=p;S.items[k]=1; addXp(20); chng();hap('success');toast(n+" куплено!");go("shop")}
 function buySnack(k){
     if(k=='fish'){if(S.coins<18)return toast("Нет монет");S.coins-=18;S.fish+=3;beep();toast("🐟 +3 рыбы!");}
     else if(k=='juice'){if(S.coins<8)return toast("Нет монет");S.coins-=8;S.energy=clamp(S.energy+25);chng();toast("🧃 Бодрость! +25⚡");}
     hud(); go("shop");
+}
+
+function buyDrinks(k){
+    if(k==='tea'){if(S.coins<5)return toast("Нет монет"); S.coins-=5; S.energy=clamp(S.energy+20); beep(); toast("🍵 Чай выпит! +20⚡");}
+    if(k==='pancakes'){if(S.coins<15)return toast("Нет монет"); S.coins-=15; S.hunger=clamp(S.hunger+50); beep(); toast("🥞 Вкусно! +50🍯");}
+    if(k==='mead'){if(S.crys<10)return toast("Нет кристаллов!"); S.crys-=10; S.energy=100; S.hunger=100; S.mood=100; S.sick=false; chng(); toast("🍯 Полное восстановление!");}
+    save(); hud(); go('bar');
+}
+
+function spinWheel(){
+    if(S.crys<5){boop();hap('error');return say("Не хватает 💎!");}
+    S.crys-=5; save(); hud();
+    const btn=$("#btn-spin"), w=$("#cas-wheel"), m=$("#cas-msg");
+    if(btn)btn.disabled=true;
+    if(m)m.innerHTML=`Крутим... Баланс: ${S.crys}💎`;
+    let ticks=0; const items=["🪙","💰","💎","🎁","🎩","👑"];
+    const iv=setInterval(()=>{
+        if(w)w.textContent=items[R(items.length)];
+        if(++ticks>15){clearInterval(iv);finishSpin();}
+    }, 100);
+}
+function finishSpin(){
+    const btn=$("#btn-spin"), w=$("#cas-wheel"), m=$("#cas-msg");
+    if(btn)btn.disabled=false;
+    const r=Math.random(); let prize="";
+    if(r<0.4){ const c=20+R(30); earn(c); prize=`+${c}🪙!`; if(w)w.textContent="🪙"; }
+    else if(r<0.7){ const c=50+R(50); earn(c); prize=`Куш! +${c}🪙!`; if(w)w.textContent="💰"; }
+    else {
+        const u=[8,9].filter(h=>!S.owned.includes(h));
+        if(u.length){ const h=u[R(u.length)]; S.owned.push(h); prize=`Уникальный приз: ${HATS[h][0]}!`; if(w)w.textContent="🎁"; save(); }
+        else{ const c=200; earn(c); prize=`Джекпот! +${c}🪙!`; if(w)w.textContent="👑"; }
+    }
+    if(m)m.innerHTML=`<b>${prize}</b><br>Баланс: ${S.crys}💎`;
+    chng(); hap('success'); hud();
+}
+function buyCrys(){
+    hap('heavy');
+    try{tg.sendData(JSON.stringify({action:"buy_crystals"})); tg.close();}
+    catch(e){toast("Откройте в Telegram"); S.crys+=50; save(); hud(); go('casino');}
+}
+
+let dartPos = 0, dartDir = 1, dartRaf, dartAct = false;
+function initDarts(){ if(!checkState())return; go('darts'); dartAct = true; dartPos = 0; dartDir = 1; loopDarts(); }
+function loopDarts(){
+    if(!dartAct)return;
+    dartPos += 3 * dartDir;
+    if(dartPos > 105 || dartPos < -105) dartDir *= -1;
+    const ind = $("#dart-ind");
+    if(ind) ind.style.transform = `translateX(${dartPos}px)`;
+    dartRaf = requestAnimationFrame(loopDarts);
+}
+function throwDart(){
+    if(!dartAct) {
+        if(S.coins<5){boop(); return toast("Нужно 5🪙");}
+        S.coins-=5; hud(); dartAct=true; loopDarts();
+        $("#dart-btn").textContent = "БРОСОК!"; $("#dart-msg").textContent = "Целься в центр!"; return;
+    }
+    dartAct = false; cancelAnimationFrame(dartRaf); hap('heavy');
+    const dist = Math.abs(dartPos); let win = 0, msg = "";
+    if(dist < 12) { win = 50; msg = "🎯 В ЯБЛОЧКО! +50🪙"; chng(); }
+    else if(dist < 35) { win = 15; msg = "Отличный бросок! +15🪙"; beep(); }
+    else if(dist < 65) { win = 5; msg = "Неплохо. Вернул 5🪙"; }
+    else { msg = "Мимо... 😢"; boop(); }
+    if(win>0) earn(win); addXp(5);
+    $("#dart-btn").textContent = "Ещё раз (5🪙)"; $("#dart-msg").textContent = msg;
+}
+
+let thimState = 0, thimIv; 
+function initThimbles(){ if(!checkState())return; go('thimbles'); thimState = 0; }
+function pickThimble(i){
+    if(thimState !== 0) return;
+    if(S.crys < 3) {boop(); return toast("Нужно 3💎");}
+    S.crys -= 3; save(); hud(); thimState = 1;
+    const msg = $("#thim-msg"); if(msg) msg.textContent = "Кручу-верчу...";
+    let ticks = 0;
+    thimIv = setInterval(()=>{
+        const cups = document.querySelectorAll(".thim-cup");
+        cups.forEach(c => c.style.transform = `translate(${(Math.random()-.5)*15}px, ${(Math.random()-.5)*10}px)`);
+        if(++ticks > 15) {
+            clearInterval(thimIv); cups.forEach(c => c.style.transform = `translate(0, 0)`);
+            const winCup = R(3);
+            if(i === winCup) { const rw = 10; S.crys += rw; save(); hud(); chng(); hap('success'); msg.innerHTML = `🎉 Угадал! Под стаканом ${i+1} был кристалл. +${rw}💎`; } 
+            else { boop(); hap('error'); msg.innerHTML = `😢 Мимо! Кристалл был под стаканом ${winCup+1}.`; }
+            cups[winCup].innerHTML = "💎";
+            setTimeout(()=>{
+                thimState = 0; cups.forEach(c => c.innerHTML = "🎩");
+                if($("#thim-msg")) $("#thim-msg").textContent = "Сыграем еще? Угадай, где кристалл (3💎)";
+            }, 2500);
+        }
+    }, 50);
+}
+
+let slotSp; const SLOTS = ["🍒","🍋","🍇","💎","🔔"];
+function initSlots(){ if(!checkState())return; go('slots'); }
+function spinSlots() {
+    if(S.coins<10){boop(); return toast("Нет монет!");}
+    S.coins-=10; hud(); $("#sl-btn").disabled=true;
+    let t=0, r=[0,0,0];
+    slotSp=setInterval(()=>{
+        r=[R(5),R(5),R(5)];
+        $("#sl-reels").textContent = SLOTS[r[0]]+SLOTS[r[1]]+SLOTS[r[2]];
+        if(++t>20){
+            clearInterval(slotSp); $("#sl-btn").disabled=false;
+            if(r[0]==r[1]&&r[1]==r[2]){ let win=r[0]==3?100:50; earn(win); chng(); $("#sl-msg").textContent=`Джекпот! +${win}🪙`; }
+            else if(r[0]==r[1]||r[1]==r[2]||r[0]==r[2]){ earn(5); beep(); $("#sl-msg").textContent=`Пара! Вернули 5🪙`; }
+            else { boop(); $("#sl-msg").textContent=`Мимо...`; }
+        }
+    }, 50);
+}
+
+let hlCard = 7;
+function initHiLo(){ if(!checkState())return; hlCard=Math.floor(Math.random()*11)+2; go('hilo'); }
+function playHiLo(dir) {
+    if(S.coins<10){boop(); return toast("Нет монет!");}
+    S.coins-=10; hud();
+    let nextCard = Math.floor(Math.random()*11)+2;
+    let realDir = nextCard > hlCard ? 1 : (nextCard < hlCard ? -1 : 0);
+    $("#hl-card").textContent = nextCard;
+    if(realDir === dir) { earn(20); chng(); $("#hl-msg").textContent=`Угадал! +20🪙`; }
+    else if(realDir === 0) { earn(10); beep(); $("#hl-msg").textContent=`Ничья! Возврат 10🪙`; }
+    else { boop(); $("#hl-msg").textContent=`Не угадал...`; }
+    hlCard = nextCard;
+}
+
+function initCoinFlip(){ if(!checkState())return; go('coinflip'); }
+function playCF(guess) {
+    if(S.coins<10){boop(); return toast("Нет монет!");}
+    S.coins-=10; hud();
+    const coin = $("#cf-coin"); coin.style.transform = `rotateY(720deg)`;
+    setTimeout(()=>{
+        coin.style.transform = `rotateY(0deg)`; let res = R(2); coin.textContent = res===0 ? "🦅" : "🔟";
+        if(res===guess) { earn(20); chng(); $("#cf-msg").textContent=`Победа! +20🪙`; }
+        else { boop(); $("#cf-msg").textContent=`Проигрыш...`; }
+    }, 800);
+}
+
+let catchScore=0, catchInt, catchTime=0;
+function initCatch(){ if(!checkState())return; catchScore=0; go('catchgame'); }
+function startCatch() {
+    if(S.coins<10){boop(); return toast("Нет монет!");}
+    S.coins-=10; hud(); catchScore=0; catchTime=10;
+    $("#cg-btn").style.display='none'; $("#cg-msg").textContent=`Время: ${catchTime}с | Счёт: 0`;
+    const area = $("#cg-area");
+    catchInt = setInterval(()=>{
+        catchTime--;
+        if(catchTime<=0){
+            clearInterval(catchInt); area.innerHTML=`<button class="b" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);" onclick="startCatch()" id="cg-btn">ИГРАТЬ (10🪙)</button>`;
+            let win = catchScore*2; earn(win); chng();
+            $("#cg-msg").textContent=`Игра окончена! Счёт: ${catchScore}. Выигрыш: ${win}🪙`;
+        } else { $("#cg-msg").textContent=`Время: ${catchTime}с | Счёт: ${catchScore}`; spawnMole(); }
+    }, 1000);
+    spawnMole();
+}
+function spawnMole() {
+    if(catchTime<=0) return;
+    const area = $("#cg-area"), mole = document.createElement("div");
+    mole.textContent = "🐹"; mole.style.position = "absolute"; mole.style.fontSize = "35px";
+    mole.style.left = R(area.clientWidth - 40) + "px"; mole.style.top = R(area.clientHeight - 40) + "px"; mole.style.cursor = "pointer";
+    mole.onpointerdown = () => { catchScore++; beep(); mole.remove(); $("#cg-msg").textContent=`Время: ${catchTime}с | Счёт: ${catchScore}`; };
+    area.appendChild(mole); setTimeout(()=>{if(mole.parentElement)mole.remove()}, 900);
 }
 
 function cast(){
@@ -291,11 +467,17 @@ function cast(){
         ft=setTimeout(()=>{fs="bite";msg="Клюёт!";go("fish");hap('heavy');
             ft=setTimeout(()=>{fs="idle";say("Сорвалась…")},S.items.rod?1600:1300)},wait)}
     else if(fs=="wait"){clearTimeout(ft);fs="idle";boop();hap('error');say("Рано! Рыба ушла 🐟💨")}
-    else if(fs=="bite"){clearTimeout(ft);fs="idle";
-        const gr=S.items.rod?2:1, r=R(10), f=r<gr?"🌟":r<gr+3?"🐠":"🐟";
-        S.fishCaught++;chng();hap('success');
-        if(f=="🌟"){earn(10);msg="🌟 Золотая рыбка! +10🪙"}else{S.fish++;msg=f+" Поймал!"}
-        addXp(5); S.mood=clamp(S.mood+3);hud();go("fish")}
+    else if(fs=="bite"){
+        clearTimeout(ft);fs="idle";
+        if(Math.random() < 0.35) {
+            boop(); hap('error'); say("Эх, сорвалась с крючка! 💦");
+        } else {
+            const gr=S.items.rod?2:1, r=R(10), f=r<gr?"🌟":r<gr+3?"🐠":"🐟";
+            S.fishCaught++;chng();hap('success');
+            if(f=="🌟"){earn(10);msg="🌟 Золотая рыбка! +10🪙"}else{S.fish++;msg=f+" Поймал!"}
+            addXp(5); S.mood=clamp(S.mood+3);hud();go("fish");
+        }
+    }
 }
 
 const E=["🐻","🐟","🍯","🌲","🍄","🫐"];
@@ -707,25 +889,81 @@ function initBubble(){
 
 function go(t){
     if(t!="fish"){clearTimeout(ft);fs="idle"}
-    r_act=false; b_act=false; RKEYS={}; cancelAnimationFrame(raf_r); cancelAnimationFrame(raf_b);
+    r_act=false; b_act=false; RKEYS={}; cancelAnimationFrame(raf_r); cancelAnimationFrame(raf_b); cancelAnimationFrame(dartRaf); dartAct=false;
+    clearInterval(catchInt); clearInterval(slotSp); clearInterval(thimIv);
     wake(false);chk();tab=t;save();
     try{if(t=="world")tg.BackButton.hide();else{tg.BackButton.show();tg.BackButton.onClick(()=>go("world"));}}catch(e){}
     $("#main").innerHTML=V[t]();if(t=="m3")draw();if(t=="world")W.init();hud();hap();}
 
 $("#app").innerHTML=`<div id="hud"></div><div id="main"></div>`;
 
-const M=["TTTTTTTTTTTTTT","TT.f..TT..f.TT","T..H..gg..K..T","T.pppppppppp.T","Tf.p.f..g.p.fT","T..p.gg...p..T","Tb.p..C...p.bT","T..pppppppp..T","T.gg..R..Q..gT","TT.f..ggg..fTT","T.f.......~~~T","T..g.S...~~~~T","Tgg......~~~~T","T..f..p.FF~~~T","T.b...pppppp.T","T..g..p...bg.T","TT.f..p..f.TTT","TTTTTTTTTTTTTT"];
-const TS=48,wid=14,hei=18,at=(c,r)=>(M[r]&&M[r][c])||"T",blk=k=>k=="T"||k=="~";
-const W={pc:3,pr:3,tpc:3,tpr:3,wk:0,fl:1,bush:{},
+const M0=["TTTTTTTTTTTTTT","TT.f..TT..f.TT","T..H..gg..K..T","T.pppppppppp.T","Tf.p.f..g.p.fT","T..p.gg...p..T","Tb.p..C...p.bT","T..pppppppp..T","T.gg..R..Q..gT","TT.f..ggg..fTT","T.f.......~~~T","T..g.S...~~~~T","Tgg......~~~~T","T..f..p.FF~~~T","T.b...pppppp.T","T..g..p...bg.T","TT.f..p..f.TTT","TTTTTTTTTTTTTT"];
+const M1=["WWWWWWWWWWWWWW","W..L..L..L...W","W.BBBBUBBBBB.W","W............W","W.D..A..O..1.W","W.c..c..c..c.W","W............W","W.2..3..4....W","W.c..c..c....W","W............W","WWWWWW.X.WWWWW","##############","##############","##############","##############","##############","##############","##############"];
+const getM=()=>S.mapId===1?M1:M0;
+const at=(c,r)=>(getM()[r]&&getM()[r][c])||"T",blk=k=>k=="T"||k=="~"||k=="W"||k=="B"||k=="#"||k=="L";
+const TS=48,wid=14,hei=18;
+const W={pc:3,pr:3,tpc:3,tpr:3,wk:0,fl:1,bush:{},tClicks:0,
 html(){let s="",L="";const e=(x,y,t,z)=>`<text x="${x}" y="${y}" font-size="${z}">${t}</text>`,lab=(x,y,t)=>(L+=`<text x="${x+24}" y="${y+60}" font-size="11" font-weight="700" fill="#fff" stroke="#0007" stroke-width="3" paint-order="stroke" text-anchor="middle">${t}</text>`,"");
-for(let r=0;r<hei;r++)for(let c=0;c<wid;c++){const k=at(c,r),x=c*TS,y=r*TS;let f=(r+c)%2?"#7db85c":"#76b055";if(k=="~")f="#3f9bd0";if(k=="p")f="#e3c993";if(k=="g")f="#5f9c47";s+=`<rect x="${x}" y="${y}" width="48" height="48" fill="${f}"/>`;
-if(k=="~")s+=`<path class="sh" style="animation-delay:${(c*r)%4*.5}s" d="M${x+8} ${y+24}q8-7 16 0t16 0" stroke="#fff" stroke-width="2" fill="none"/>`;
-if(k=="T")s+=`<ellipse cx="${x+24}" cy="${y+42}" rx="18" ry="6" fill="#0003"/>`+e(x+2,y+40,(r+c)%3?"🌲":"🌳",44);if(k=="f")s+=e(x+10,y+34,"🌼",22);if(k=="g")s+=e(x+2,y+32,"🌿",26)+e(x+20,y+44,"🌿",24);
-if(k=="b")s+=`<circle cx="${x+24}" cy="${y+30}" r="19" fill="#3d8a3f"/>`+e(x+10,y+38,"🫐",26)+lab(x,y-8,"Ягоды");if(k=="H")s+=`<ellipse cx="${x+24}" cy="${y+46}" rx="24" ry="7" fill="#0003"/>`+e(x-2,y+42,["","🛖","🛖","🏡","🏰"][S.house],46)+lab(x,y-6,"Берлога");
-if(k=="K")s+=`<ellipse cx="${x+24}" cy="${y+44}" rx="24" ry="8" fill="#0003"/>`+e(x-3,y+44,"🏪",54)+lab(x,y-6,"Лавка");if(k=="Q")s+=e(x+4,y+40,"📋",40)+lab(x,y-8,"Задания");if(k=="S")s+=`<ellipse cx="${x+24}" cy="${y+42}" rx="16" ry="6" fill="#0003"/>`+e(x+2,y+40,"🧩",42)+lab(x,y-8,"3 в ряд");if(k=="F"&&c==8)s+=e(x+9,y+36,"🎣",28)+lab(x,y-4,"Рыбалка");
-if(k=="R")s+=`<ellipse cx="${x+24}" cy="${y+44}" rx="20" ry="8" fill="#0003"/>`+e(x+4,y+40,"🏁",36)+lab(x,y-8,"Гонки");if(k=="C")s+=`<ellipse cx="${x+24}" cy="${y+44}" rx="20" ry="8" fill="#0003"/>`+e(x+4,y+40,"🎯",36)+lab(x,y-8,"Пушка");}
-const h=new Date().getHours(),tint=h>=22||h<5?"rgba(12,24,70,.5)":h<8||h>=19?"rgba(255,140,60,.2)":"transparent",nt=h>=22||h<5,rn=weather===1?`<div class="rain"></div>`:"";
-const amb=nt?Array.from({length:12},()=>`<i class="ff" style="left:${R(100)}%;top:${R(100)}%;animation-delay:${R(40)/10}s"></i>`).join(""):h>=8&&h<19?Array.from({length:3},()=>`<i class="bf" style="top:${15+R(60)}%;animation-delay:-${R(12)}s">🦋</i>`).join(""):"";
+const isCas = S.mapId === 1;
+for(let r=0;r<hei;r++)for(let c=0;c<wid;c++){const k=at(c,r),x=c*TS,y=r*TS;
+let f = (r+c)%2 ? "#7db85c" : "#76b055";
+if(isCas) f = (r+c)%2 ? "#4a2d1d" : "#422819";
+if(k=="#")f="#000";
+if(k=="~")f="#3f9bd0"; if(k=="p")f="#e3c993"; if(k=="g")f="#5f9c47";
+s+=`<rect x="${x}" y="${y}" width="48" height="48" fill="${f}"/>`;
+
+if(!isCas && k=="~")s+=`<path class="sh" style="animation-delay:${(c*r)%4*.5}s" d="M${x+8} ${y+24}q8-7 16 0t16 0" stroke="#fff" stroke-width="2" fill="none"/>`;
+if(!isCas && k=="T")s+=`<ellipse cx="${x+24}" cy="${y+42}" rx="18" ry="6" fill="#0003"/>`+e(x+2,y+40,(r+c)%3?"🌲":"🌳",44);
+if(!isCas && k=="f")s+=e(x+10,y+34,"🌼",22); if(!isCas && k=="g")s+=e(x+2,y+32,"🌿",26)+e(x+20,y+44,"🌿",24);
+if(!isCas && k=="b")s+=`<circle cx="${x+24}" cy="${y+30}" r="19" fill="#3d8a3f"/>`+e(x+10,y+38,"🫐",26)+lab(x,y-8,"Ягоды");
+if(!isCas && k=="H")s+=`<ellipse cx="${x+24}" cy="${y+46}" rx="24" ry="7" fill="#0003"/>`+e(x-2,y+42,["","🛖","🛖","🏡","🏰"][S.house],46)+lab(x,y-6,"Берлога");
+if(!isCas && k=="K"){
+    s+=`<ellipse cx="${x+24}" cy="${y+44}" rx="24" ry="8" fill="#0003"/>`+e(x-3,y+44,"🏪",54)+lab(x,y-6,"Лавка");
+    if(S.items.hive) L+=`<ellipse cx="${x+72}" cy="${y+42}" rx="16" ry="6" fill="#0003"/>`+e(x+56,y+36,"🍯",32)+e(x+64,y+16,"🐝",18)+e(x+50,y+24,"🐝",14);
+}
+if(!isCas && k=="Q")s+=e(x+4,y+40,"📋",40)+lab(x,y-8,"Задания");if(!isCas && k=="S")s+=`<ellipse cx="${x+24}" cy="${y+42}" rx="16" ry="6" fill="#0003"/>`+e(x+2,y+40,"🧩",42)+lab(x,y-8,"3 в ряд");
+if(!isCas && k=="F"&&c==8)s+=e(x+9,y+36,"🎣",28)+lab(x,y-4,"Рыбалка");
+if(!isCas && k=="R")s+=`<ellipse cx="${x+24}" cy="${y+44}" rx="20" ry="8" fill="#0003"/>`+e(x+4,y+40,"🏁",36)+lab(x,y-8,"Гонки");
+if(!isCas && k=="C")s+=`<ellipse cx="${x+24}" cy="${y+44}" rx="20" ry="8" fill="#0003"/>`+e(x+4,y+40,"🎯",36)+lab(x,y-8,"Пушка");
+
+if(isCas && k=="W")s+=`<rect x="${x}" y="${y}" width="48" height="48" fill="#2c160e"/><rect x="${x+2}" y="${y+2}" width="44" height="20" fill="#4a2617"/><rect x="${x+2}" y="${y+24}" width="44" height="20" fill="#4a2617"/>`;
+if(isCas && k=="L")s+=`<rect x="${x+18}" y="${y}" width="12" height="20" fill="#111"/><circle cx="${x+24}" cy="${y+20}" r="14" fill="#f1c40f" opacity="0.8"/><circle cx="${x+24}" cy="${y+20}" r="8" fill="#fff"/>`;
+if(isCas && k=="B") {
+    s+=`<rect x="${x}" y="${y+10}" width="48" height="28" fill="#3a1e12"/><rect x="${x}" y="${y+10}" width="48" height="8" fill="#7a3e20"/>`;
+    s+=`<circle cx="${x+24}" cy="${y+42}" r="9" fill="#5c2a18" stroke="#2a1208" stroke-width="2"/>`;
+}
+if(isCas && k=="U") {
+    s+=`<g transform="translate(${x-10} ${y-10}) scale(0.40)">
+        <ellipse cx="100" cy="128" rx="55" ry="44" fill="#1a1a1a"/>
+        <path d="M40 110 Q100 160 160 110 L170 170 L30 170 Z" fill="#111"/>
+        <polygon points="80,110 120,110 100,140" fill="#fff"/>
+        <polygon points="90,115 110,115 100,155" fill="#c33"/>
+        <circle cx="100" cy="80" r="38" fill="#5a3818"/>
+        <circle cx="72" cy="50" r="14" fill="#3a200a"/><circle cx="128" cy="50" r="14" fill="#3a200a"/>
+        <ellipse cx="100" cy="94" rx="19" ry="15" fill="#d9b48a"/>
+        <ellipse cx="100" cy="87" rx="8" ry="5.5" fill="#2a1a10"/>
+        <circle cx="87" cy="77" r="4.5" fill="#2a1a10"/><circle cx="113" cy="77" r="4.5" fill="#2a1a10"/>
+        </g>`;
+    s+=`<rect x="${x}" y="${y+10}" width="48" height="28" fill="#3a1e12"/><rect x="${x}" y="${y+10}" width="48" height="8" fill="#7a3e20"/>`;
+    s+=`<circle cx="${x+24}" cy="${y+42}" r="9" fill="#5c2a18" stroke="#2a1208" stroke-width="2"/>`+e(x+15,y+20,"🛎",18)+lab(x,y-8,"Бар");
+}
+if(isCas && ["c","D","A","O","1","2","3","4"].includes(k)) s+=`<rect x="${x+4}" y="${y+4}" width="40" height="40" rx="4" fill="#732b35" stroke="#e6c637" stroke-width="2"/>`;
+if(isCas && ["D","A","O","1","2","3","4"].includes(k)) {
+    s+=`<rect x="${x+8}" y="${y+8}" width="32" height="20" rx="4" fill="#1a1a1a"/><circle cx="${x+12}" cy="${y+36}" r="3" fill="#e74c3c"/><circle cx="${x+20}" cy="${y+36}" r="3" fill="#3498db"/>`;
+}
+if(isCas && k=="D") s+= e(x+12,y+22,"🎡",24)+lab(x,y-8,"Колесо");
+if(isCas && k=="A") s+= e(x+12,y+22,"🎯",24)+lab(x,y-8,"Дартс");
+if(isCas && k=="O") s+= e(x+12,y+22,"🎩",24)+lab(x,y-8,"Игра");
+if(isCas && k=="1") s+= e(x+12,y+22,"🃏",24)+lab(x,y-8,"Карты");
+if(isCas && k=="2") s+= e(x+12,y+22,"🎰",24)+lab(x,y-8,"Слоты");
+if(isCas && k=="3") s+= e(x+12,y+22,"🪙",24)+lab(x,y-8,"Монетка");
+if(isCas && k=="4") s+= e(x+12,y+22,"🐹",24)+lab(x,y-8,"Крот");
+if(isCas && k=="X") s+= `<rect x="${x+8}" y="${y+4}" width="32" height="44" fill="#4a2617"/><rect x="${x+12}" y="${y+8}" width="24" height="16" fill="#2a1208"/>`+e(x+15,y+36,"🚪",18)+lab(x,y-8,"Выход");
+}
+const h=new Date().getHours(), nt=h>=22||h<5;
+const tint=isCas ? "transparent" : (nt?"rgba(12,24,70,.5)":(h<8||h>=19?"rgba(255,140,60,.2)":"transparent"));
+const rn=(!isCas && weather===1)?`<div class="rain"></div>`:"";
+const amb=(!isCas && nt)?Array.from({length:12},()=>`<i class="ff" style="left:${R(100)}%;top:${R(100)}%;animation-delay:${R(40)/10}s"></i>`).join(""):(!isCas && h>=8&&h<19)?Array.from({length:3},()=>`<i class="bf" style="top:${15+R(60)}%;animation-delay:-${R(12)}s">🦋</i>`).join(""):"";
 const twinEl=S.twin?`<div id="pl2"><svg viewBox="30 20 140 170">${bear(100,130,1,false,TWINOPT)}</svg></div>`:"";
 return `<div id="wv"><div id="wm"><svg width="${wid*TS}" height="${hei*TS}">${s+L}</svg><div id="pl"><svg viewBox="30 20 140 170">${bear(100,130,1)}</svg></div>${twinEl}</div>${amb}${rn}<div id="ov" style="background:${tint}"></div></div><div class="msg" id="dk">Тапни по карте — Степан пойдёт ✨</div>`},
 init(){const p=Array.isArray(S.pos)?S.pos:[3,3];W.pc=p[0];W.pr=p[1];
@@ -739,7 +977,19 @@ const pl=$("#pl");if(pl)pl.style.transform=`translate(${W.pc*TS-7}px,${W.pr*TS-3
 const p2=$("#pl2");if(p2)p2.style.transform=`translate(${W.tpc*TS-5}px,${W.tpr*TS-32}px)`;
 const wm=$("#wm");if(wm)wm.style.transform=`translate(${-cx}px,${-cy}px)`},
 say(t){const d=$("#dk");if(d)d.innerHTML=t},
-go(tc,tr){if(tc<0||tc>=wid||tr<0||tr>=hei||blk(at(tc,tr))){boop();hap('error');return W.say("Сюда нельзя 🌲");}if(tc==W.pc&&tr==W.pr)return W.act(at(tc,tr));hap();
+go(tc,tr){
+if(tc===0 && tr===0 && S.mapId !== 1) {
+    if(!S.items.secret) { boop(); return W.say("Это дерево кажется обычным... 🌲"); }
+    W.tClicks = (W.tClicks || 0) + 1;
+    if(W.tClicks >= 5) {
+        W.tClicks = 0; S.mapId = 1; S.pos = [6, 7]; W.pc=6; W.pr=7; W.tpc=6; W.tpr=7; save(); hap('heavy'); chng(); go("world");
+        return W.say("🤫 Вы вошли в секретный бар!");
+    }
+    hap('light'); boop(); return W.say(`Дерево странно шумит... (${W.tClicks}/5)`);
+} else { W.tClicks = 0; }
+
+if(tc<0||tc>=wid||tr<0||tr>=hei||blk(at(tc,tr))){boop();hap('error');return W.say(S.mapId===1 ? "Стена 🧱" : "Сюда нельзя 🌲");}
+if(tc==W.pc&&tr==W.pr)return W.act(at(tc,tr));hap();
 const id=(c,r)=>r*wid+c, start=id(W.pc,W.pr), target=id(tc,tr), open=[start], cameFrom={}, gScore={[start]:0}, fScore={[start]:Math.abs(W.pc-tc)+Math.abs(W.pr-tr)}; let curr;
 while(open.length>0){open.sort((a,b)=>fScore[a]-fScore[b]); curr=open.shift(); if(curr===target) break; const c=curr%wid, r=Math.floor(curr/wid);
 for(const [dc,dr] of [[1,0],[-1,0],[0,1],[0,-1]]){const nc=c+dc, nr=r+dr, n=id(nc,nr); if(nc<0||nc>=wid||nr<0||nr>=hei||blk(at(nc,nr))) continue;
@@ -752,7 +1002,18 @@ const n=path[i++],nc=n%wid,opc=W.pc,opr=W.pr;if(nc!=W.pc){W.fl=nc<W.pc?-1:1;[pl,
 W.pc=nc;W.pr=Math.floor(n/wid);W.tpc=opc;W.tpr=opr;W.put();S.pos=[W.pc,W.pr];
 if(S.twin&&Math.random()<0.05){earn(1);hud();W.say("🎀 Подружка нашла монетку! +1🪙")}
 if(at(W.pc,W.pr)=="g"&&Math.random()<.08){if(pl)pl.classList.remove("walk");if(p2)p2.classList.remove("walk");return W.enc()} setTimeout(st,240)};st()},
-act(k){const m={H:"home",K:"shop",Q:"quest",F:"fish"}[k];if(m)return go(m);if(k=="S")return newM3(); if(k=="R")return initRace(); if(k=="C")return initBubble();
+act(k){
+if(k=="X") { S.mapId=0; S.pos=[1,2]; W.pc=1; W.pr=2; W.tpc=1; W.tpr=2; save(); hap(); go("world"); return W.say("Вы вышли в лес."); }
+if(k=="U") return go("bar");
+if(k=="D") return go("casino");
+if(k=="A") return initDarts();
+if(k=="O") return initThimbles();
+if(k=="1") return initHiLo();
+if(k=="2") return initSlots();
+if(k=="3") return initCoinFlip();
+if(k=="4") return initCatch();
+
+const m={H:"home",K:"shop",Q:"quest",F:"fish"}[k];if(m)return go(m);if(k=="S")return newM3(); if(k=="R")return initRace(); if(k=="C")return initBubble();
 if(k=="b"){const i=W.pr*wid+W.pc,now=Date.now();if((W.bush[i]||0)>now){boop();return W.say("Куст пока пустой 🌿")}W.bush[i]=now+60000;
 const bn=S.items.clover?6:3;earn(bn); addXp(5); hap('success');chng();S.hunger=clamp(S.hunger+6);S.mood=clamp(S.mood+3);hud();W.say(`🫐 Ягоды! +${bn}🪙`)}
 },
