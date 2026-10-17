@@ -10,8 +10,10 @@
 *{box-sizing:border-box; user-select:none; -webkit-tap-highlight-color:transparent;}
 html,body{margin:0;padding:0;overflow:hidden;background:var(--bg);color:var(--ink);font:15px/1.35 system-ui,-apple-system,sans-serif;}
 #app{width:100%;max-width:440px;margin:0 auto;padding:8px;display:flex;flex-direction:column;height:100vh;}
-.top{display:flex;justify-content:space-between;align-items:center;font-weight:800;padding:7px 11px;background:var(--card);border-radius:14px;box-shadow:0 2px 8px #0001;margin-bottom:6px;border:1px solid var(--stroke)}
-.badge{display:inline-flex;align-items:center;gap:4px;background:var(--ib);padding:3px 8px;border-radius:20px;font-size:13px}
+.top{display:flex;justify-content:space-between;align-items:center;font-weight:800;padding:7px 11px;background:var(--card);border-radius:14px;box-shadow:0 2px 8px #0001;margin-bottom:6px;border:1px solid var(--stroke);gap:4px}
+.badge{display:inline-flex;align-items:center;gap:4px;background:var(--ib);padding:3px 7px;border-radius:20px;font-size:12px}
+.cpu-badge{cursor:pointer;border:1px solid var(--stroke);transition:transform .1s}
+.cpu-badge:active{transform:scale(0.93)}
 .bars{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin:0 0 6px}
 .bar{background:var(--card);border-radius:13px;padding:6px 8px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 6px #0001;border:1px solid var(--stroke)}
 .ic-box{width:32px;height:32px;border-radius:9px;background:var(--ib);display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:4px}
@@ -80,6 +82,163 @@ const tg=(window.Telegram&&window.Telegram.WebApp)||{expand(){},ready(){},BackBu
 try{tg.expand();tg.ready();tg.BackButton.onClick(()=>go("world"));}catch(e){}
 
 const GOOGLE_SHEETS_URL = "";
+
+// ===== МНОГОПОТОЧНЫЙ ПУЛ ЯДЕР (WEB WORKER POOL) =====
+const CPU = (() => {
+    const cores = Math.max(2, Math.min(16, navigator.hardwareConcurrency || 4));
+    const workers = [];
+    const load = new Array(cores).fill(0);
+    const done = new Array(cores).fill(0);
+    const cbs = new Map();
+    let seq = 1, rr = 0, totalDone = 0;
+
+    const workerCode = `
+    const R = n => Math.random()*n|0;
+    function findM3(G){
+        const m=new Set();
+        for(let r=0;r<6;r++)for(let c=0;c<6;c++){
+            const i=r*6+c,v=G[i];if(v<0)continue;
+            if(c<4&&G[i+1]==v&&G[i+2]==v){m.add(i);m.add(i+1);m.add(i+2);}
+            if(r<4&&G[i+6]==v&&G[i+12]==v){m.add(i);m.add(i+6);m.add(i+12);}
+        }
+        return m;
+    }
+    function canMoveM3(G){
+        for(let i=0;i<36;i++)for(const j of[i+1,i+6]){
+            if(j>35||(j==i+1&&j%6==0))continue;
+            const t=G[i];G[i]=G[j];G[j]=t;
+            const ok=findM3(G).size>0;
+            G[j]=G[i];G[i]=t;
+            if(ok)return true;
+        }
+        return false;
+    }
+    self.onmessage = function(e){
+        const {id, cmd, p} = e.data;
+        let res = null;
+        if(cmd === 'path'){
+            const {grid, wid, hei, sc, sr, tc, tr, blkSet} = p;
+            const idx = (c,r)=>r*wid+c, start=idx(sc,sr), target=idx(tc,tr);
+            const open=[start], cameFrom={}, gScore={[start]:0}, fScore={[start]:Math.abs(sc-tc)+Math.abs(sr-tr)};
+            let curr = -1;
+            while(open.length>0){
+                open.sort((a,b)=>fScore[a]-fScore[b]);
+                curr=open.shift();
+                if(curr===target)break;
+                const c=curr%wid, r=(curr/wid)|0;
+                for(const [dc,dr] of [[1,0],[-1,0],[0,1],[0,-1]]){
+                    const nc=c+dc, nr=r+dr, n=idx(nc,nr);
+                    if(nc<0||nc>=wid||nr<0||nr>=hei)continue;
+                    const ch = (grid[nr]&&grid[nr][nc])||'T';
+                    if(blkSet.includes(ch))continue;
+                    const tg2=gScore[curr]+1;
+                    if(tg2 < (gScore[n]??1e9)){
+                        cameFrom[n]=curr; gScore[n]=tg2; fScore[n]=tg2+Math.abs(nc-tc)+Math.abs(nr-tr);
+                        if(!open.includes(n))open.push(n);
+                    }
+                }
+            }
+            if(curr===target){
+                const path=[];
+                while(cameFrom[curr]!==undefined){path.unshift(curr);curr=cameFrom[curr];}
+                res = path;
+            }
+        } else if(cmd === 'm3gen'){
+            let G, tries=0;
+            do{ G=Array.from({length:36},()=>R(6)); }while((findM3(G).size||!canMoveM3(G))&&++tries<300);
+            res = G;
+        } else if(cmd === 'track'){
+            const {diff, Wpx, Hpx, CX, CY} = p;
+            const NCP=[8,10,12][diff], ctrl=[], ph=[R(628)/100,R(628)/100,R(628)/100],
+                  amp1=[.10,.20,.30][diff], amp2=[.06,.13,.20][diff];
+            for(let i=0;i<NCP;i++){
+                const t=i/NCP*Math.PI*2;
+                const rx=118*(1+Math.sin(t*3+ph[0])*amp1+Math.sin(t*5+ph[1])*amp2*.6)+R(16)-8,
+                      ry=135*(1+Math.cos(t*2+ph[2])*amp1+Math.sin(t*4+ph[0])*amp2*.6)+R(16)-8;
+                ctrl.push([CX+Math.cos(t)*rx, CY+Math.sin(t)*ry]);
+            }
+            const pts=[];
+            for(let i=0;i<NCP;i++){
+                const p0=ctrl[(i-1+NCP)%NCP],p1=ctrl[i],p2=ctrl[(i+1)%NCP],p3=ctrl[(i+2)%NCP];
+                for(let t=0;t<1;t+=0.05){
+                    const t2=t*t,t3=t2*t;
+                    pts.push([
+                        .5*(2*p1[0]+(-p0[0]+p2[0])*t+(2*p0[0]-5*p1[0]+4*p2[0]-p3[0])*t2+(-p0[0]+3*p1[0]-3*p2[0]+p3[0])*t3),
+                        .5*(2*p1[1]+(-p0[1]+p2[1])*t+(2*p0[1]-5*p1[1]+4*p2[1]-p3[1])*t2+(-p0[1]+3*p1[1]-3*p2[1]+p3[1])*t3)
+                    ]);
+                }
+            }
+            const NP=pts.length, dist=[0]; let TL=0;
+            for(let i=1;i<=NP;i++){
+                const a=pts[i-1], b=pts[i%NP];
+                TL+=Math.hypot(b[0]-a[0], b[1]-a[1]);
+                dist[i]=TL;
+            }
+            res = {pts, dist, TL};
+        } else if(cmd === 'tick'){
+            const {dt, sick, doll, radio, twin, hunger, mood, energy, sleeping, coffee, hive, hiveA} = p;
+            const clamp = v => Math.max(1, Math.min(100, v));
+            const mult = sick ? 2.5 : 1;
+            const moodMult = mult*(doll?0.7:1)*(radio?0.8:1)*(twin?0.85:1);
+            let nh = clamp(hunger - dt*0.5*mult);
+            let nm = clamp(mood - dt*0.3*moodMult);
+            let ne = sleeping ? clamp(energy + dt*180) : clamp(energy - dt*0.3*mult);
+            if(coffee) ne = clamp(ne + dt*12);
+            let ha = (hiveA||0) + (hive ? dt : 0), hCoins = 0;
+            while(ha >= 1){ ha -= 1; hCoins += 2; }
+            res = {nh, nm, ne, ha, hCoins};
+        }
+        self.postMessage({id, res});
+    };`;
+
+    try {
+        const url = URL.createObjectURL(new Blob([workerCode], {type: 'application/javascript'}));
+        for(let i=0;i<cores;i++){
+            const w = new Worker(url);
+            w.onmessage = e => {
+                const {id, res} = e.data;
+                load[i] = Math.max(0, load[i]-1);
+                done[i]++; totalDone++;
+                const cb = cbs.get(id);
+                if(cb){ cbs.delete(id); cb(res, i); }
+            };
+            w.onerror = () => { load[i] = Math.max(0, load[i]-1); };
+            workers.push(w);
+        }
+    } catch(e){}
+
+    function pickCore(){
+        let best = rr % cores, minL = load[best];
+        for(let k=1;k<cores;k++){
+            const idx = (rr + k) % cores;
+            if(load[idx] < minL){ best = idx; minL = load[idx]; }
+        }
+        rr = (best + 1) % cores;
+        return best;
+    }
+
+    function run(cmd, p, fallbackFn){
+        if(!workers.length) return Promise.resolve(fallbackFn());
+        return new Promise(resolve => {
+            const id = seq++;
+            const cIdx = pickCore();
+            load[cIdx]++;
+            const tmr = setTimeout(() => {
+                if(cbs.has(id)){ cbs.delete(id); load[cIdx]=Math.max(0,load[cIdx]-1); resolve(fallbackFn()); }
+            }, 600);
+            cbs.set(id, (res) => { clearTimeout(tmr); resolve(res ?? fallbackFn()); });
+            workers[cIdx].postMessage({id, cmd, p});
+        });
+    }
+
+    return { cores, done, load, get total(){return totalDone;}, run };
+})();
+
+function showCpuStats(){
+    hap('light');
+    const perCore = CPU.done.map((n,i)=>`Ядро #${i+1}: ${n} зад.`).join(" · ");
+    toast(`⚙️ Многопоточный движок (${CPU.cores} потоков)\nВыполнено задач на ядрах: ${CPU.total}\n${perCore}`);
+}
 
 let actx;
 const snd=(t,f,d)=>{try{if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)();if(actx.state==='suspended')actx.resume();const o=actx.createOscillator(),g=actx.createGain();o.type=t;o.frequency.setValueAtTime(f,actx.currentTime);if(t=='sine')o.frequency.exponentialRampToValueAtTime(f*1.5,actx.currentTime+d);g.gain.setValueAtTime(0.08,actx.currentTime);g.gain.exponentialRampToValueAtTime(0.01,actx.currentTime+d);o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+d)}catch(e){}};
@@ -160,11 +319,23 @@ function addXp(amt){
 let weather=R(2), lastTick=Date.now();
 setInterval(()=>{
     let now=Date.now(), dt=(now-lastTick)/60000; lastTick=now;
-    decay(dt); 
-    if(now<S.sleepUntil) S.energy=clamp(S.energy+dt*180);
-    if(S.items.coffee) S.energy=clamp(S.energy+dt*12);
-    if(S.items.hive){S.hiveA=(S.hiveA||0)+dt; while(S.hiveA>=1){S.hiveA-=1; earn(2,false)}}
-    S.t=now; wake(false); save(); hud();
+    CPU.run('tick', {
+        dt, sick:!!S.sick, doll:!!S.items.doll, radio:!!S.items.radio, twin:!!S.twin,
+        hunger:S.hunger, mood:S.mood, energy:S.energy,
+        sleeping:now<S.sleepUntil, coffee:!!S.items.coffee, hive:!!S.items.hive, hiveA:S.hiveA||0
+    }, () => {
+        decay(dt);
+        if(now<S.sleepUntil) S.energy=clamp(S.energy+dt*180);
+        if(S.items.coffee) S.energy=clamp(S.energy+dt*12);
+        let hCoins = 0, ha = (S.hiveA||0) + (S.items.hive ? dt : 0);
+        while(ha>=1){ ha-=1; hCoins+=2; }
+        return {nh:S.hunger, nm:S.mood, ne:S.energy, ha, hCoins};
+    }).then(r => {
+        S.hunger=r.nh; S.mood=r.nm; S.energy=r.ne; S.hiveA=r.ha;
+        if(r.hCoins>0) earn(r.hCoins, false);
+        if(!S.sick && S.hunger < 30 && Math.random() < 0.05) { S.sick = true; toast("Степан заболел 🤒\nКупите витамины в берлоге!"); }
+        S.t=now; wake(false); save(); hud();
+    });
 }, 10000);
 
 let tab="world",msg="";
@@ -192,6 +363,7 @@ const HATSV=[``,`<path d="M68 62Q100 20 132 62Q100 52 68 62Z" fill="#c33"/><circ
 `<path d="M65 50 L75 12 L88 40 L100 4 L112 40 L125 12 L135 50 Z" fill="#ffd700" stroke="#b8860b" stroke-width="2"/><circle cx="100" cy="24" r="5" fill="#e74c3c"/><circle cx="82" cy="32" r="3.5" fill="#3498db"/><circle cx="118" cy="32" r="3.5" fill="#2ecc71"/>`,
 `<rect x="68" y="70" width="26" height="12" fill="#000"/><rect x="106" y="70" width="26" height="12" fill="#000"/><rect x="94" y="72" width="12" height="4" fill="#000"/><rect x="74" y="72" width="6" height="4" fill="#fff" opacity="0.7"/><rect x="112" y="72" width="6" height="4" fill="#fff" opacity="0.7"/>`];
 
+// ===== ТОЧНОЕ ЦЕНТРИРОВАНИЕ МЕДВЕДЯ ПРИ ЛЮБОМ МАСШТАБЕ SC =====
 function bear(x=100,y=130,sc=1,fish=false,opt={}){
 const body=opt.body||(S.sick?'#668a62':'#7a4e26'), belly=opt.belly||(S.sick?'#7c9c73':'#93633a'), head=opt.head||(S.sick?'#7c9c73':'#8a5a2e');
 const hIdx=opt.hat!==undefined?opt.hat:S.hat;
@@ -199,7 +371,8 @@ const sl=Date.now()<S.sleepUntil && !opt.noSleep, eye=sl?`<path d="M82 78q5 5 10
 const hat=HATSV[hIdx]||"";
 const bow=opt.bow?`<path d="M128 34l-13-9v18zM128 34l13-9v18z" fill="#e85a8a"/><circle cx="128" cy="34" r="4.5" fill="#c23a6a"/>`:"";
 const rodSvg=fish?(S.items.rod?`<path d="M145 135 L205 30" stroke="#3498db" stroke-width="4" stroke-linecap="round"/><path d="M150 120 L165 110" stroke="#bdc3c7" stroke-width="2"/><circle cx="165" cy="110" r="7" fill="#ecf0f1" stroke="#2c3e50" stroke-width="2"/><circle cx="165" cy="110" r="2" fill="#e74c3c"/>`:`<path d="M145 135 L200 40" stroke="#6b4a22" stroke-width="3" stroke-linecap="round"/>`):"";
-return `<g transform="translate(${x-100} ${y-130}) scale(${sc})"><g class="bear">${opt.noShadow?'':`<ellipse cx="100" cy="168" rx="62" ry="14" fill="#0003"/>`}<ellipse cx="58" cy="160" rx="17" ry="12" fill="#5a3818"/><ellipse cx="142" cy="160" rx="17" ry="12" fill="#5a3818"/><ellipse cx="100" cy="128" rx="55" ry="44" fill="${body}"/><ellipse cx="100" cy="136" rx="34" ry="30" fill="${belly}"/><ellipse cx="52" cy="128" rx="14" ry="26" fill="#6a421f" transform="rotate(18 52 128)"/><ellipse cx="148" cy="128" rx="14" ry="26" fill="#6a421f" transform="rotate(-18 148 128)"/>${hIdx==2?hat:""}<circle cx="72" cy="50" r="14" fill="#6a421f"/><circle cx="128" cy="50" r="14" fill="#6a421f"/><circle cx="72" cy="50" r="7" fill="#c98e62"/><circle cx="128" cy="50" r="7" fill="#c98e62"/><circle cx="100" cy="80" r="38" fill="${head}"/><ellipse cx="100" cy="94" rx="19" ry="15" fill="#d9b48a"/><ellipse cx="100" cy="87" rx="8" ry="5.5" fill="#2a1a10"/><circle cx="77" cy="93" r="6" fill="#e88" opacity=".35"/><circle cx="123" cy="93" r="6" fill="#e88" opacity=".35"/><path d="M100 92v6M93 100q7 5 14 0" stroke="#2a1a10" stroke-width="2.5" fill="none"/>${eye}${hIdx!=2?hat:""}${bow}${rodSvg}</g></g>`}
+const Legs = opt.hideLegs ? "" : `<ellipse cx="58" cy="160" rx="17" ry="12" fill="#5a3818"/><ellipse cx="142" cy="160" rx="17" ry="12" fill="#5a3818"/>`;
+return `<g transform="translate(${x-100*sc} ${y-130*sc}) scale(${sc})"><g class="bear">${opt.noShadow?'':`<ellipse cx="100" cy="168" rx="62" ry="14" fill="#0003"/>`}${Legs}<ellipse cx="100" cy="128" rx="55" ry="44" fill="${body}"/><ellipse cx="100" cy="136" rx="34" ry="30" fill="${belly}"/><ellipse cx="52" cy="128" rx="14" ry="26" fill="#6a421f" transform="rotate(18 52 128)"/><ellipse cx="148" cy="128" rx="14" ry="26" fill="#6a421f" transform="rotate(-18 148 128)"/>${hIdx==2?hat:""}<circle cx="72" cy="50" r="14" fill="#6a421f"/><circle cx="128" cy="50" r="14" fill="#6a421f"/><circle cx="72" cy="50" r="7" fill="#c98e62"/><circle cx="128" cy="50" r="7" fill="#c98e62"/><circle cx="100" cy="80" r="38" fill="${head}"/><ellipse cx="100" cy="94" rx="19" ry="15" fill="#d9b48a"/><ellipse cx="100" cy="87" rx="8" ry="5.5" fill="#2a1a10"/><circle cx="77" cy="93" r="6" fill="#e88" opacity=".35"/><circle cx="123" cy="93" r="6" fill="#e88" opacity=".35"/><path d="M100 92v6M93 100q7 5 14 0" stroke="#2a1a10" stroke-width="2.5" fill="none"/>${eye}${hIdx!=2?hat:""}${bow}${rodSvg}</g></g>`}
 const TWINOPT={body:'#9a6a3a',belly:'#c89a6a',head:'#a97a45',hat:0,bow:true};
 
 function scene(inner,h=300){const w=S.house, dens=[``,`<path d="M20 140 C20 70 120 70 120 140 Z" fill="#4a3a30"/><path d="M50 140 C50 90 90 90 90 140 Z" fill="#1a120c"/>`,`<rect x="14" y="90" width="104" height="50" fill="#8a5a38"/><rect x="10" y="85" width="112" height="10" fill="#6a4a28"/><rect x="54" y="105" width="24" height="35" rx="2" fill="#3a2410"/>`,`<polygon points="10,90 66,40 122,90" fill="#a33"/><rect x="18" y="90" width="96" height="50" fill="#c9955e"/><rect x="52" y="110" width="28" height="30" rx="3" fill="#3a2410"/><circle cx="34" cy="110" r="8" fill="#ffd34d"/><circle cx="98" cy="110" r="8" fill="#ffd34d"/>`,`<polygon points="5,80 66,20 127,80" fill="#803333"/><rect x="15" y="80" width="102" height="60" fill="#e6d5b8"/><rect x="50" y="100" width="32" height="40" rx="4" fill="#5a3a20"/><circle cx="30" cy="100" r="10" fill="#ffe270"/><circle cx="102" cy="100" r="10" fill="#ffe270"/><circle cx="48" cy="90" r="3" fill="#ff9"/><circle cx="84" cy="90" r="3" fill="#ff9"/>`];
@@ -227,10 +400,24 @@ function int_scene(inner, h=300) {
     else if (w === 2) { bg = ASSETS.bg2; rug = ASSETS.rugGreen; bed = twinBed + ASSETS.bedBlue; } 
     else if (w === 3) { bg = ASSETS.bg3; rug = ASSETS.rugGreen; dec = ASSETS.shelf; bed = twinBed + ASSETS.bedBlue; } 
     else { bg = ASSETS.bg3; rug = ASSETS.rugStar; dec = ASSETS.shelf + ASSETS.dresser; bed = twinBed + ASSETS.bedBlue; }
-    if(S.items.radio && w>=2) extras += `<text x="152" y="158" font-size="22">📻</text>`;
-    if(S.items.coffee && w>=2) extras += `<text x="185" y="158" font-size="22">☕</text>`;
-    if(S.items.doll) extras += `<text x="115" y="255" font-size="24">🧸</text>`;
-    return `<svg viewBox="0 0 360 ${h}">${bg}${rug}${dec}${bed}${extras}${inner}</svg>`;
+
+    // Аккуратное размещение купленных предметов на полке или комоде (не висят в воздухе!)
+    if(w === 4){
+        if(S.items.radio) extras += `<text x="163" y="164" font-size="20" text-anchor="middle">📻</text>`;
+        if(S.items.coffee) extras += `<text x="197" y="164" font-size="20" text-anchor="middle">☕</text>`;
+    } else if(w === 3){
+        if(S.items.radio) extras += `<text x="64" y="96" font-size="20" text-anchor="middle">📻</text>`;
+        if(S.items.coffee) extras += `<text x="98" y="96" font-size="20" text-anchor="middle">☕</text>`;
+    } else if(w === 2 && (S.items.radio || S.items.coffee)){
+        extras += `<rect x="152" y="182" width="56" height="32" rx="4" fill="#8c5830" stroke="#4d2c14" stroke-width="1.5"/>`;
+        if(S.items.radio) extras += `<text x="166" y="180" font-size="19" text-anchor="middle">📻</text>`;
+        if(S.items.coffee) extras += `<text x="194" y="180" font-size="19" text-anchor="middle">☕</text>`;
+    }
+    if(S.items.doll) extras += `<text x="92" y="268" font-size="23" text-anchor="middle">🧸</text>`;
+    return `<svg viewBox="0 0 360 ${h}">
+        <defs><clipPath id="bedClip"><rect x="0" y="0" width="360" height="242"/></clipPath></defs>
+        ${bg}${rug}${dec}${bed}${extras}${inner}
+    </svg>`;
 }
 
 function hud(){
@@ -239,7 +426,7 @@ function hud(){
         const pct = Math.max(0, Math.min(100, Math.round(v)));
         return `<div class="bar ${c}"><div class="ic-box"><img src="${ic}" class="stat-ic" alt=""></div><div class="bar-info"><div class="bar-head"><span>${n}</span><span>${pct}%</span></div><i><b style="width:${pct}%"></b></i></div></div>`;
     };
-    el.innerHTML=`<div class="top"><span>🐻 Ур.${S.lvl} <small style="font-weight:600;opacity:.75">${getTitle()}</small> ${S.sick?'🤒':''}</span><span><span class="badge">🪙 ${S.coins}</span> <span class="badge">💎 ${S.crys}</span> <span class="badge">🐟 ${S.fish}</span></span></div><div class="bars">${
+    el.innerHTML=`<div class="top"><span>🐻 Ур.${S.lvl} <small style="font-weight:600;opacity:.75">${getTitle()}</small> ${S.sick?'🤒':''}</span><span><span class="badge cpu-badge" onclick="showCpuStats()" title="Нагрузка по ядрам">⚙️ ${CPU.cores} яд.</span> <span class="badge">🪙 ${S.coins}</span> <span class="badge">💎 ${S.crys}</span> <span class="badge">🐟 ${S.fish}</span></span></div><div class="bars">${
         b("Опыт",S.xp/(S.lvl*50)*100,"Frame 34.svg","xp-bar")+
         b("Сытость",S.hunger,"Frame 33.svg","ok-bar")+
         b("Радость",S.mood,"Frame 36.svg")+
@@ -256,28 +443,46 @@ function earn(n, anim=true){
 function saveAndClose(){save(); hap('heavy'); try{tg.sendData(JSON.stringify({action:"exit",state:S}))}catch(e){try{tg.close()}catch(_){}}}
 
 const V={world(){return W.html()},
-home(){const sl=Date.now()<S.sleepUntil;
+home(){
+const sl=Date.now()<S.sleepUntil;
 const w=S.house||1;
-let bx1=180,by1=220,bs1=1.1,bx2=125,by2=232,bs2=0.78;
-let zzz="", covers="";
-if(sl){
-    if(w>1){
-        bx1=295; by1=182; bs1=0.68;
-        covers += `<rect x="250" y="175" width="90" height="68" rx="14" fill="#738ce6" stroke="#5b73c9" stroke-width="2"/>`;
+let bearsSvg = "";
+if(!sl){
+    // Бодрствуют: стоят ровно по центру ковра, лапы на одной линии пола (~260px)
+    if(!S.twin){
+        bearsSvg = bear(180, 232, 0.94, false, {});
+    } else {
+        bearsSvg = bear(148, 233, 0.90, false, {}) + bear(214, 236, 0.80, false, TWINOPT);
+    }
+} else {
+    // Спят: уложены ровно головой на подушки кроватей и укрыты одеялами с отворотом простыни
+    if(w > 1){
+        const b1 = bear(295, 198, 0.72, false, {noShadow:true, hideLegs:true});
+        const b2 = S.twin ? bear(65, 200, 0.66, false, {...TWINOPT, noShadow:true, hideLegs:true}) : "";
+        let covers = `<rect x="251" y="182" width="88" height="66" rx="12" fill="#738ce6" stroke="#5b73c9" stroke-width="2"/>
+                      <rect x="251" y="182" width="88" height="12" rx="4" fill="#eef3ff" stroke="#5b73c9" stroke-width="1.5"/>`;
+        let zzz = `<text x="295" y="114" font-size="22" text-anchor="middle">💤</text>`;
         if(S.twin){
-            bx2=65; by2=182; bs2=0.62;
-            covers += `<rect x="20" y="175" width="90" height="68" rx="14" fill="#fa8fb1" stroke="#e07094" stroke-width="2"/>`;
-            zzz=`<text x="295" y="118" font-size="24">💤</text><text x="65" y="118" font-size="24">💤</text>`;
-        } else {
-            zzz=`<text x="295" y="118" font-size="24">💤</text>`;
+            covers += `<rect x="21" y="184" width="88" height="64" rx="12" fill="#fa8fb1" stroke="#e07094" stroke-width="2"/>
+                       <rect x="21" y="184" width="88" height="12" rx="4" fill="#fff0f5" stroke="#e07094" stroke-width="1.5"/>`;
+            zzz += `<text x="65" y="116" font-size="22" text-anchor="middle">💤</text>`;
         }
-    }else{
-        bx1=170; by1=240; bs1=1.05;
-        if(S.twin){ bx2=255; by2=248; bs2=0.75; zzz=`<text x="170" y="175" font-size="24">💤</text><text x="255" y="190" font-size="22">💤</text>`; }
-        else { zzz=`<text x="170" y="175" font-size="24">💤</text>`; }
+        bearsSvg = `<g clip-path="url(#bedClip)">${b1}${b2}</g>${covers}${zzz}`;
+    } else {
+        // В халупе 1-го уровня (без кроватей) спят в центре под тёплым пледом
+        if(!S.twin){
+            bearsSvg = bear(180, 235, 0.90, false, {hideLegs:true}) +
+                       `<rect x="132" y="218" width="96" height="48" rx="14" fill="#c0783a" stroke="#7d4618" stroke-width="2"/>
+                        <text x="180" y="160" font-size="24" text-anchor="middle">💤</text>`;
+        } else {
+            bearsSvg = bear(148, 235, 0.86, false, {hideLegs:true}) +
+                       bear(212, 238, 0.78, false, {...TWINOPT, hideLegs:true}) +
+                       `<rect x="105" y="220" width="150" height="48" rx="16" fill="#c0783a" stroke="#7d4618" stroke-width="2"/>
+                        <text x="148" y="162" font-size="22" text-anchor="middle">💤</text>
+                        <text x="212" y="168" font-size="20" text-anchor="middle">💤</text>`;
+        }
     }
 }
-const bearsSvg = bear(bx1,by1,bs1,false,{noShadow:sl&&w>1}) + (S.twin?bear(bx2,by2,bs2,false,{...TWINOPT,noShadow:sl&&w>1}):"") + covers + zzz;
 return `${int_scene(bearsSvg,300)}
 <div class="msg">${sl ? (S.twin ? "Они сладко спят…" : "Степан спит…") : (msg || `🏠 ${HOUSES[w]}`)}</div>
 ${sl ? `<div class="card"><button class="b exit-btn" style="background:linear-gradient(180deg,#5a9a4a,#447a37)" onclick="wake(true)">🔔 Разбудить</button></div>` :
@@ -293,8 +498,8 @@ ${sl ? `<div class="card"><button class="b exit-btn" style="background:linear-gr
 <div class="card"><div style="display:flex; gap:6px;"><button class="b exit-btn" onclick="go('world')">🌲 В лес</button><button class="b exit-btn" style="background:linear-gradient(180deg,#4a3525,#2a1a10);" onclick="saveAndClose()">🚪 Сохранить и выйти</button></div></div>`}`},
 
 fish(){
-const tipX=S.items.rod?154:150; const tipY=S.items.rod?124:132;
-return `${scene(bear(90,230,.8,true)+`<g id="bob" style="animation:${fs=="bite"?"bob .3s infinite":"none"}"><path d="M${tipX} ${tipY}L${fs=="idle"?190:240} ${fs=="idle"?100:200}" stroke="#fff9" stroke-width="1.5" fill="none"/><circle cx="${fs=="idle"?190:240}" cy="${fs=="idle"?100:215}" r="7" fill="${fs=="bite"?"#f33":"#fff"}" stroke="#c33" stroke-width="2"/></g>`,300)}
+const tipX=S.items.rod?174:170; const tipY=S.items.rod?150:158;
+return `${scene(bear(90,230,.8,true)+`<g id="bob" style="animation:${fs=="bite"?"bob .3s infinite":"none"}"><path d="M${tipX} ${tipY}L${fs=="idle"?205:245} ${fs=="idle"?115:205}" stroke="#fff9" stroke-width="1.5" fill="none"/><circle cx="${fs=="idle"?205:245}" cy="${fs=="idle"?115:215}" r="7" fill="${fs=="bite"?"#f33":"#fff"}" stroke="#c33" stroke-width="2"/></g>`,300)}
 <div class="msg">${msg||"Нажми «Забросить» и жди клёва!"}</div><div class="card"><button class="b" style="width:100%;margin-bottom:8px;font-size:16px;padding:12px" onclick="cast()">${fs=="idle"?"🎣 Забросить удочку":fs=="wait"?"🌊 Ждём поклёвку…":"❗ ПОДСЕКАЙ СКОРЕЕ!"}</button><button class="b exit-btn" onclick="go('world')">🌲 Вернуться в лес</button></div>`},
 
 m3(){return `<div class="card"><div class="top" id="m3top" style="margin-bottom:8px"><span>Ходы: ${mv}</span><span>Собрано: ${cl}🪙</span></div><div class="grid" id="g"></div><div class="msg">${mv<=0?"Игра окончена! Заработано: "+cl+"🪙":"Меняй местами соседние фишки"}</div>${mv<=0?`<button class="b" style="width:100%;margin-bottom:8px" onclick="newM3()">🔁 Сыграть ещё раз</button>`:""}<button class="b exit-btn" onclick="go('world')">🌲 В лес</button></div>`},
@@ -461,7 +666,6 @@ bubble(){return `<div class="card" style="padding:4px"><canvas id="bcanvas"></ca
 
 let fs="idle",ft,mid=0,mv=15,cl=0,sel=null,G=[],busy=false;
 
-// ===== 10 РАЗНООБРАЗНЫХ ЕЖЕДНЕВНЫХ ЗАДАНИЙ =====
 const Q=[
     {t:"🐟 Поймать 3 рыбы в озере",n:3,r:15,v:()=>S.fishCaught-(S.qb?.f||0)},
     {t:"🧩 Собрать 40 фишек в «3 в ряд»",n:40,r:20,v:()=>S.tiles-(S.qb?.t||0)},
@@ -475,7 +679,6 @@ const Q=[
     {t:"💰 Заработать 120 монет за день",n:120,r:30,v:()=>S.total-(S.qb?.o||0)}
 ];
 
-// ===== ДОЛГОСРОЧНЫЕ ЛЕСНЫЕ ДОСТИЖЕНИЯ (ЗА КРИСТАЛЛЫ) =====
 const ACH=[
     {t:"🏡 Мастер-строитель",d:"Улучшить берлогу до 4 уровня (Усадьба)",n:4,crys:15,coins:100,v:()=>S.house},
     {t:"🎩 Лесной модник",d:"Собрать в гардеробе 5 головных уборов",n:5,crys:10,coins:50,v:()=>S.owned.length},
@@ -931,11 +1134,17 @@ function cast(){
     }
 }
 
-// ===== ТРИ В РЯД =====
+// ===== ТРИ В РЯД (ГЕНЕРАЦИЯ ПОЛЯ НА WEB WORKER) =====
 const E=["🐻","🐟","🍯","🌲","🍄","🫐"];
-function newM3(){if(!checkState())return; mid++;busy=false;mv=15;cl=0;sel=null;hap();
-    let tries=0; do{G=Array.from({length:36},()=>R(6))}while((find().size||!canMove())&&++tries<300);
-    go("m3")}
+function newM3(){
+    if(!checkState())return;
+    mid++; busy=false; mv=15; cl=0; sel=null; hap();
+    CPU.run('m3gen', {}, () => {
+        let tries=0, b;
+        do{ b=Array.from({length:36},()=>R(6)); G=b; }while((find().size||!canMove())&&++tries<300);
+        return b;
+    }).then(board => { G = board; go("m3"); });
+}
 function canMove(){for(let i=0;i<36;i++)for(const j of[i+1,i+6]){if(j>35||(j==i+1&&j%6==0))continue;[G[i],G[j]]=[G[j],G[i]];const ok=find().size;[G[i],G[j]]=[G[j],G[i]];if(ok)return true}return false}
 function find(){const m=new Set;for(let r=0;r<6;r++)for(let c=0;c<6;c++){const i=r*6+c,v=G[i];if(v<0)continue;if(c<4&&G[i+1]==v&&G[i+2]==v)[i,i+1,i+2].forEach(x=>m.add(x));if(r<4&&G[i+6]==v&&G[i+12]==v)[i,i+6,i+12].forEach(x=>m.add(x))}return m}
 function draw(clear=new Set){if(!$("#g"))return;$("#g").innerHTML=G.map((v,i)=>`<button class="t ${i===sel?"s":""} ${clear.has(i)?"x":""}" onclick="pick(${i})">${v>=0?E[v]:""}</button>`).join("")}
@@ -956,7 +1165,7 @@ function setupCanvas(id, w, h){
     ctx.setTransform(dpr*cw/w,0,0,dpr*cw/w,0,0); ctx.textAlign='center'; ctx.textBaseline='middle'; return {c, ctx};
 }
 
-// ===== ГОНКИ =====
+// ===== ГОНКИ (РАСЧЁТ ТРАССЫ НА WEB WORKER) =====
 let raf_r, r_act=false, r_race=null, RKEYS={};
 addEventListener('keydown',e=>RKEYS[e.key]=true);
 addEventListener('keyup',e=>RKEYS[e.key]=false);
@@ -973,24 +1182,31 @@ function initRace(){
     if(rm)rm.innerHTML=`Выбери сложность заезда:<br>${RDIFF.map((d,i)=>`<button class="b" style="margin:4px" onclick="startRace(${i})">${d.n}<br><small>${d.laps} круга · до ${d.reward}🪙</small></button>`).join('')}`;
 }
 
-function startRace(diff){
+async function startRace(diff){
     const D=RDIFF[diff],Wpx=340,Hpx=500,CX=Wpx/2,CY=212;
     const sc=setupCanvas('#rcanvas',Wpx,Hpx);if(!sc)return;
     const{c,ctx}=sc;
     const rr=(x,y,w,h,r)=>{ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()};
-    const NCP=[8,10,12][diff],ctrl=[],ph=[R(628)/100,R(628)/100,R(628)/100],
-          amp1=[.10,.20,.30][diff],amp2=[.06,.13,.20][diff];
-    for(let i=0;i<NCP;i++){const t=i/NCP*Math.PI*2;
-        const rx=118*(1+Math.sin(t*3+ph[0])*amp1+Math.sin(t*5+ph[1])*amp2*.6)+R(16)-8,
-              ry=135*(1+Math.cos(t*2+ph[2])*amp1+Math.sin(t*4+ph[0])*amp2*.6)+R(16)-8;
-        ctrl.push([CX+Math.cos(t)*rx,CY+Math.sin(t)*ry])}
-    const pts=[];
-    for(let i=0;i<NCP;i++){const p0=ctrl[(i-1+NCP)%NCP],p1=ctrl[i],p2=ctrl[(i+1)%NCP],p3=ctrl[(i+2)%NCP];
-        for(let t=0;t<1;t+=0.05){const t2=t*t,t3=t2*t;
-        pts.push([.5*(2*p1[0]+(-p0[0]+p2[0])*t+(2*p0[0]-5*p1[0]+4*p2[0]-p3[0])*t2+(-p0[0]+3*p1[0]-3*p2[0]+p3[0])*t3),
-                  .5*(2*p1[1]+(-p0[1]+p2[1])*t+(2*p0[1]-5*p1[1]+4*p2[1]-p3[1])*t2+(-p0[1]+3*p1[1]-3*p2[1]+p3[1])*t3)])}}
-    const NP=pts.length,dist=[0];let TL=0;
-    for(let i=1;i<=NP;i++){const a=pts[i-1],b=pts[i%NP];TL+=Math.hypot(b[0]-a[0],b[1]-a[1]);dist[i]=TL}
+
+    // Генерация сплайнов трассы на свободном ядре CPU
+    const trk = await CPU.run('track', {diff, Wpx, Hpx, CX, CY}, () => {
+        const NCP=[8,10,12][diff],ctrl=[],ph=[R(628)/100,R(628)/100,R(628)/100],
+              amp1=[.10,.20,.30][diff],amp2=[.06,.13,.20][diff];
+        for(let i=0;i<NCP;i++){const t=i/NCP*Math.PI*2;
+            const rx=118*(1+Math.sin(t*3+ph[0])*amp1+Math.sin(t*5+ph[1])*amp2*.6)+R(16)-8,
+                  ry=135*(1+Math.cos(t*2+ph[2])*amp1+Math.sin(t*4+ph[0])*amp2*.6)+R(16)-8;
+            ctrl.push([CX+Math.cos(t)*rx,CY+Math.sin(t)*ry])}
+        const pts=[];
+        for(let i=0;i<NCP;i++){const p0=ctrl[(i-1+NCP)%NCP],p1=ctrl[i],p2=ctrl[(i+1)%NCP],p3=ctrl[(i+2)%NCP];
+            for(let t=0;t<1;t+=0.05){const t2=t*t,t3=t2*t;
+            pts.push([.5*(2*p1[0]+(-p0[0]+p2[0])*t+(2*p0[0]-5*p1[0]+4*p2[0]-p3[0])*t2+(-p0[0]+3*p1[0]-3*p2[0]+p3[0])*t3),
+                      .5*(2*p1[1]+(-p0[1]+p2[1])*t+(2*p0[1]-5*p1[1]+4*p2[1]-p3[1])*t2+(-p0[1]+3*p1[1]-3*p2[1]+p3[1])*t3)])}}
+        const NP=pts.length,dist=[0];let TL=0;
+        for(let i=1;i<=NP;i++){const a=pts[i-1],b=pts[i%NP];TL+=Math.hypot(b[0]-a[0],b[1]-a[1]);dist[i]=TL}
+        return {pts, dist, TL};
+    });
+
+    const {pts, dist, TL} = trk, NP = pts.length;
     const ptAt=d=>{d=((d%TL)+TL)%TL;let lo=0,hi=NP;
         while(lo<hi){const m=(lo+hi+1)>>1;if(dist[m]<=d)lo=m;else hi=m-1}
         const i=lo,j=(i+1)%NP,seg=(dist[i+1]||TL)-dist[i]||.001,f=(d-dist[i])/seg;
@@ -1770,18 +1986,27 @@ const pl=$("#pl");if(pl)pl.style.transform=`translate(${W.pc*TS-7}px,${W.pr*TS-3
 const p2=$("#pl2");if(p2)p2.style.transform=`translate(${W.tpc*TS-5}px,${W.tpr*TS-32}px)`;
 const wm=$("#wm");if(wm)wm.style.transform=`translate(${-cx}px,${-cy}px)`},
 say(t){const d=$("#dk");if(d)d.innerHTML=t},
-go(tc,tr){
+async go(tc,tr){
 const hei=getHei();
 if(tc<0||tc>=wid||tr<0||tr>=hei||blk(at(tc,tr))){boop();hap('error');return W.say(S.mapId===1 ? "Туда не пройти 🧱" : "Сюда нельзя 🌲");}
 if(tc==W.pc&&tr==W.pr)return W.act(at(tc,tr));hap();
-const id=(c,r)=>r*wid+c, start=id(W.pc,W.pr), target=id(tc,tr), open=[start], cameFrom={}, gScore={[start]:0}, fScore={[start]:Math.abs(W.pc-tc)+Math.abs(W.pr-tr)}; let curr;
-while(open.length>0){open.sort((a,b)=>fScore[a]-fScore[b]); curr=open.shift(); if(curr===target) break; const c=curr%wid, r=Math.floor(curr/wid);
-for(const [dc,dr] of [[1,0],[-1,0],[0,1],[0,-1]]){const nc=c+dc, nr=r+dr, n=id(nc,nr); if(nc<0||nc>=wid||nr<0||nr>=hei||blk(at(nc,nr))) continue;
-const tg2 = gScore[curr]+1; if(tg2 < (gScore[n] ?? Infinity)){cameFrom[n]=curr; gScore[n]=tg2; fScore[n]=tg2+Math.abs(nc-tc)+Math.abs(nr-tr); if(!open.includes(n)) open.push(n);}}}
-if(curr!==target){boop();return W.say("Не добраться 🚧")} const path=[]; while(cameFrom[curr]!==undefined){path.unshift(curr);curr=cameFrom[curr];}
+
+// Поиск пути A* распределяется на свободное ядро в пуле воркеров
+const path = await CPU.run('path', {
+    grid: getM(), wid, hei, sc: W.pc, sr: W.pr, tc, tr, blkSet: ["T","~","W","B","L"]
+}, () => {
+    const id=(c,r)=>r*wid+c, start=id(W.pc,W.pr), target=id(tc,tr), open=[start], cameFrom={}, gScore={[start]:0}, fScore={[start]:Math.abs(W.pc-tc)+Math.abs(W.pr-tr)}; let curr;
+    while(open.length>0){open.sort((a,b)=>fScore[a]-fScore[b]); curr=open.shift(); if(curr===target) break; const c=curr%wid, r=Math.floor(curr/wid);
+    for(const [dc,dr] of [[1,0],[-1,0],[0,1],[0,-1]]){const nc=c+dc, nr=r+dr, n=id(nc,nr); if(nc<0||nc>=wid||nr<0||nr>=hei||blk(at(nc,nr))) continue;
+    const tg2 = gScore[curr]+1; if(tg2 < (gScore[n] ?? Infinity)){cameFrom[n]=curr; gScore[n]=tg2; fScore[n]=tg2+Math.abs(nc-tc)+Math.abs(nr-tr); if(!open.includes(n)) open.push(n);}}}
+    if(curr!==target) return null;
+    const p=[]; while(cameFrom[curr]!==undefined){p.unshift(curr);curr=cameFrom[curr];} return p;
+});
+
+if(!path){boop();return W.say("Не добраться 🚧")}
 const mk=document.createElement("i");mk.className="mk";mk.style.cssText=`left:${tc*TS+8}px;top:${tr*TS+8}px`;const wm=$("#wm");if(wm){wm.appendChild(mk);setTimeout(()=>mk.remove(),800)}
 const t=++W.wk,pl=$("#pl"),p2=$("#pl2");if(pl)pl.classList.add("walk");if(p2)p2.classList.add("walk");W.say("");let i=0;
-const st=()=>{if(t!=W.wk||tab!="world")return;if(i>=path.length){if(pl)pl.classList.remove("walk");if(p2)p2.classList.remove("walk");return W.act(at(W.pc,W.pr))}
+const st=()=>{if(t!=W.wk||tab!="world")return;if(i>=path.length){if(pl)pl.classList.remove("walk");if(p2)p2.classList.remove("walk");hud();return W.act(at(W.pc,W.pr))}
 const n=path[i++],nc=n%wid,opc=W.pc,opr=W.pr;if(nc!=W.pc){W.fl=nc<W.pc?-1:1;[pl,p2].forEach(p=>{if(p&&p.firstChild)p.firstChild.style.transform=`scaleX(${W.fl})`})}
 W.pc=nc;W.pr=Math.floor(n/wid);W.tpc=opc;W.tpr=opr;W.put();S.pos=[W.pc,W.pr];S.steps++;
 if(S.twin&&Math.random()<0.05){earn(1);hud();W.say("🎀 Подружка нашла монетку! +1🪙")}
