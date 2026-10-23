@@ -20,7 +20,7 @@ html,body{margin:0;padding:0;overflow:hidden;background:var(--bg);color:var(--in
 .bar-head{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700;margin-bottom:3px}
 .bar-head span:last-child{opacity:.75;font-size:10px}
 .bar i{display:block;height:7px;border-radius:4px;background:#0002;overflow:hidden}
-.bar b{display:block;height:100%;background:linear-gradient(90deg,var(--acc),#e59856);transition:width .35s}
+.bar b{display:block;height:100%;background:linear-gradient(90deg,var(--acc),#e59856);transition:width .3s}
 .bar.xp-bar b{background:linear-gradient(90deg,#8e44ad,#b06ab3)}
 .bar.en-bar b{background:linear-gradient(90deg,#e0a02a,#f3c65f)}
 .bar.ok-bar b{background:linear-gradient(90deg,#4a8a3a,#6ec25a)}
@@ -41,11 +41,11 @@ svg{width:100%;display:block;border-radius:14px}
 .msg{text-align:center;min-height:22px;font-weight:700;margin:4px 0;font-size:14px}
 @keyframes bob{50%{transform:translateY(5px)}}@keyframes br{50%{transform:scale(1.02)}}
 .bear{animation:br 3s infinite;transform-origin:100px 150px}
-#wv{position:relative;overflow:hidden;height:min(64vh,540px);border-radius:16px;background:#4e8c3a;touch-action:none;box-shadow:0 6px 18px #0005;border:2px solid var(--stroke)}
-#wm{position:relative}#wm svg{width:auto;border-radius:0}
+#wv{position:relative;overflow:hidden;height:min(64vh,540px);border-radius:16px;background:#4e8c3a;touch-action:none;box-shadow:0 6px 18px #0005;border:2px solid var(--stroke);contain:strict}
+#wm{position:relative;will-change:transform;backface-visibility:hidden}#wm svg{width:auto;border-radius:0}
 #wm.tr,#wm.tr #pl,#wm.tr #pl2{transition:transform .2s linear}
-#pl{position:absolute;left:0;top:0;width:62px;pointer-events:none;z-index:2}#pl svg{width:62px;transition:transform .15s}
-#pl2{position:absolute;left:0;top:0;width:46px;pointer-events:none;z-index:1}#pl2 svg{width:46px;transition:transform .15s}
+#pl{position:absolute;left:0;top:0;width:62px;pointer-events:none;z-index:2;will-change:transform;backface-visibility:hidden}#pl svg{width:62px;transition:transform .15s}
+#pl2{position:absolute;left:0;top:0;width:46px;pointer-events:none;z-index:1;will-change:transform;backface-visibility:hidden}#pl2 svg{width:46px;transition:transform .15s}
 #pl.walk .bear,#pl2.walk .bear{animation:wk .2s infinite}
 #ov{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 55px #0005;z-index:3}
 .sh{animation:shm 2.8s infinite ease-in-out}
@@ -55,7 +55,7 @@ svg{width:100%;display:block;border-radius:14px}
 .bf{position:absolute;font-style:normal;left:-10%;font-size:20px;animation:bf 14s linear infinite;pointer-events:none;z-index:3}@keyframes bf{to{left:105%;transform:translateY(-30px)}}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#1a120ce6;color:#fff;padding:10px 18px;border-radius:22px;z-index:99;font-weight:700;animation:tin .2s;text-align:center;box-shadow:0 4px 15px #0006;white-space:pre-line}
 @keyframes tin{from{opacity:0;transform:translate(-50%,12px)}}
-.pop{position:fixed;pointer-events:none;font-weight:900;font-size:16px;z-index:99;animation:popUp .9s forwards;text-shadow:0 2px 4px #0008}
+.pop{position:fixed;pointer-events:none;font-weight:900;font-size:16px;z-index:99;animation:popUp .9s forwards;text-shadow:0 2px 4px #0008;will-change:transform,opacity}
 @keyframes popUp{0%{opacity:1;transform:translateY(0) scale(0.8)}50%{transform:translateY(-18px) scale(1.1)}100%{opacity:0;transform:translateY(-36px) scale(1)}}
 .rain{position:absolute;inset:0;pointer-events:none;opacity:0.6;background-image:url("data:image/svg+xml,%3Csvg width='30' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cline x1='15' y1='0' x2='5' y2='40' stroke='%23fff' stroke-width='1.5' opacity='0.4'/%3E%3C/svg%3E");animation:fall 0.4s linear infinite;z-index:3}
 @keyframes fall{from{background-position:0 0;}to{background-position:-20px 100px;}}
@@ -375,18 +375,33 @@ function int_scene(inner, h=290) {
     </svg>`;
 }
 
+// ===== УМНОЕ ОБНОВЛЕНИЕ HUD БЕЗ ПЕРЕРИСОВКИ DOM И КАРТИНОК =====
 function hud(){
     const el=$("#hud");if(!el)return;
-    const b=(n,v,ic,c="")=>{
-        const pct = Math.max(0, Math.min(100, Math.round(v)));
-        return `<div class="bar ${c}"><div class="ic-box"><img src="${ic}" class="stat-ic" alt=""></div><div class="bar-info"><div class="bar-head"><span>${n}</span><span>${pct}%</span></div><i><b style="width:${pct}%"></b></i></div></div>`;
+    if(!$("#hud-c")){
+        const b=(id,n,ic,c="")=>`<div class="bar ${c}"><div class="ic-box"><img src="${ic}" class="stat-ic" alt=""></div><div class="bar-info"><div class="bar-head"><span>${n}</span><span id="ht-${id}">0%</span></div><i><b id="hb-${id}" style="width:0%"></b></i></div></div>`;
+        el.innerHTML=`<div class="top"><span id="hud-t"></span><span><span class="badge">🪙 <span id="hud-c">0</span></span> <span class="badge">💎 <span id="hud-d">0</span></span> <span class="badge">🐟 <span id="hud-f">0</span></span></span></div><div class="bars">${
+            b("xp","Опыт","Frame 34.svg","xp-bar")+
+            b("hu","Сытость","Frame 33.svg","ok-bar")+
+            b("mo","Радость","Frame 36.svg")+
+            b("en","Бодрость","Frame 35.svg","en-bar")
+        }</div>`;
+    }
+    const tEl=$("#hud-t");
+    const tHtml=`🐻 Ур.${S.lvl} <small style="font-weight:600;opacity:.75">${getTitle()}</small> ${S.sick?'🤒':''}`;
+    if(tEl._last!==tHtml){tEl.innerHTML=tHtml;tEl._last=tHtml;}
+    $("#hud-c").textContent=S.coins;
+    $("#hud-d").textContent=S.crys;
+    $("#hud-f").textContent=S.fish;
+    const setB=(id,v)=>{
+        const p=Math.max(0,Math.min(100,Math.round(v)))+"%";
+        const bt=$("#ht-"+id), bb=$("#hb-"+id);
+        if(bt&&bt.textContent!==p){bt.textContent=p;bb.style.width=p;}
     };
-    el.innerHTML=`<div class="top"><span>🐻 Ур.${S.lvl} <small style="font-weight:600;opacity:.75">${getTitle()}</small> ${S.sick?'🤒':''}</span><span><span class="badge">🪙 ${S.coins}</span> <span class="badge">💎 ${S.crys}</span> <span class="badge">🐟 ${S.fish}</span></span></div><div class="bars">${
-        b("Опыт",S.xp/(S.lvl*50)*100,"Frame 34.svg","xp-bar")+
-        b("Сытость",S.hunger,"Frame 33.svg","ok-bar")+
-        b("Радость",S.mood,"Frame 36.svg")+
-        b("Бодрость",S.energy,"Frame 35.svg","en-bar")
-    }</div>`;
+    setB("xp",S.xp/(S.lvl*50)*100);
+    setB("hu",S.hunger);
+    setB("mo",S.mood);
+    setB("en",S.energy);
 }
 
 function earn(n, anim=true){
@@ -1132,17 +1147,35 @@ function cascade(k){if(k!==mid)return;const m=find();if(!m.size){busy=false;if(!
 draw(m);const gain = m.size + (m.size>=4 ? 2 : 0); cl+=gain; S.tiles+=m.size; earn(gain,false); hud(); beep(); hap('success');
 setTimeout(()=>{if(k!==mid)return;m.forEach(i=>G[i]=-1);for(let c=0;c<6;c++){let col=[];for(let r=5;r>=0;r--)if(G[r*6+c]>=0)col.push(G[r*6+c]);while(col.length<6)col.push(R(6));for(let r=5;r>=0;r--)G[r*6+c]=col[5-r]}draw();setTimeout(()=>cascade(k),180)},190)}
 
+// ===== ОПТИМИЗИРОВАННЫЙ CANVAS И ФАБРИКА OFFSCREEN-СПРАЙТОВ =====
+const DPR = Math.min(window.devicePixelRatio || 1, 2);
 function setupCanvas(id, w, h){
     const c=$(id); if(!c)return null;
-    const ctx=c.getContext('2d'), dpr=window.devicePixelRatio||1;
+    const ctx=c.getContext('2d', {alpha: false});
     const cw=(c.parentElement&&c.parentElement.clientWidth-8)||w, ch=Math.round(cw*h/w);
-    c.width=cw*dpr; c.height=ch*dpr; c.style.width=cw+"px"; c.style.height=ch+"px";
-    ctx.setTransform(dpr*cw/w,0,0,dpr*cw/w,0,0); ctx.textAlign='center'; ctx.textBaseline='middle'; return {c, ctx};
+    c.width=Math.round(cw*DPR); c.height=Math.round(ch*DPR);
+    c.style.width=cw+"px"; c.style.height=ch+"px";
+    ctx.setTransform(DPR*cw/w,0,0,DPR*cw/w,0,0);
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    return {c, ctx};
 }
+function mkSprite(w, h, fn){
+    const oc = document.createElement('canvas');
+    oc.width = Math.ceil(w * DPR);
+    oc.height = Math.ceil(h * DPR);
+    const octx = oc.getContext('2d');
+    octx.scale(DPR, DPR);
+    octx.textAlign = 'center';
+    octx.textBaseline = 'middle';
+    fn(octx, w, h);
+    return oc;
+}
+function rrPath(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()}
+
 // =========================================================================
-// ===== НАСТОЯЩИЙ ГАРАЖ, ПЛАВНЫЙ HILL CLIMB И СБАЛАНСИРОВАННЫЙ ДОХОД =====
+// ===== НАСТОЯЩИЙ ГАРАЖ, ПЛАВНЫЙ HILL CLIMB И OFFSCREEN-СПРАЙТЫ =====
 // =========================================================================
-let raf_r, r_act=false, RKEYS={};
+let raf_r, r_act=false, RKEYS={}, HC_SPR=null;
 addEventListener('keydown',e=>RKEYS[e.key]=true);
 addEventListener('keyup',e=>RKEYS[e.key]=false);
 
@@ -1152,6 +1185,117 @@ const HC_UPG_META = [
     ["tires","🛞 Шины",[0,35,75,130,220]],
     ["fuel","⛽ Бензобак",[0,30,65,120,200]]
 ];
+
+// Запекаем тяжёлую графику гаража, монеток, канистр и ёлок в текстуры 1 раз
+function getHcSprites(){
+    if(HC_SPR) return HC_SPR;
+    const garage = mkSprite(300, 240, ctx => {
+        ctx.translate(50, -40);
+        const rr=(x,y,w,h,r)=>rrPath(ctx,x,y,w,h,r);
+        ctx.fillStyle = '#2d231e'; ctx.fillRect(-40, 88, 268, 174);
+        ctx.fillStyle = '#3a2d27';
+        for(let y=96; y<255; y+=18) for(let x=-35+(y%36?14:0); x<215; x+=32) ctx.fillRect(x, y, 28, 13);
+        ctx.fillStyle = '#4a321f'; ctx.fillRect(-45, 80, 282, 12); ctx.fillRect(-40, 88, 14, 174);
+        ctx.beginPath(); ctx.moveTo(-50, 82); ctx.lineTo(95, 42); ctx.lineTo(245, 82); ctx.closePath();
+        ctx.fillStyle = '#5c3a21'; ctx.fill(); ctx.strokeStyle = '#3b2214'; ctx.lineWidth = 3; ctx.stroke();
+        ctx.fillStyle = '#485460'; ctx.fillRect(-40, 256, 272, 16);
+        ctx.fillStyle = '#f1c40f'; for(let x=185; x<226; x+=10) ctx.fillRect(x, 256, 6, 6);
+
+        // Стенд с гаечными ключами
+        ctx.fillStyle = '#1e272e'; ctx.strokeStyle = '#7f8c8d'; ctx.lineWidth = 2;
+        rr(6, 118, 106, 66, 4); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#485460';
+        for(let px=14; px<=104; px+=10) for(let py=126; py<=176; py+=10) ctx.fillRect(px, py, 1.5, 1.5);
+        [[22,130,36],[38,130,32],[54,130,27],[68,130,22]].forEach(([wx,wy,len])=>{
+            ctx.strokeStyle = '#dfe6e9'; ctx.lineWidth = 3.5; ctx.lineCap = 'round';
+            ctx.beginPath(); ctx.moveTo(wx, wy+4); ctx.lineTo(wx, wy+len); ctx.stroke();
+            ctx.fillStyle = '#dfe6e9';
+            ctx.beginPath(); ctx.arc(wx, wy+4, 4.5, 0, 7); ctx.fill();
+            ctx.beginPath(); ctx.arc(wx, wy+len, 4, 0, 7); ctx.fill();
+            ctx.fillStyle = '#1e272e'; ctx.fillRect(wx-1.8, wy, 3.6, 4);
+            ctx.beginPath(); ctx.arc(wx, wy+len, 1.8, 0, 7); ctx.fill();
+        });
+        ctx.strokeStyle = '#bdc3c7'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(84, 140); ctx.lineTo(84, 166); ctx.stroke();
+        ctx.fillStyle = '#e74c3c'; rr(80, 127, 8, 14, 3); ctx.fill();
+        ctx.strokeStyle = '#cd853f'; ctx.lineWidth = 3.5;
+        ctx.beginPath(); ctx.moveTo(100, 134); ctx.lineTo(100, 168); ctx.stroke();
+        ctx.fillStyle = '#95a5a6'; rr(92, 128, 16, 8, 2); ctx.fill();
+
+        // Полка с маслом и аккумулятором
+        ctx.fillStyle = '#5c3a21'; ctx.fillRect(124, 144, 78, 6);
+        ctx.fillStyle = '#e74c3c'; rr(130, 122, 16, 22, 3); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.fillRect(133, 128, 10, 7);
+        ctx.fillStyle = '#f39c12'; rr(150, 126, 14, 18, 3); ctx.fill();
+        ctx.fillStyle = '#2c3e50'; rr(170, 126, 24, 18, 2); ctx.fill();
+        ctx.fillStyle = '#e74c3c'; ctx.fillRect(173, 123, 5, 3);
+        ctx.fillStyle = '#3498db'; ctx.fillRect(186, 123, 5, 3);
+        ctx.fillStyle = '#f1c40f'; ctx.font = 'bold 9px sans-serif'; ctx.fillText('⚡', 182, 136);
+
+        // Верстак и ящики
+        ctx.fillStyle = '#c0392b'; ctx.strokeStyle = '#7d1919'; ctx.lineWidth = 1.5;
+        rr(4, 198, 76, 58, 3); ctx.fill(); ctx.stroke();
+        for(let dy=204; dy<=240; dy+=12){
+            ctx.fillStyle = '#e74c3c'; ctx.fillRect(9, dy, 66, 9);
+            ctx.fillStyle = '#dfe6e9'; ctx.fillRect(34, dy+3, 16, 2.5);
+        }
+        ctx.fillStyle = '#d9a76a'; ctx.fillRect(0, 192, 84, 6);
+        ctx.fillStyle = '#34495e'; ctx.fillRect(64, 182, 14, 10); ctx.fillRect(60, 185, 22, 4);
+
+        // Запаски
+        for(let ty=244; ty>=220; ty-=12){
+            ctx.fillStyle = '#1e272e'; ctx.strokeStyle = '#485460'; ctx.lineWidth = 1.5;
+            rr(166, ty, 36, 11, 4); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#7f8c8d';
+            for(let tx=170; tx<=196; tx+=6) ctx.fillRect(tx, ty+2, 3, 7);
+        }
+
+        // Лампа и свет
+        ctx.strokeStyle = '#111'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(115, 92); ctx.lineTo(115, 108); ctx.stroke();
+        ctx.fillStyle = '#2c3e50';
+        ctx.beginPath(); ctx.moveTo(101, 114); ctx.lineTo(115, 104); ctx.lineTo(129, 114); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#ffe97a';
+        ctx.beginPath(); ctx.arc(115, 114, 4.5, 0, Math.PI); ctx.fill();
+        const glow = ctx.createLinearGradient(115, 114, 115, 256);
+        glow.addColorStop(0, 'rgba(255, 233, 122, 0.22)');
+        glow.addColorStop(1, 'rgba(255, 233, 122, 0.0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath(); ctx.moveTo(103, 114); ctx.lineTo(127, 114); ctx.lineTo(185, 256); ctx.lineTo(45, 256); ctx.closePath(); ctx.fill();
+    });
+
+    const mkCoin = (val, col, r) => mkSprite(24, 24, ctx => {
+        ctx.fillStyle = col; ctx.beginPath(); ctx.arc(12, 12, r, 0, 7); ctx.fill();
+        ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1.8; ctx.stroke();
+        ctx.fillStyle = '#7d4618'; ctx.font = 'bold 9px sans-serif'; ctx.fillText(val, 12, 12.5);
+    });
+    const fuel = mkSprite(24, 28, ctx => {
+        ctx.fillStyle = '#e74c3c'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+        rrPath(ctx, 3, 3, 18, 22, 4); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 11px sans-serif'; ctx.fillText('⛽', 12, 15);
+    });
+    const mkTree = col => mkSprite(36, 66, ctx => {
+        ctx.fillStyle = '#5c3818'; ctx.fillRect(15, 50, 6, 15);
+        ctx.fillStyle = col;
+        ctx.beginPath(); ctx.moveTo(18, 16); ctx.lineTo(2, 52); ctx.lineTo(34, 52); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(18, 2); ctx.lineTo(5, 34); ctx.lineTo(31, 34); ctx.closePath(); ctx.fill();
+    });
+    const rock = mkSprite(24, 16, ctx => {
+        ctx.fillStyle = '#7f8c8d'; ctx.beginPath(); ctx.arc(12, 14, 9, Math.PI, 0); ctx.fill();
+    });
+
+    HC_SPR = {
+        garage,
+        c1: mkCoin(1, '#ffd34d', 7.5),
+        c3: mkCoin(3, '#ff9f43', 9.5),
+        fuel,
+        t0: mkTree('#2b6e3f'),
+        t1: mkTree('#3a874c'),
+        tSnow: mkTree('#dfe6e9'),
+        rock
+    };
+    return HC_SPR;
+}
 
 function renderGarageMenu(topBanner=""){
     const rm = $('#rmsg'); if(!rm) return;
@@ -1197,11 +1341,8 @@ function drawJeepModel(ctx, rr, sx, sy, a, compR, compF, headA, rotW){
     ctx.translate(sx, sy);
     ctx.rotate(a);
 
-    ctx.fillStyle = '#576574';
-    ctx.fillRect(-31, 1, 6, 4);
-
-    const rHubY = STRUT_LEN - compR;
-    const fHubY = STRUT_LEN - compF;
+    ctx.fillStyle = '#576574'; ctx.fillRect(-31, 1, 6, 4);
+    const rHubY = STRUT_LEN - compR, fHubY = STRUT_LEN - compF;
 
     ctx.strokeStyle = '#2f3640'; ctx.lineWidth = 3.5;
     ctx.beginPath();
@@ -1236,12 +1377,9 @@ function drawJeepModel(ctx, rr, sx, sy, a, compR, compF, headA, rotW){
     ctx.fillRect(0, -7, 11, 2.5);
     ctx.restore();
 
-    const bodyGrad = ctx.createLinearGradient(0, -10, 0, 9);
-    bodyGrad.addColorStop(0, '#ff5252');
-    bodyGrad.addColorStop(0.5, '#d63031');
-    bodyGrad.addColorStop(1, '#961d1d');
-    ctx.fillStyle = bodyGrad; ctx.strokeStyle = '#5c1010'; ctx.lineWidth = 1.8;
+    ctx.fillStyle = '#d63031'; ctx.strokeStyle = '#5c1010'; ctx.lineWidth = 1.8;
     rr(-29, -9, 58, 17, 6); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#ff5252'; ctx.fillRect(-26, -8, 52, 4);
 
     ctx.fillStyle = '#ffeaa7'; ctx.fillRect(-26, -2, 50, 3.2);
     ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(27, -3, 3.5, 0, 7); ctx.fill();
@@ -1255,119 +1393,29 @@ function drawJeepModel(ctx, rr, sx, sy, a, compR, compF, headA, rotW){
         ctx.rotate(rotW);
         ctx.fillStyle = '#1e272e';
         ctx.beginPath(); ctx.arc(0, 0, WHEEL_R, 0, 7); ctx.fill();
-        ctx.strokeStyle = '#485460'; ctx.lineWidth = 2.8; ctx.setLineDash([4, 3]);
-        ctx.beginPath(); ctx.arc(0, 0, WHEEL_R - 1.2, 0, 7); ctx.stroke();
-        ctx.setLineDash([]);
+        ctx.strokeStyle = '#485460'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(0, 0, WHEEL_R - 1.5, 0, 7); ctx.stroke();
         ctx.fillStyle = '#dfe6e9';
         ctx.beginPath(); ctx.arc(0, 0, 6.2, 0, 7); ctx.fill();
+        ctx.strokeStyle = '#2f3640'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(-5,0); ctx.lineTo(5,0); ctx.moveTo(0,-5); ctx.lineTo(0,5); ctx.stroke();
         ctx.fillStyle = '#d63031';
-        ctx.beginPath(); ctx.arc(0, 0, 2.8, 0, 7); ctx.fill();
+        ctx.beginPath(); ctx.arc(0, 0, 2.6, 0, 7); ctx.fill();
         ctx.restore();
     }
     ctx.restore();
 }
 
-function drawGarageBack(ctx, rr, ox, oy){
-    if(ox < -320) return;
-    ctx.save();
-    ctx.translate(ox, oy);
-
-    ctx.fillStyle = '#2d231e';
-    ctx.fillRect(-40, 88, 268, 174);
-    ctx.fillStyle = '#3a2d27';
-    for(let y=96; y<255; y+=18){
-        for(let x=-35 + (y%36?14:0); x<215; x+=32) ctx.fillRect(x, y, 28, 13);
-    }
-
-    ctx.fillStyle = '#4a321f';
-    ctx.fillRect(-45, 80, 282, 12);
-    ctx.fillRect(-40, 88, 14, 174);
-    ctx.beginPath();
-    ctx.moveTo(-50, 82); ctx.lineTo(95, 42); ctx.lineTo(245, 82); ctx.closePath();
-    ctx.fillStyle = '#5c3a21'; ctx.fill();
-    ctx.strokeStyle = '#3b2214'; ctx.lineWidth = 3; ctx.stroke();
-
-    ctx.fillStyle = '#485460';
-    ctx.fillRect(-40, 256, 272, 16);
-    ctx.fillStyle = '#f1c40f';
-    for(let x=185; x<226; x+=10) ctx.fillRect(x, 256, 6, 6);
-
-    // Перфорированный стенд с гаечными ключами
-    ctx.fillStyle = '#1e272e'; ctx.strokeStyle = '#7f8c8d'; ctx.lineWidth = 2;
-    rr(6, 118, 106, 66, 4); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#485460';
-    for(let px=14; px<=104; px+=10) for(let py=126; py<=176; py+=10) ctx.fillRect(px, py, 1.5, 1.5);
-
-    [[22,130,36],[38,130,32],[54,130,27],[68,130,22]].forEach(([wx,wy,len])=>{
-        ctx.strokeStyle = '#dfe6e9'; ctx.lineWidth = 3.5; ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.moveTo(wx, wy+4); ctx.lineTo(wx, wy+len); ctx.stroke();
-        ctx.fillStyle = '#dfe6e9';
-        ctx.beginPath(); ctx.arc(wx, wy+4, 4.5, 0, 7); ctx.fill();
-        ctx.beginPath(); ctx.arc(wx, wy+len, 4, 0, 7); ctx.fill();
-        ctx.fillStyle = '#1e272e';
-        ctx.fillRect(wx-1.8, wy, 3.6, 4);
-        ctx.beginPath(); ctx.arc(wx, wy+len, 1.8, 0, 7); ctx.fill();
-    });
-
-    ctx.strokeStyle = '#bdc3c7'; ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.moveTo(84, 140); ctx.lineTo(84, 166); ctx.stroke();
-    ctx.fillStyle = '#e74c3c'; rr(80, 127, 8, 14, 3); ctx.fill();
-
-    ctx.strokeStyle = '#cd853f'; ctx.lineWidth = 3.5;
-    ctx.beginPath(); ctx.moveTo(100, 134); ctx.lineTo(100, 168); ctx.stroke();
-    ctx.fillStyle = '#95a5a6'; rr(92, 128, 16, 8, 2); ctx.fill();
-
-    // Полка с маслом и аккумулятором
-    ctx.fillStyle = '#5c3a21'; ctx.fillRect(124, 144, 78, 6);
-    ctx.fillStyle = '#e74c3c'; rr(130, 122, 16, 22, 3); ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.fillRect(133, 128, 10, 7);
-    ctx.fillStyle = '#f39c12'; rr(150, 126, 14, 18, 3); ctx.fill();
-    ctx.fillStyle = '#2c3e50'; rr(170, 126, 24, 18, 2); ctx.fill();
-    ctx.fillStyle = '#e74c3c'; ctx.fillRect(173, 123, 5, 3);
-    ctx.fillStyle = '#3498db'; ctx.fillRect(186, 123, 5, 3);
-    ctx.fillStyle = '#f1c40f'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText('⚡', 182, 136);
-
-    // Верстак с ящиками и тисками
-    ctx.fillStyle = '#c0392b'; ctx.strokeStyle = '#7d1919'; ctx.lineWidth = 1.5;
-    rr(4, 198, 76, 58, 3); ctx.fill(); ctx.stroke();
-    for(let dy=204; dy<=240; dy+=12){
-        ctx.fillStyle = '#e74c3c'; ctx.fillRect(9, dy, 66, 9);
-        ctx.fillStyle = '#dfe6e9'; ctx.fillRect(34, dy+3, 16, 2.5);
-    }
-    ctx.fillStyle = '#d9a76a'; ctx.fillRect(0, 192, 84, 6);
-    ctx.fillStyle = '#34495e'; ctx.fillRect(64, 182, 14, 10); ctx.fillRect(60, 185, 22, 4);
-
-    // Запасные шины
-    for(let ty=244; ty>=220; ty-=12){
-        ctx.fillStyle = '#1e272e'; ctx.strokeStyle = '#485460'; ctx.lineWidth = 1.5;
-        rr(166, ty, 36, 11, 4); ctx.fill(); ctx.stroke();
-        ctx.fillStyle = '#7f8c8d';
-        for(let tx=170; tx<=196; tx+=6) ctx.fillRect(tx, ty+2, 3, 7);
-    }
-
-    // Лампа под потолком
-    ctx.strokeStyle = '#111'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(115, 92); ctx.lineTo(115, 108); ctx.stroke();
-    ctx.fillStyle = '#2c3e50';
-    ctx.beginPath(); ctx.moveTo(101, 114); ctx.lineTo(115, 104); ctx.lineTo(129, 114); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#ffe97a';
-    ctx.beginPath(); ctx.arc(115, 114, 4.5, 0, Math.PI); ctx.fill();
-
-    const glow = ctx.createLinearGradient(115, 114, 115, 256);
-    glow.addColorStop(0, 'rgba(255, 233, 122, 0.22)');
-    glow.addColorStop(1, 'rgba(255, 233, 122, 0.0)');
-    ctx.fillStyle = glow;
-    ctx.beginPath(); ctx.moveTo(103, 114); ctx.lineTo(127, 114); ctx.lineTo(185, 256); ctx.lineTo(45, 256); ctx.closePath(); ctx.fill();
-
-    ctx.restore();
+function drawGarageBack(ctx, ox, oy){
+    if(ox < -310) return;
+    const spr = getHcSprites();
+    ctx.drawImage(spr.garage, ox - 50, oy + 40, 300, 240);
 }
 
 function drawGarageFront(ctx, rr, ox, oy, doorOpen){
-    if(ox < -320) return;
+    if(ox < -310) return;
     ctx.save();
     ctx.translate(ox, oy);
-
     const maxDoorH = 136;
     const curDoorH = Math.max(8, maxDoorH * (1 - doorOpen));
     const doorX = 212, doorTopY = 120;
@@ -1383,21 +1431,18 @@ function drawGarageFront(ctx, rr, ox, oy, doorOpen){
     ctx.fillStyle = '#f1c40f';
     ctx.fillRect(doorX + 1, doorTopY + curDoorH - 6, 10, 5);
 
-    ctx.fillStyle = '#3b2214';
-    ctx.fillRect(208, 88, 22, 34);
+    ctx.fillStyle = '#3b2214'; ctx.fillRect(208, 88, 22, 34);
     ctx.fillStyle = '#f1c40f'; ctx.strokeStyle = '#222'; ctx.lineWidth = 1.2;
     rr(196, 95, 34, 15, 3); ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#111'; ctx.font = 'bold 8.5px sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('ГАРАЖ', 213, 102.5);
-
     ctx.restore();
 }
 
 function drawGaragePreview(){
     const sc=setupCanvas('#rcanvas',340,240); if(!sc)return;
     const {ctx}=sc;
-    const rr=(x,y,w,h,r)=>{ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()};
-
+    const rr=(x,y,w,h,r)=>rrPath(ctx,x,y,w,h,r);
     const sky = ctx.createLinearGradient(0,0,0,240);
     sky.addColorStop(0,'#3a86ff'); sky.addColorStop(1,'#e0fbfc');
     ctx.fillStyle=sky; ctx.fillRect(0,0,340,240);
@@ -1407,7 +1452,7 @@ function drawGaragePreview(){
     ctx.fillStyle='#6a994e'; ctx.fillRect(200,186,140,8);
 
     const ox = 28, oy = -68;
-    drawGarageBack(ctx, rr, ox, oy);
+    drawGarageBack(ctx, ox, oy);
     drawJeepModel(ctx, rr, ox + 112, oy + 230, 0, 1, 1, 0, 0);
     drawGarageFront(ctx, rr, ox, oy, 0.15);
 }
@@ -1420,12 +1465,11 @@ function startRace(){
     r_act = false; cancelAnimationFrame(raf_r);
     S.gamesPlayed++; save();
 
-    const rr=(x,y,w,h,r)=>{ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()};
-
+    const rr=(x,y,w,h,r)=>rrPath(ctx,x,y,w,h,r);
+    const spr = getHcSprites();
     const u = S.hcUpg || {eng:1,susp:1,tires:1,fuel:1};
     const seed1 = Math.random()*6.28, seed2 = Math.random()*6.28, seed3 = Math.random()*6.28;
 
-    // Очень плавный синусоидальный профиль холмов без резких микро-зубцов
     const getH = x => {
         if(x <= 240) return 260;
         const d = x - 240;
@@ -1522,7 +1566,6 @@ function startRace(){
         if(car.over) return;
         car.over = true; r_act = false;
         const distM = Math.max(0, Math.floor((car.x - 220) / 10));
-        // Сниженный бонус за дистанцию: 1 монета за каждые 60 м
         const distBonus = Math.floor(distM / 60);
         const isRecord = distM > (S.bestHill || 0);
         if(isRecord) S.bestHill = distM;
@@ -1546,7 +1589,6 @@ function startRace(){
         const onGround = pen >= -3.0;
 
         if(onGround){
-            // Мягкая безынерционная подвеска с плавным гашением колебаний
             if(pen > 0){
                 car.vy -= pen * suspStiff * dt;
                 car.vy *= Math.pow(0.62, dt);
@@ -1583,10 +1625,8 @@ function startRace(){
             }
             car.airTime = 0; car.airRot = 0;
 
-            // Плавное выравнивание кузова вдоль склона
             car.va += (groundA - car.a) * 0.13 * dt;
             car.va *= Math.pow(0.75, dt);
-
             car.vx -= Math.sin(groundA) * 0.16 * dt;
 
             if(dir > 0 && car.fuel > 0){
@@ -1597,12 +1637,12 @@ function startRace(){
                 if(car.phase !== "rollout") car.fuel = Math.max(0, car.fuel - fuelRate * dt);
                 car.rpm = Math.min(1, car.rpm + 0.055 * dt);
 
-                if(Math.random() < 0.45){
+                if(particles.length < 24 && Math.random() < 0.35){
                     const inGarage = car.x < 225;
                     particles.push({
                         x: wxR - 6, y: gyR - (inGarage ? 12 : 2),
                         vx: -1.4 - Math.random()*1.8, vy: -0.5 - Math.random()*1.3,
-                        r: inGarage ? 3.2 + Math.random()*2.5 : 2.2 + Math.random()*2.2,
+                        r: inGarage ? 3.2 : 2.5,
                         col: inGarage ? '#dfe6e9' : (Math.random() < 0.35 ? '#55a630' : '#7f5539'), a: 0.8
                     });
                 }
@@ -1654,21 +1694,9 @@ function startRace(){
     function drawGauge(cx, cy, r, val, label, sub){
         ctx.save();
         ctx.translate(cx, cy);
-        const g = ctx.createRadialGradient(0, -4, 2, 0, 0, r);
-        g.addColorStop(0, '#2f3640'); g.addColorStop(1, '#111');
-        ctx.fillStyle = g;
-        ctx.strokeStyle = '#bdc3c7'; ctx.lineWidth = 2.5;
+        ctx.fillStyle = '#1b1f24';
+        ctx.strokeStyle = '#bdc3c7'; ctx.lineWidth = 2.2;
         ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.fill(); ctx.stroke();
-
-        for(let i=0; i<=8; i++){
-            const a = Math.PI * 0.8 + (i / 8) * Math.PI * 1.4;
-            ctx.strokeStyle = i >= 6 ? '#e74c3c' : '#ecf0f1';
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.moveTo(Math.cos(a)*(r-6), Math.sin(a)*(r-6));
-            ctx.lineTo(Math.cos(a)*(r-2), Math.sin(a)*(r-2));
-            ctx.stroke();
-        }
 
         ctx.fillStyle = '#aaa'; ctx.font = 'bold 7.5px sans-serif'; ctx.textAlign = 'center';
         ctx.fillText(label, 0, -6);
@@ -1698,7 +1726,6 @@ function startRace(){
         }
 
         const dir = getInput();
-        // 4 подшага физики на кадр для сверхплавного хода подвески
         const SUB = 4, subDt = dt / SUB;
         for(let s=0; s<SUB; s++){
             if(!car.over) stepPhysics(subDt, dir);
@@ -1720,7 +1747,7 @@ function startRace(){
         if(distM >= car.nextMilestone){
             const bonus = 3;
             car.got += bonus; earn(bonus, false); addXp(6);
-            chng(); hap('success');
+            chng(); hap('success'); hud();
             floatTxt.push({x: car.x, y: car.y - 50, t: `🚩 ${car.nextMilestone} МЕТРОВ! +${bonus}🪙`, col:'#2ecc71', a: 1.3});
             car.nextMilestone += 100;
         }
@@ -1730,16 +1757,16 @@ function startRace(){
             for(const o of ch.coins){
                 if(o.got) continue;
                 const oy = getH(o.x) - 18;
-                if(Math.hypot(o.x - car.x, oy - car.y) < 28){
+                if(Math.abs(o.x - car.x) < 28 && Math.hypot(o.x - car.x, oy - car.y) < 28){
                     o.got = true; car.got += o.val; earn(o.val, false);
-                    beep(); hap('light');
+                    beep(); hap('light'); hud();
                     floatTxt.push({x: o.x, y: oy - 12, t: `+${o.val}🪙`, col: o.val>1?'#ff9f43':'#ffe270', a: 1});
                 }
             }
             for(const f of ch.fuels){
                 if(f.got) continue;
                 const fy = getH(f.x) - 20;
-                if(Math.hypot(f.x - car.x, fy - car.y) < 32){
+                if(Math.abs(f.x - car.x) < 32 && Math.hypot(f.x - car.x, fy - car.y) < 32){
                     f.got = true; car.fuel = 100;
                     chng(); hap('medium');
                     floatTxt.push({x: f.x, y: fy - 16, t: `⛽ БАК ПОЛОН!`, col:'#2ecc71', a: 1.2});
@@ -1757,8 +1784,6 @@ function startRace(){
     }
 
     function drawWorld(dir, distM){
-        ctx.clearRect(0, 0, Wpx, Hpx);
-
         const biome = distM < 300 ? 0 : (distM < 700 ? 1 : 2);
         const skyCols = [
             ['#3a86ff','#8ecae6','#e0fbfc'],
@@ -1771,27 +1796,25 @@ function startRace(){
         sky.addColorStop(0.6, skyCols[1]);
         sky.addColorStop(1, skyCols[2]);
         ctx.fillStyle = sky;
-        ctx.fillRect(0, 0, Wpx, Hpx);
+        ctx.fillRect(0, 0, Wpx, Hpx - 80);
 
         ctx.fillStyle = biome===1 ? '#7f5539' : (biome===2 ? '#8e9aaf' : '#6c8ead');
         ctx.beginPath();
-        ctx.moveTo(0, Hpx);
-        for(let sx=0; sx<=Wpx+40; sx+=35){
+        ctx.moveTo(0, Hpx - 80);
+        for(let sx=0; sx<=Wpx+40; sx+=40){
             const wx = sx + camX * 0.12;
-            const my = 185 - camY * 0.12 + Math.sin(wx * 0.007) * 42 + Math.cos(wx * 0.016) * 22;
-            ctx.lineTo(sx, my);
+            ctx.lineTo(sx, 185 - camY * 0.12 + Math.sin(wx * 0.007) * 42 + Math.cos(wx * 0.016) * 22);
         }
-        ctx.lineTo(Wpx, Hpx); ctx.closePath(); ctx.fill();
+        ctx.lineTo(Wpx, Hpx - 80); ctx.closePath(); ctx.fill();
 
         ctx.fillStyle = biome===1 ? '#5c3a21' : (biome===2 ? '#5c6b73' : '#4f7756');
         ctx.beginPath();
-        ctx.moveTo(0, Hpx);
-        for(let sx=0; sx<=Wpx+30; sx+=25){
+        ctx.moveTo(0, Hpx - 80);
+        for(let sx=0; sx<=Wpx+30; sx+=30){
             const wx = sx + camX * 0.28;
-            const my = 225 - camY * 0.22 + Math.sin(wx * 0.015) * 24 + Math.cos(wx * 0.035) * 12;
-            ctx.lineTo(sx, my);
+            ctx.lineTo(sx, 225 - camY * 0.22 + Math.sin(wx * 0.015) * 24 + Math.cos(wx * 0.035) * 12);
         }
-        ctx.lineTo(Wpx, Hpx); ctx.closePath(); ctx.fill();
+        ctx.lineTo(Wpx, Hpx - 80); ctx.closePath(); ctx.fill();
 
         const curChunk = Math.floor(car.x / CHUNK_LEN);
         for(let ci = curChunk - 1; ci <= curChunk + 1; ci++){
@@ -1800,19 +1823,14 @@ function startRace(){
                 const sx = pr.x - camX;
                 if(sx < -40 || sx > Wpx + 40) continue;
                 const sy = getH(pr.x) - camY;
-                ctx.save();
-                ctx.translate(sx, sy);
-                ctx.scale(pr.s, pr.s);
                 if(pr.type < 2){
-                    ctx.fillStyle = '#5c3818'; ctx.fillRect(-3, -14, 6, 15);
-                    ctx.fillStyle = biome===2 ? '#dfe6e9' : (pr.type===0 ? '#2b6e3f' : '#3a874c');
-                    ctx.beginPath(); ctx.moveTo(0,-48); ctx.lineTo(-16,-12); ctx.lineTo(16,-12); ctx.closePath(); ctx.fill();
-                    ctx.beginPath(); ctx.moveTo(0,-62); ctx.lineTo(-13,-30); ctx.lineTo(13,-30); ctx.closePath(); ctx.fill();
+                    const tSpr = biome===2 ? spr.tSnow : (pr.type===0 ? spr.t0 : spr.t1);
+                    const tw = 36 * pr.s, th = 66 * pr.s;
+                    ctx.drawImage(tSpr, sx - tw*0.5, sy - th, tw, th);
                 } else {
-                    ctx.fillStyle = '#7f8c8d';
-                    ctx.beginPath(); ctx.arc(0, -4, 9, Math.PI, 0); ctx.fill();
+                    const rw = 24 * pr.s, rh = 16 * pr.s;
+                    ctx.drawImage(spr.rock, sx - rw*0.5, sy - rh + 2, rw, rh);
                 }
-                ctx.restore();
             }
         }
 
@@ -1822,8 +1840,7 @@ function startRace(){
             const sx = wx - camX;
             if(sx < -40 || sx > Wpx + 40) continue;
             const sy = getH(wx) - camY;
-            ctx.fillStyle = '#5c3818';
-            ctx.fillRect(sx - 2, sy - 38, 4, 38);
+            ctx.fillStyle = '#5c3818'; ctx.fillRect(sx - 2, sy - 38, 4, 38);
             ctx.fillStyle = '#f1c40f'; ctx.strokeStyle = '#5c3818'; ctx.lineWidth = 1.5;
             rr(sx - 22, sy - 48, 44, 16, 4); ctx.fill(); ctx.stroke();
             ctx.fillStyle = '#222'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
@@ -1831,42 +1848,27 @@ function startRace(){
         }
 
         ctx.beginPath();
-        ctx.moveTo(-10, Hpx + 20);
-        for(let sx=-10; sx<=Wpx+10; sx+=6){
+        ctx.moveTo(-10, Hpx - 80);
+        for(let sx=-10; sx<=Wpx+10; sx+=8){
             ctx.lineTo(sx, getH(sx + camX) - camY);
         }
-        ctx.lineTo(Wpx + 10, Hpx + 20);
+        ctx.lineTo(Wpx + 10, Hpx - 80);
         ctx.closePath();
-        const dirtGrad = ctx.createLinearGradient(0, 140, 0, Hpx);
-        dirtGrad.addColorStop(0, biome===1 ? '#7f4f24' : '#9c6644');
-        dirtGrad.addColorStop(0.3, '#7f5539');
-        dirtGrad.addColorStop(1, '#432818');
-        ctx.fillStyle = dirtGrad;
+        ctx.fillStyle = biome===1 ? '#704220' : '#7f5539';
         ctx.fill();
 
-        const firstStoneIdx = Math.floor((camX - 40) / 55);
-        for(let si = firstStoneIdx; si < firstStoneIdx + 9; si++){
-            const wx = si * 55 + ((si * 37) % 25);
-            const sx = wx - camX;
-            const sy = getH(wx) - camY + 26 + ((si * 19) % 38);
-            if(sy < Hpx - 80){
-                ctx.fillStyle = '#5c3a21';
-                ctx.beginPath(); ctx.ellipse(sx, sy, 9 + (si%5), 5 + (si%3), (si%3)*0.4, 0, 7); ctx.fill();
-            }
-        }
-
         ctx.beginPath();
-        for(let sx=-10; sx<=Wpx+10; sx+=6){
-            const wx = sx + camX;
-            const sy = getH(wx) - camY;
+        for(let sx=-10; sx<=Wpx+10; sx+=8){
+            const sy = getH(sx + camX) - camY;
             sx === -10 ? ctx.moveTo(sx, sy) : ctx.lineTo(sx, sy);
         }
         ctx.strokeStyle = biome===2 ? '#74b9ff' : (biome===1 ? '#5c3a21' : '#386641');
         ctx.lineWidth = 11; ctx.lineCap = 'round'; ctx.stroke();
         ctx.strokeStyle = biome===2 ? '#ffffff' : (biome===1 ? '#d4a373' : '#6a994e');
-        ctx.lineWidth = 6; ctx.stroke();
+        ctx.lineWidth = 5.5; ctx.stroke();
 
-        drawGarageBack(ctx, rr, -camX, -camY);
+        // Отрисовка запечённого гаража за 1 вызов drawImage
+        drawGarageBack(ctx, -camX, -camY);
 
         for(let ci = curChunk - 1; ci <= curChunk + 1; ci++){
             const ch = chunks.get(ci); if(!ch) continue;
@@ -1875,27 +1877,20 @@ function startRace(){
                 const sx = o.x - camX;
                 if(sx < -20 || sx > Wpx + 20) continue;
                 const sy = getH(o.x) - 18 - camY;
-                ctx.fillStyle = o.val > 1 ? '#ff9f43' : '#ffd34d';
-                ctx.beginPath(); ctx.arc(sx, sy, o.val > 1 ? 9.5 : 7.5, 0, 7); ctx.fill();
-                ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1.8; ctx.stroke();
-                ctx.fillStyle = '#7d4618'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center';
-                ctx.fillText(o.val, sx, sy + 0.5);
+                ctx.drawImage(o.val > 1 ? spr.c3 : spr.c1, sx - 12, sy - 12, 24, 24);
             }
             for(const f of ch.fuels){
                 if(f.got) continue;
                 const sx = f.x - camX;
                 if(sx < -25 || sx > Wpx + 25) continue;
                 const sy = getH(f.x) - 20 - camY;
-                ctx.fillStyle = '#e74c3c'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
-                rr(sx - 9, sy - 11, 18, 22, 4); ctx.fill(); ctx.stroke();
-                ctx.fillStyle = '#fff'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
-                ctx.fillText('⛽', sx, sy + 1);
+                ctx.drawImage(spr.fuel, sx - 12, sy - 14, 24, 28);
             }
         }
 
         for(let i=particles.length-1; i>=0; i--){
             const p = particles[i];
-            p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.a -= 0.035;
+            p.x += p.vx; p.y += p.vy; p.vy += 0.12; p.a -= 0.04;
             if(p.a <= 0){ particles.splice(i, 1); continue; }
             ctx.globalAlpha = p.a;
             ctx.fillStyle = p.col;
@@ -1908,7 +1903,7 @@ function startRace(){
 
         for(let i=floatTxt.length-1; i>=0; i--){
             const ft = floatTxt[i];
-            ft.y -= 0.9; ft.a -= 0.022;
+            ft.y -= 0.9; ft.a -= 0.025;
             if(ft.a <= 0){ floatTxt.splice(i, 1); continue; }
             ctx.globalAlpha = Math.min(1, ft.a);
             ctx.fillStyle = '#000a';
@@ -1936,7 +1931,7 @@ function startRace(){
         ctx.fillStyle = '#ffd34d'; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'right';
         ctx.fillText(`🪙 +${car.got}`, Wpx - 10, 18);
 
-        ctx.fillStyle = 'rgba(18,12,8,0.86)';
+        ctx.fillStyle = '#140e0a';
         ctx.fillRect(0, Hpx - 82, Wpx, 82);
         ctx.strokeStyle = '#593622'; ctx.lineWidth = 1.5;
         ctx.beginPath(); ctx.moveTo(0, Hpx - 82); ctx.lineTo(Wpx, Hpx - 82); ctx.stroke();
@@ -1969,9 +1964,9 @@ function startRace(){
 }
 
 // =========================================================================
-// ===== ЯГОДНЫЙ БОЧОНОК (SUIKA-ИГРА С МЕДВЕДЕМ И СЛИЯНИЕМ ЯГОД) =====
+// ===== ЯГОДНЫЙ БОЧОНОК (SUIKA С ПРЕДЗАПЕЧЁННЫМИ СПРАЙТАМИ ЯГОД) =====
 // =========================================================================
-let raf_y, y_act=false;
+let raf_y, y_act=false, BERRY_SPR=null;
 const BERRIES = [
     {e:"🫐", r:14, c1:"#5c7cfa", c2:"#364fc7", pts:2},
     {e:"🍒", r:19, c1:"#ff6b6b", c2:"#c92a2a", pts:4},
@@ -1984,6 +1979,24 @@ const BERRIES = [
     {e:"👑", r:82, c1:"#ffd43b", c2:"#9c36b5", pts:140}
 ];
 
+function getBerrySprites(){
+    if(BERRY_SPR) return BERRY_SPR;
+    BERRY_SPR = BERRIES.map(b => {
+        const r = b.r, sz = r * 2 + 4, cx = sz / 2;
+        return mkSprite(sz, sz, ctx => {
+            const g = ctx.createRadialGradient(cx - r*0.3, cx - r*0.35, r*0.15, cx, cx, r);
+            g.addColorStop(0, b.c1); g.addColorStop(1, b.c2);
+            ctx.fillStyle = g; ctx.strokeStyle = '#ffffff55'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(cx, cx, r, 0, 7); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#ffffff44';
+            ctx.beginPath(); ctx.arc(cx - r*0.32, cx - r*0.32, r*0.26, 0, 7); ctx.fill();
+            ctx.font = `${Math.round(r * 1.15)}px sans-serif`;
+            ctx.fillText(b.e, cx, cx + 1);
+        });
+    });
+    return BERRY_SPR;
+}
+
 function initBerry(){
     if(!checkState()) return;
     S.gamesPlayed++; save();
@@ -1993,6 +2006,7 @@ function initBerry(){
     const sc = setupCanvas('#ycanvas', Wpx, Hpx); if(!sc) return;
     const {c, ctx} = sc;
     y_act = false; cancelAnimationFrame(raf_y);
+    const bSpr = getBerrySprites();
 
     const BX0 = 28, BX1 = 312, BY0 = 104, BY1 = 426;
     const st = {
@@ -2046,17 +2060,21 @@ function initBerry(){
         st.cur = st.next;
         st.next = R(4);
         st.bx = clampX(st.bx, st.cur);
-        st.cooldown = 22;
+        st.cooldown = 20;
         snd('sine', 520, 0.07);
         hap('light');
     };
     c.onpointerup = dropBerry;
     c.onpointercancel = () => { dragging = false; };
 
+    function drawBerryBall(x, y, lv){
+        const r = BERRIES[lv].r + 2;
+        ctx.drawImage(bSpr[lv], x - r, y - r, r * 2, r * 2);
+    }
+
     function drawBearDropper(x, curLv, ready){
         ctx.save();
         ctx.translate(x, 62);
-        // Уши и голова Степана над бочонком
         ctx.fillStyle = '#5a3818';
         ctx.beginPath(); ctx.arc(-16, -24, 8, 0, 7); ctx.arc(16, -24, 8, 0, 7); ctx.fill();
         ctx.fillStyle = '#c98e62';
@@ -2068,44 +2086,18 @@ function initBerry(){
         ctx.fillStyle = '#2a1a10';
         ctx.beginPath(); ctx.ellipse(0, -7, 4.5, 3, 0, 0, 7); ctx.fill();
         ctx.beginPath(); ctx.arc(-7, -13, 2.5, 0, 7); ctx.arc(7, -13, 2.5, 0, 7); ctx.fill();
-        // Лапки, держащие ягоду
         ctx.fillStyle = '#6a421f';
         ctx.beginPath(); ctx.arc(-14, 12, 7, 0, 7); ctx.arc(14, 12, 7, 0, 7); ctx.fill();
         ctx.restore();
 
-        if(ready){
-            drawBerryBall(x, 86, BERRIES[curLv].r, curLv);
-        }
-    }
-
-    function drawBerryBall(x, y, r, lv){
-        const b = BERRIES[lv];
-        ctx.save();
-        ctx.translate(x, y);
-        const g = ctx.createRadialGradient(-r*0.3, -r*0.35, r*0.15, 0, 0, r);
-        g.addColorStop(0, b.c1);
-        g.addColorStop(1, b.c2);
-        ctx.fillStyle = g;
-        ctx.strokeStyle = '#ffffff55';
-        ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.fill(); ctx.stroke();
-
-        ctx.fillStyle = '#ffffff44';
-        ctx.beginPath(); ctx.arc(-r*0.32, -r*0.32, r*0.26, 0, 7); ctx.fill();
-
-        ctx.font = `${Math.round(r * 1.15)}px sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(b.e, 0, 1);
-        ctx.restore();
+        if(ready) drawBerryBall(x, 86, curLv);
     }
 
     function loop(){
         if(!y_act) return;
         if(st.cooldown > 0) st.cooldown--;
 
-        // Физика ягод: 6 итераций на кадр для плотной укладки без дрожания
-        const SUB = 6;
+        const SUB = 5;
         let mergedPair = null;
 
         for(let s=0; s<SUB; s++){
@@ -2129,8 +2121,9 @@ function initBerry(){
                 for(let j=i+1; j<N; j++){
                     const b = st.items[j];
                     const dx = b.x - a.x, dy = b.y - a.y;
-                    const dist = Math.hypot(dx, dy);
                     const minD = a.r + b.r;
+                    if(Math.abs(dx) >= minD || Math.abs(dy) >= minD) continue;
+                    const dist = Math.hypot(dx, dy);
                     if(dist < minD){
                         if(!mergedPair && a.lv === b.lv && a.lv < BERRIES.length - 1){
                             mergedPair = [i, j];
@@ -2160,7 +2153,6 @@ function initBerry(){
 
         for(const it of st.items) it.age++;
 
-        // Слияние двух одинаковых ягод в более крупную!
         if(mergedPair){
             const [i, j] = mergedPair;
             const a = st.items[i], b = st.items[j];
@@ -2182,7 +2174,6 @@ function initBerry(){
             S.berryMerges++;
             if(st.score > (S.bestBerry || 0)) S.bestBerry = st.score;
 
-            // Монетки начисляются за крупные слияния (начиная с Земляники/Грибка), чтобы экономика была честной
             let coinGain = newLv >= 7 ? 6 : (newLv >= 5 ? 3 : (newLv >= 3 ? 1 : 0));
             if(coinGain > 0){
                 st.coinsGot += coinGain;
@@ -2197,7 +2188,6 @@ function initBerry(){
             });
         }
 
-        // Проверка переполнения бочонка выше пунктирной линии
         let overLine = false;
         for(const it of st.items){
             if(it.age > 55 && it.y - it.r < BY0){ overLine = true; break; }
@@ -2214,15 +2204,12 @@ function initBerry(){
             st.dangerTimer = Math.max(0, st.dangerTimer - 2);
         }
 
-        // Отрисовка сцены
-        ctx.clearRect(0, 0, Wpx, Hpx);
         const bg = ctx.createLinearGradient(0, 0, 0, Hpx);
         bg.addColorStop(0, '#2d4a22');
         bg.addColorStop(1, '#182812');
         ctx.fillStyle = bg;
         ctx.fillRect(0, 0, Wpx, Hpx);
 
-        // Верхняя плашка со счётом и следующей ягодой
         ctx.fillStyle = 'rgba(0,0,0,0.45)';
         ctx.fillRect(0, 0, Wpx, 32);
         ctx.fillStyle = '#ffe270'; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'left';
@@ -2230,7 +2217,6 @@ function initBerry(){
         ctx.fillStyle = '#ffd34d'; ctx.textAlign = 'right';
         ctx.fillText(`🪙 +${st.coinsGot}   След: ${BERRIES[st.next].e}`, Wpx - 10, 17);
 
-        // Прицельная вертикальная линия от лап Степана
         if(!st.over && st.cooldown === 0){
             ctx.strokeStyle = 'rgba(255,255,255,0.32)';
             ctx.setLineDash([5, 5]); ctx.lineWidth = 2;
@@ -2238,20 +2224,16 @@ function initBerry(){
             ctx.setLineDash([]);
         }
 
-        // Медведь Степан с ягодой в лапах
         drawBearDropper(st.bx, st.cur, st.cooldown === 0 && !st.over);
 
-        // Деревянный контейнер (бочонок) для ягод
         ctx.fillStyle = 'rgba(255, 248, 230, 0.08)';
         ctx.fillRect(BX0, BY0, BX1 - BX0, BY1 - BY0);
 
-        // Линия переполнения
         ctx.strokeStyle = st.dangerTimer > 0 ? '#ff4757' : 'rgba(255,100,100,0.45)';
         ctx.setLineDash([6, 6]); ctx.lineWidth = 2;
         ctx.beginPath(); ctx.moveTo(BX0, BY0); ctx.lineTo(BX1, BY0); ctx.stroke();
         ctx.setLineDash([]);
 
-        // Стенки и дно деревянного бочонка с металлическими обручами
         ctx.strokeStyle = '#8c5830'; ctx.lineWidth = 10; ctx.lineCap = 'round';
         ctx.beginPath();
         ctx.moveTo(BX0 - 4, BY0 - 4); ctx.lineTo(BX0 - 4, BY1 + 4); ctx.lineTo(BX1 + 4, BY1 + 4); ctx.lineTo(BX1 + 4, BY0 - 4);
@@ -2259,12 +2241,8 @@ function initBerry(){
         ctx.strokeStyle = '#5c3818'; ctx.lineWidth = 3;
         ctx.stroke();
 
-        // Отрисовка всех ягод в контейнере
-        for(const it of st.items){
-            drawBerryBall(it.x, it.y, it.r, it.lv);
-        }
+        for(const it of st.items) drawBerryBall(it.x, it.y, it.lv);
 
-        // Эффекты слияния
         for(let i=st.pops.length-1; i>=0; i--){
             const p = st.pops[i];
             p.y -= 0.7; p.a -= 0.035;
@@ -2277,7 +2255,6 @@ function initBerry(){
             ctx.globalAlpha = 1;
         }
 
-        // Шкала эволюции ягод в самом низу
         ctx.fillStyle = 'rgba(0,0,0,0.55)';
         ctx.fillRect(0, Hpx - 20, Wpx, 20);
         ctx.fillStyle = '#fff'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
@@ -2290,14 +2267,32 @@ function initBerry(){
     raf_y = requestAnimationFrame(loop);
 }
 
-// ===== ПУШКА =====
-let raf_b, b_act=false, b_st=null;
+// ===== ПУШКА (С КЭШИРОВАННЫМИ СПРАЙТАМИ ШАРОВ) =====
+let raf_b, b_act=false, b_st=null, BUB_SPR=null;
 const BC=['#ff5f6d','#ffc65c','#4ecdc4','#5a9cf8','#b28dff','#ff8ac2'];
 const BCD=['#c33d4b','#c98f2a','#2a9a92','#3270c8','#7e5ad0','#d05a94'];
+
+function getBubSprites(){
+    if(BUB_SPR) return BUB_SPR;
+    const mk = r => BC.map((c, idx) => {
+        const sz = r * 2 + 4, cx = sz / 2;
+        return mkSprite(sz, sz, ctx => {
+            ctx.beginPath(); ctx.arc(cx + 1.5, cx + 1.5, r, 0, 7); ctx.fillStyle = '#0005'; ctx.fill();
+            const g = ctx.createRadialGradient(cx - r*0.35, cx - r*0.4, r*0.15, cx, cx, r);
+            g.addColorStop(0, '#fff9'); g.addColorStop(0.35, c); g.addColorStop(1, BCD[idx]);
+            ctx.beginPath(); ctx.arc(cx, cx, r, 0, 7); ctx.fillStyle = g; ctx.fill();
+            ctx.beginPath(); ctx.arc(cx - r*0.3, cx - r*0.38, r*0.3, 0, 7); ctx.fillStyle = '#ffffff40'; ctx.fill();
+        });
+    });
+    BUB_SPR = { main: mk(13), sm: mk(9) };
+    return BUB_SPR;
+}
+
 function initBubble(){
     if(!checkState())return; S.gamesPlayed++; save(); go('bubble');
     const Wpx=340,Hpx=460,sc=setupCanvas('#bcanvas',Wpx,Hpx);if(!sc)return;
     const{c,ctx}=sc;
+    const spr = getBubSprites();
     const Rr=14,COLS=Math.floor((Wpx-6)/(Rr*2)),XO=Rr+3,STEP=Rr*1.74,TOPY=34,MAXR=13,DANG=11;
     const maxC=r=>COLS-(r&1),cellX=(r,cc)=>XO+cc*Rr*2+(r&1)*Rr,cellY=r=>TOPY+Rr+r*STEP;
     const st={lvl:1,colors:4,rows:6,grid:[],cur:0,next:0,aim:-Math.PI/2,drag:false,
@@ -2345,7 +2340,7 @@ function initBubble(){
             st.combo++;st.miss=0;
             const gain=match.length+drop*2+st.combo*2;
             st.score+=gain;earn(Math.min(gain,15),false);addXp(gain);
-            chng();hap('success');st.shake=6;
+            chng();hap('success');hud();st.shake=6;
             const bm=$('#bmsg');if(bm)bm.innerHTML=`💥 ${st.combo>1?`Комбо ×${st.combo}! `:''}+${gain} очков`;
             if(!left().length){
                 const bonus=20+st.lvl*10;earn(bonus);
@@ -2374,11 +2369,11 @@ function initBubble(){
                 if((x-cellX(r,cc))**2+(y-cellY(r))**2<(Rr*1.8)**2){hit=true;break}}
             if(hit||bnc>2)break}
         return out}
-    function ball(x,y,col,r){
-        const g=ctx.createRadialGradient(x-r*.35,y-r*.4,r*.15,x,y,r);
-        g.addColorStop(0,'#fff9');g.addColorStop(.35,BC[col]);g.addColorStop(1,BCD[col]);
-        ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fillStyle=g;ctx.fill();
-        ctx.beginPath();ctx.arc(x-r*.3,y-r*.38,r*.3,0,7);ctx.fillStyle='#ffffff40';ctx.fill()}
+    function ball(x,y,col,sm=false){
+        const s = sm ? spr.sm[col] : spr.main[col];
+        const sz = sm ? 22 : 30;
+        ctx.drawImage(s, x - sz*0.5, y - sz*0.5, sz, sz);
+    }
     function cannon(){
         ctx.save();ctx.translate(st.can.x,st.can.y);ctx.rotate(st.aim+Math.PI/2);
         ctx.fillStyle='#2a2f3a';ctx.fillRect(-7,-30,14,32);
@@ -2388,7 +2383,6 @@ function initBubble(){
         ctx.beginPath();ctx.arc(st.can.x,st.can.y,13,0,7);ctx.fillStyle='#39404d';ctx.fill()}
     function loop(){
         if(!b_act)return;
-        ctx.clearRect(0,0,Wpx,Hpx);
         ctx.save();
         if(st.shake>.3){ctx.translate((Math.random()-.5)*st.shake,(Math.random()-.5)*st.shake);st.shake*=.85}
         const bg=ctx.createLinearGradient(0,0,0,Hpx);
@@ -2398,9 +2392,7 @@ function initBubble(){
         ctx.beginPath();ctx.moveTo(0,cellY(DANG)+Rr);ctx.lineTo(Wpx,cellY(DANG)+Rr);ctx.stroke();ctx.setLineDash([]);
         for(let r=0;r<MAXR;r++)for(let cc=0;cc<maxC(r);cc++){
             const v=st.grid[r][cc];if(v<0)continue;
-            const x=cellX(r,cc),y=cellY(r);
-            ctx.beginPath();ctx.arc(x+2,y+2,Rr-1,0,7);ctx.fillStyle='#0005';ctx.fill();
-            ball(x,y,v,Rr-1)}
+            ball(cellX(r,cc),cellY(r),v,false)}
         for(let i=st.parts.length-1;i>=0;i--){const p=st.parts[i];
             p.x+=p.vx;p.y+=p.vy;p.vy+=.18;p.a-=.03;
             if(p.a<=0){st.parts.splice(i,1);continue}
@@ -2418,7 +2410,7 @@ function initBubble(){
         cannon();
         ctx.fillStyle='#fff';ctx.font='10px sans-serif';ctx.textAlign='right';
         ctx.fillText('СМЕНИТЬ ⇄',Wpx-38,Hpx-16);
-        ball(Wpx-20,Hpx-20,st.next,9);
+        ball(Wpx-20,Hpx-20,st.next,true);
         ctx.beginPath();ctx.arc(Wpx-20,Hpx-20,12,0,7);ctx.strokeStyle='#ffffff44';ctx.stroke();
         if(st.fly){
             for(let s2=0;s2<3&&st.fly;s2++){
@@ -2431,8 +2423,8 @@ function initBubble(){
                     if(st.grid[r][cc]<0)continue;
                     if((st.fly.x-cellX(r,cc))**2+(st.fly.y-cellY(r))**2<(Rr*1.85)**2){hit=true;break}}
                 if(hit){snap(st.fly.x,st.fly.y);break}}}
-        if(st.fly)ball(st.fly.x,st.fly.y,st.fly.col,Rr);
-        else if(!st.over)ball(st.can.x,st.can.y,st.cur,Rr);
+        if(st.fly)ball(st.fly.x,st.fly.y,st.fly.col,false);
+        else if(!st.over)ball(st.can.x,st.can.y,st.cur,false);
         ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(0,0,Wpx,28);
         ctx.fillStyle='#ffe270';ctx.font='bold 13px sans-serif';ctx.textAlign='left';
         ctx.fillText(`🎯 ${st.score}`,8,19);
@@ -2613,285 +2605,141 @@ function svgPill(x,y,txt,badge=false){
     </g>`;
 }
 
-const W={pc:3,pr:3,tpc:3,tpr:3,wk:0,fl:1,bush:{},
-html(){
-let bg="",waterBank="",waterFill="",waterTop="",pathBorder="",pathFill="",objs="",L="",hei=getHei();
-const isClub = S.mapId === 1;
-const Wpx = wid*TS, Hpx = hei*TS;
-const hasQuestReady = Q.some((q,i)=>q.v()>=q.n && !S.claimed.includes(i)) || (S.claimed.length>=6 && !S.dailyBonus) || ACH.some((a,i)=>a.v()>=a.n && !S.achClaimed.includes(i));
-
-if(!isClub){
-    bg += `<defs>
-        <radialGradient id="gladeGrad" cx="50%" cy="42%" r="62%">
-            <stop offset="0%" stop-color="#8ccf65"/>
-            <stop offset="55%" stop-color="#72b650"/>
-            <stop offset="100%" stop-color="#53943d"/>
-        </radialGradient>
-    </defs>
-    <rect width="${Wpx}" height="${Hpx}" fill="url(#gladeGrad)"/>`;
-    [[170,180,95,50],[460,170,100,55],[310,330,130,70],[180,550,95,55],[340,720,115,55]].forEach(([cx,cy,rx,ry])=>{
-        bg += `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="#9ee075" opacity="0.26"/>`;
-    });
-} else {
-    bg += `<rect width="${Wpx}" height="${Hpx}" fill="#28150b"/>`;
-    for(let r=0;r<11;r++)for(let c=0;c<wid;c++){
-        const x=c*TS,y=r*TS;
-        bg += `<rect x="${x}" y="${y}" width="48" height="48" fill="${(r+c)%2?'#4a2d1d':'#3e2416'}" stroke="#2e190e" stroke-width="0.8"/>`;
-    }
-    bg += `<g>
-        <rect x="${1*TS+14}" y="${4*TS-4}" width="${12*TS-28}" height="${5*TS+8}" rx="14" fill="#e6c637"/>
-        <rect x="${6*TS+8}" y="${3*TS+4}" width="${2*TS-16}" height="${7*TS-8}" rx="10" fill="#e6c637"/>
-        <rect x="${1*TS+17}" y="${4*TS-1}" width="${12*TS-34}" height="${5*TS+2}" rx="11" fill="#78202b"/>
-        <rect x="${6*TS+11}" y="${3*TS+7}" width="${2*TS-22}" height="${7*TS-14}" rx="8" fill="#78202b"/>
-        <rect x="${1*TS+23}" y="${4*TS+5}" width="${12*TS-46}" height="${5*TS-10}" rx="8" fill="none" stroke="#f1c40f33" stroke-width="1.5"/>
-    </g>`;
-}
-
-for(let r=0;r<hei;r++)for(let c=0;c<wid;c++){
-    const k=at(c,r),x=c*TS,y=r*TS,cx=x+24,cy=y+24;
+// ===== КЭШИРОВАННАЯ КАРТА МИРА И АППАРАТНОЕ УСКОРЕНИЕ TRANSLATE3D =====
+const W={pc:3,pr:3,tpc:3,tpr:3,wk:0,fl:1,bush:{},_cache:{},
+buildStatic(mapId){
+    if(W._cache[mapId]) return W._cache[mapId];
+    let bg="",waterBank="",waterFill="",waterTop="",pathBorder="",pathFill="",objs="",L="";
+    const isClub = mapId === 1, hei = isClub ? 14 : 18;
+    const Wpx = wid*TS, Hpx = hei*TS;
+    const mAt = (c,r)=>((isClub?M1:M0)[r]&&(isClub?M1:M0)[r][c])||"T";
 
     if(!isClub){
-        if(isRoad(k)){
-            const u=isRoad(at(c,r-1)), d=isRoad(at(c,r+1)), l=isRoad(at(c-1,r)), ri=isRoad(at(c+1,r));
-            pathBorder += `<circle cx="${cx}" cy="${cy}" r="21" fill="#c49e62"/>`;
-            if(u) pathBorder += `<rect x="${x+3}" y="${y}" width="42" height="24" fill="#c49e62"/>`;
-            if(d) pathBorder += `<rect x="${x+3}" y="${y+24}" width="42" height="24" fill="#c49e62"/>`;
-            if(l) pathBorder += `<rect x="${x}" y="${y+3}" width="24" height="42" fill="#c49e62"/>`;
-            if(ri) pathBorder += `<rect x="${x+24}" y="${y+3}" width="24" height="42" fill="#c49e62"/>`;
-            if(d&&ri&&isRoad(at(c+1,r+1))) pathBorder += `<rect x="${x+24}" y="${y+24}" width="24" height="24" fill="#c49e62"/>`;
-
-            pathFill += `<circle cx="${cx}" cy="${cy}" r="18" fill="#e6cc96"/>`;
-            if(u) pathFill += `<rect x="${x+6}" y="${y}" width="36" height="24" fill="#e6cc96"/>`;
-            if(d) pathFill += `<rect x="${x+6}" y="${y+24}" width="36" height="24" fill="#e6cc96"/>`;
-            if(l) pathFill += `<rect x="${x}" y="${y+6}" width="24" height="36" fill="#e6cc96"/>`;
-            if(ri) pathFill += `<rect x="${x+24}" y="${y+6}" width="24" height="36" fill="#e6cc96"/>`;
-            if(d&&ri&&isRoad(at(c+1,r+1))) pathFill += `<rect x="${x+24}" y="${y+24}" width="24" height="24" fill="#e6cc96"/>`;
-            if((c+r)%2===0) pathFill += `<circle cx="${cx-6}" cy="${cy+4}" r="2.2" fill="#d1b379"/><circle cx="${cx+7}" cy="${cy-5}" r="1.8" fill="#d1b379"/>`;
+        bg += `<defs><radialGradient id="gladeGrad" cx="50%" cy="42%" r="62%"><stop offset="0%" stop-color="#8ccf65"/><stop offset="55%" stop-color="#72b650"/><stop offset="100%" stop-color="#53943d"/></radialGradient></defs><rect width="${Wpx}" height="${Hpx}" fill="url(#gladeGrad)"/>`;
+        [[170,180,95,50],[460,170,100,55],[310,330,130,70],[180,550,95,55],[340,720,115,55]].forEach(([cx,cy,rx,ry])=>{
+            bg += `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="#9ee075" opacity="0.26"/>`;
+        });
+    } else {
+        bg += `<rect width="${Wpx}" height="${Hpx}" fill="#28150b"/>`;
+        for(let r=0;r<11;r++)for(let c=0;c<wid;c++){
+            const x=c*TS,y=r*TS;
+            bg += `<rect x="${x}" y="${y}" width="48" height="48" fill="${(r+c)%2?'#4a2d1d':'#3e2416'}" stroke="#2e190e" stroke-width="0.8"/>`;
         }
+        bg += `<g><rect x="${1*TS+14}" y="${4*TS-4}" width="${12*TS-28}" height="${5*TS+8}" rx="14" fill="#e6c637"/><rect x="${6*TS+8}" y="${3*TS+4}" width="${2*TS-16}" height="${7*TS-8}" rx="10" fill="#e6c637"/><rect x="${1*TS+17}" y="${4*TS-1}" width="${12*TS-34}" height="${5*TS+2}" rx="11" fill="#78202b"/><rect x="${6*TS+11}" y="${3*TS+7}" width="${2*TS-22}" height="${7*TS-14}" rx="8" fill="#78202b"/><rect x="${1*TS+23}" y="${4*TS+5}" width="${12*TS-46}" height="${5*TS-10}" rx="8" fill="none" stroke="#f1c40f33" stroke-width="1.5"/></g>`;
+    }
 
-        if(k=="~"){
-            const u=at(c,r-1)=="~", d=at(c,r+1)=="~", l=at(c-1,r)=="~", ri=at(c+1,r)=="~";
-            waterBank += `<rect x="${x-6}" y="${y-6}" width="60" height="60" rx="22" fill="#e8cf96"/>`;
-            waterFill += `<rect x="${x}" y="${y}" width="48" height="48" rx="16" fill="#3f9bd0"/>`;
-            if(u) waterFill += `<rect x="${x}" y="${y}" width="48" height="24" fill="#3f9bd0"/>`;
-            if(d) waterFill += `<rect x="${x}" y="${y+24}" width="48" height="24" fill="#3f9bd0"/>`;
-            if(l) waterFill += `<rect x="${x}" y="${y}" width="24" height="48" fill="#3f9bd0"/>`;
-            if(ri) waterFill += `<rect x="${x+24}" y="${y}" width="24" height="48" fill="#3f9bd0"/>`;
-            if(u&&l&&at(c-1,r-1)=="~") waterFill += `<rect x="${x}" y="${y}" width="24" height="24" fill="#3f9bd0"/>`;
-            if(u&&ri&&at(c+1,r-1)=="~") waterFill += `<rect x="${x+24}" y="${y}" width="24" height="24" fill="#3f9bd0"/>`;
-            if(d&&l&&at(c-1,r+1)=="~") waterFill += `<rect x="${x}" y="${y+24}" width="24" height="24" fill="#3f9bd0"/>`;
-            if(d&&ri&&at(c+1,r+1)=="~") waterFill += `<rect x="${x+24}" y="${y+24}" width="24" height="24" fill="#3f9bd0"/>`;
-            if(l&&ri) waterTop += `<rect x="${x+4}" y="${y+4}" width="40" height="40" rx="12" fill="#2c81b5" opacity="0.45"/>`;
-            waterTop += `<path class="sh" style="animation-delay:${(c*r)%4*.5}s" d="M${x+10} ${y+24}q7-5 14 0t14 0" stroke="#ffffffaa" stroke-width="2" fill="none" stroke-linecap="round"/>`;
-            if(c===11 && r===11) waterTop += `<circle cx="${x+24}" cy="${y+20}" r="6.5" fill="#469c4b"/><circle cx="${x+24}" cy="${y+19}" r="2.8" fill="#ff9ebb"/>`;
-        }
+    for(let r=0;r<hei;r++)for(let c=0;c<wid;c++){
+        const k=mAt(c,r),x=c*TS,y=r*TS,cx=x+24,cy=y+24;
+        if(!isClub){
+            if(isRoad(k)){
+                const u=isRoad(mAt(c,r-1)), d=isRoad(mAt(c,r+1)), l=isRoad(mAt(c-1,r)), ri=isRoad(mAt(c+1,r));
+                pathBorder += `<circle cx="${cx}" cy="${cy}" r="21" fill="#c49e62"/>`;
+                if(u) pathBorder += `<rect x="${x+3}" y="${y}" width="42" height="24" fill="#c49e62"/>`;
+                if(d) pathBorder += `<rect x="${x+3}" y="${y+24}" width="42" height="24" fill="#c49e62"/>`;
+                if(l) pathBorder += `<rect x="${x}" y="${y+3}" width="24" height="42" fill="#c49e62"/>`;
+                if(ri) pathBorder += `<rect x="${x+24}" y="${y+3}" width="24" height="42" fill="#c49e62"/>`;
+                if(d&&ri&&isRoad(mAt(c+1,r+1))) pathBorder += `<rect x="${x+24}" y="${y+24}" width="24" height="24" fill="#c49e62"/>`;
 
-        if(k=="." && (c*7+r*13)%5===0){
-            bg += `<path d="M${cx-4} ${cy+6} l-3 -7 M${cx} ${cy+6} l0 -9 M${cx+4} ${cy+6} l3 -7" stroke="#53993e" stroke-width="2" stroke-linecap="round"/>`;
-        }
-        if(k=="f"){
-            objs += `<g transform="translate(${x} ${y})">
-                <circle cx="16" cy="20" r="5" fill="#fff"/><circle cx="16" cy="20" r="2.2" fill="#f1c40f"/>
-                <circle cx="33" cy="30" r="5.5" fill="#ff9ebb"/><circle cx="33" cy="30" r="2.2" fill="#f1c40f"/>
-                <circle cx="20" cy="35" r="4.5" fill="#fff"/><circle cx="20" cy="35" r="2" fill="#f1c40f"/>
-            </g>`;
-        }
-        if(k=="g"){
-            objs += `<g transform="translate(${x} ${y})">
-                <ellipse cx="24" cy="36" rx="16" ry="7" fill="#498737"/>
-                <path d="M14 35 Q10 18 6 16 M20 36 Q18 16 16 12 M26 36 Q28 16 32 13 M33 35 Q38 20 42 18" stroke="#387028" stroke-width="3" fill="none" stroke-linecap="round"/>
-            </g>`;
-        }
-
-        if(k=="T") objs += svgTree(x,y,(r+c)%3===0);
-
-        if(k=="b"){
-            const ready = (W.bush[r*wid+c]||0) <= Date.now();
-            objs += `<g transform="translate(${x} ${y})">
-                <ellipse cx="24" cy="41" rx="19" ry="6" fill="#0003"/>
-                <circle cx="15" cy="29" r="12" fill="#2e7332"/>
-                <circle cx="33" cy="29" r="12" fill="#2e7332"/>
-                <circle cx="24" cy="22" r="14" fill="#3d8c40"/>
-                <circle cx="20" cy="19" r="9" fill="#52a655"/>
-                ${ready ? `<circle cx="15" cy="25" r="3.5" fill="#2c5aa0" stroke="#a8c8ff" stroke-width="1"/>
-                <circle cx="25" cy="19" r="3.5" fill="#2c5aa0" stroke="#a8c8ff" stroke-width="1"/>
-                <circle cx="32" cy="27" r="3.5" fill="#2c5aa0" stroke="#a8c8ff" stroke-width="1"/>
-                <circle cx="22" cy="31" r="3.5" fill="#2c5aa0" stroke="#a8c8ff" stroke-width="1"/>` : ``}
-            </g>`;
-            L += svgPill(x,y,"Ягоды");
-        }
-
-        if(k=="H"){ objs += svgDen(x,y,S.house); L += svgPill(x,y,"Берлога"); }
-        if(k=="K"){
-            objs += svgShop(x,y); L += svgPill(x,y,"Лавка");
-            if(S.items.hive){
-                objs += `<g transform="translate(${x+48} ${y})">
-                    <ellipse cx="24" cy="42" rx="15" ry="5" fill="#0003"/>
-                    <rect x="14" y="34" width="20" height="7" rx="2" fill="#6b4423"/>
-                    <ellipse cx="24" cy="30" rx="14" ry="6" fill="#d99126"/>
-                    <ellipse cx="24" cy="23" rx="13" ry="6" fill="#eba434"/>
-                    <ellipse cx="24" cy="16" rx="10" ry="5" fill="#f5b841"/>
-                    <circle cx="24" cy="26" r="3.5" fill="#2a1808"/>
-                    <text x="10" y="14" font-size="13">🐝</text><text x="34" y="18" font-size="12">🐝</text>
-                </g>`;
+                pathFill += `<circle cx="${cx}" cy="${cy}" r="18" fill="#e6cc96"/>`;
+                if(u) pathFill += `<rect x="${x+6}" y="${y}" width="36" height="24" fill="#e6cc96"/>`;
+                if(d) pathFill += `<rect x="${x+6}" y="${y+24}" width="36" height="24" fill="#e6cc96"/>`;
+                if(l) pathFill += `<rect x="${x}" y="${y+6}" width="24" height="36" fill="#e6cc96"/>`;
+                if(ri) pathFill += `<rect x="${x+24}" y="${y+6}" width="24" height="36" fill="#e6cc96"/>`;
+                if(d&&ri&&isRoad(mAt(c+1,r+1))) pathFill += `<rect x="${x+24}" y="${y+24}" width="24" height="24" fill="#e6cc96"/>`;
+                if((c+r)%2===0) pathFill += `<circle cx="${cx-6}" cy="${cy+4}" r="2.2" fill="#d1b379"/><circle cx="${cx+7}" cy="${cy-5}" r="1.8" fill="#d1b379"/>`;
+            }
+            if(k=="~"){
+                const u=mAt(c,r-1)=="~", d=mAt(c,r+1)=="~", l=mAt(c-1,r)=="~", ri=mAt(c+1,r)=="~";
+                waterBank += `<rect x="${x-6}" y="${y-6}" width="60" height="60" rx="22" fill="#e8cf96"/>`;
+                waterFill += `<rect x="${x}" y="${y}" width="48" height="48" rx="16" fill="#3f9bd0"/>`;
+                if(u) waterFill += `<rect x="${x}" y="${y}" width="48" height="24" fill="#3f9bd0"/>`;
+                if(d) waterFill += `<rect x="${x}" y="${y+24}" width="48" height="24" fill="#3f9bd0"/>`;
+                if(l) waterFill += `<rect x="${x}" y="${y}" width="24" height="48" fill="#3f9bd0"/>`;
+                if(ri) waterFill += `<rect x="${x+24}" y="${y}" width="24" height="48" fill="#3f9bd0"/>`;
+                if(u&&l&&mAt(c-1,r-1)=="~") waterFill += `<rect x="${x}" y="${y}" width="24" height="24" fill="#3f9bd0"/>`;
+                if(u&&ri&&mAt(c+1,r-1)=="~") waterFill += `<rect x="${x+24}" y="${y}" width="24" height="24" fill="#3f9bd0"/>`;
+                if(d&&l&&mAt(c-1,r+1)=="~") waterFill += `<rect x="${x}" y="${y+24}" width="24" height="24" fill="#3f9bd0"/>`;
+                if(d&&ri&&mAt(c+1,r+1)=="~") waterFill += `<rect x="${x+24}" y="${y+24}" width="24" height="24" fill="#3f9bd0"/>`;
+                if(l&&ri) waterTop += `<rect x="${x+4}" y="${y+4}" width="40" height="40" rx="12" fill="#2c81b5" opacity="0.45"/>`;
+                waterTop += `<path class="sh" style="animation-delay:${(c*r)%4*.5}s" d="M${x+10} ${y+24}q7-5 14 0t14 0" stroke="#ffffffaa" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+                if(c===11 && r===11) waterTop += `<circle cx="${x+24}" cy="${y+20}" r="6.5" fill="#469c4b"/><circle cx="${x+24}" cy="${y+19}" r="2.8" fill="#ff9ebb"/>`;
+            }
+            if(k=="." && (c*7+r*13)%5===0) bg += `<path d="M${cx-4} ${cy+6} l-3 -7 M${cx} ${cy+6} l0 -9 M${cx+4} ${cy+6} l3 -7" stroke="#53993e" stroke-width="2" stroke-linecap="round"/>`;
+            if(k=="f") objs += `<g transform="translate(${x} ${y})"><circle cx="16" cy="20" r="5" fill="#fff"/><circle cx="16" cy="20" r="2.2" fill="#f1c40f"/><circle cx="33" cy="30" r="5.5" fill="#ff9ebb"/><circle cx="33" cy="30" r="2.2" fill="#f1c40f"/><circle cx="20" cy="35" r="4.5" fill="#fff"/><circle cx="20" cy="35" r="2" fill="#f1c40f"/></g>`;
+            if(k=="g") objs += `<g transform="translate(${x} ${y})"><ellipse cx="24" cy="36" rx="16" ry="7" fill="#498737"/><path d="M14 35 Q10 18 6 16 M20 36 Q18 16 16 12 M26 36 Q28 16 32 13 M33 35 Q38 20 42 18" stroke="#387028" stroke-width="3" fill="none" stroke-linecap="round"/></g>`;
+            if(k=="T") objs += svgTree(x,y,(r+c)%3===0);
+            if(k=="K"){ objs += svgShop(x,y); L += svgPill(x,y,"Лавка"); }
+            if(k=="G"){ objs += svgClub(x,y); L += svgPill(x,y,"Клуб игр"); }
+            if(k=="Q"){
+                objs += `<g transform="translate(${x} ${y})"><ellipse cx="24" cy="43" rx="16" ry="5" fill="#0003"/><rect x="11" y="24" width="4" height="19" fill="#5c3818"/><rect x="33" y="24" width="4" height="19" fill="#5c3818"/><rect x="7" y="10" width="34" height="22" rx="3" fill="#8c5830" stroke="#4d2c14" stroke-width="2"/><polygon points="5,11 24,3 43,11" fill="#6b401e"/><rect x="12" y="14" width="10" height="13" fill="#fff5dc"/><rect x="25" y="15" width="11" height="12" fill="#fbe8b2"/></g>`;
+            }
+            if(k=="A"){ objs += `<g transform="translate(${x} ${y})"><ellipse cx="24" cy="43" rx="16" ry="5" fill="#0003"/><line x1="15" y1="26" x2="11" y2="43" stroke="#5c3818" stroke-width="3.5" stroke-linecap="round"/><line x1="33" y1="26" x2="37" y2="43" stroke="#5c3818" stroke-width="3.5" stroke-linecap="round"/><circle cx="24" cy="22" r="15" fill="#e74c3c" stroke="#5c3818" stroke-width="2"/><circle cx="24" cy="22" r="10" fill="#fff"/><circle cx="24" cy="22" r="6" fill="#e74c3c"/><circle cx="24" cy="22" r="2.5" fill="#f1c40f"/></g>`; L += svgPill(x,y,"Дартс"); }
+            if(k=="C"){ objs += `<g transform="translate(${x} ${y})"><ellipse cx="24" cy="43" rx="18" ry="6" fill="#0003"/><g transform="rotate(-28 24 26)"><rect x="14" y="14" width="24" height="13" rx="5" fill="#34495e" stroke="#1a252f" stroke-width="2"/></g><circle cx="19" cy="34" r="8" fill="#8c5830" stroke="#4d2c14" stroke-width="2"/><circle cx="19" cy="34" r="2.5" fill="#f1c40f"/><circle cx="34" cy="11" r="4.5" fill="#ff5f6d"/><circle cx="41" cy="17" r="3.5" fill="#4ecdc4"/></g>`; L += svgPill(x,y,"Пушка"); }
+            if(k=="S"){ objs += `<g transform="translate(${x} ${y})"><ellipse cx="24" cy="43" rx="19" ry="6" fill="#0003"/><ellipse cx="24" cy="34" rx="15" ry="8" fill="#8c5830"/><ellipse cx="24" cy="26" rx="18" ry="10" fill="#c78d52" stroke="#6e4720" stroke-width="2"/><rect x="14" y="20" width="8" height="8" rx="2" fill="#e74c3c"/><rect x="25" y="20" width="8" height="8" rx="2" fill="#3498db"/><rect x="19" y="26" width="8" height="8" rx="2" fill="#f1c40f"/></g>`; L += svgPill(x,y,"3 в ряд"); }
+            if(k=="Y"){ objs += `<g transform="translate(${x} ${y})"><ellipse cx="24" cy="43" rx="19" ry="6" fill="#0003"/><rect x="9" y="16" width="30" height="26" rx="5" fill="#9c6638" stroke="#4d2c14" stroke-width="2"/><line x1="16" y1="16" x2="16" y2="42" stroke="#6b401e" stroke-width="1.5"/><line x1="24" y1="16" x2="24" y2="42" stroke="#6b401e" stroke-width="1.5"/><line x1="32" y1="16" x2="32" y2="42" stroke="#6b401e" stroke-width="1.5"/><rect x="8" y="21" width="32" height="3.5" fill="#576574"/><rect x="8" y="34" width="32" height="3.5" fill="#576574"/><circle cx="16" cy="14" r="5" fill="#364fc7"/><circle cx="24" cy="12" r="6" fill="#e03131"/><circle cx="32" cy="14" r="5" fill="#51cf66"/></g>`; L += svgPill(x,y,"Ягодница"); }
+            if(k=="F"){ objs += `<g transform="translate(${x} ${y})"><ellipse cx="64" cy="41" rx="7" ry="2.5" fill="none" stroke="#ffffffaa" stroke-width="1.5"/><ellipse cx="80" cy="41" rx="7" ry="2.5" fill="none" stroke="#ffffffaa" stroke-width="1.5"/><rect x="61" y="32" width="6" height="9" rx="1" fill="#3d2210"/><rect x="77" y="32" width="6" height="9" rx="1" fill="#3d2210"/><rect x="14" y="16" width="72" height="20" rx="3" fill="#6b401e"/><rect x="14" y="13" width="72" height="20" rx="3" fill="#9c6638" stroke="#4d2c14" stroke-width="1.5"/><line x1="24" y1="13" x2="24" y2="33" stroke="#5c3818" stroke-width="2"/><line x1="36" y1="13" x2="36" y2="33" stroke="#5c3818" stroke-width="2"/><line x1="48" y1="13" x2="48" y2="33" stroke="#5c3818" stroke-width="2"/><line x1="60" y1="13" x2="60" y2="33" stroke="#5c3818" stroke-width="2"/><line x1="72" y1="13" x2="72" y2="33" stroke="#5c3818" stroke-width="2"/><circle cx="18" cy="14" r="3" fill="#4d2c14"/><circle cx="18" cy="32" r="3" fill="#4d2c14"/><circle cx="81" cy="14" r="3" fill="#4d2c14"/><circle cx="81" cy="32" r="3" fill="#4d2c14"/><path d="M58 20 L88 5" stroke="#e0a02a" stroke-width="2.2" stroke-linecap="round"/><path d="M88 5 L88 24" stroke="#ffffffaa" stroke-width="1" stroke-dasharray="2 2"/><circle cx="88" cy="25" r="2.5" fill="#e74c3c" stroke="#fff" stroke-width="1"/></g>`; L += svgPill(x+12,y,"Рыбалка"); }
+            if(k=="R"){ objs += `<g transform="translate(${x} ${y})"><ellipse cx="24" cy="43" rx="22" ry="6" fill="#0003"/><path d="M3 42 Q22 18 45 38 Z" fill="#6b401e" stroke="#469c4b" stroke-width="2.5"/><g transform="translate(23 24) rotate(-18)"><rect x="-13" y="-6" width="26" height="10" rx="3" fill="#d63031" stroke="#7d1919" stroke-width="1.5"/><path d="M-8 -6 L-4 -13 L6 -13 L10 -6" fill="none" stroke="#2c3e50" stroke-width="2"/><circle cx="-8" cy="6" r="5" fill="#222"/><circle cx="-8" cy="6" r="2" fill="#f1c40f"/><circle cx="8" cy="6" r="5" fill="#222"/><circle cx="8" cy="6" r="2" fill="#f1c40f"/></g></g>`; L += svgPill(x,y,"Гараж"); }
+            if(k=="M"){ objs += `<g transform="translate(${x} ${y})"><ellipse cx="24" cy="41" rx="20" ry="7" fill="#0003"/><ellipse cx="15" cy="35" rx="9" ry="4.5" fill="#5c3818"/><ellipse cx="33" cy="36" rx="9" ry="4.5" fill="#5c3818"/><ellipse cx="24" cy="29" rx="12" ry="6" fill="#4a2c12"/><path d="M17 29 C17 14 31 14 31 29 Z" fill="#8c5a32"/><ellipse cx="24" cy="23" rx="4" ry="2.8" fill="#f5b7b1"/><circle cx="24" cy="22" r="1.5" fill="#c0392b"/><circle cx="21" cy="19" r="1.5" fill="#111"/><circle cx="27" cy="19" r="1.5" fill="#111"/></g>`; L += svgPill(x,y,"Кроты"); }
+        } else {
+            const ico=(t,z)=>`<text x="${cx}" y="${y+29}" font-size="${z}" text-anchor="middle">${t}</text>`;
+            if(k=="W"){
+                if(r<=10) objs += `<rect x="${x}" y="${y}" width="48" height="48" fill="#28150b"/><rect x="${x+3}" y="${y+4}" width="42" height="38" rx="3" fill="#3b2214" stroke="#593622" stroke-width="2"/><rect x="${x}" y="${y+43}" width="48" height="5" fill="#170b05"/>`;
+                else objs += `<rect x="${x}" y="${y}" width="48" height="48" fill="#1e1008"/>`;
+            }
+            if(k=="L") objs += `<rect x="${x}" y="${y}" width="48" height="48" fill="#28150b"/><circle cx="${cx}" cy="${cy}" r="18" fill="#f1c40f" opacity="0.32"/><circle cx="${cx}" cy="${cy}" r="8" fill="#ffe97a"/>`;
+            if(k=="B" || k=="U"){
+                objs += `<rect x="${x}" y="${y+14}" width="48" height="24" fill="#5c3a21"/><rect x="${x}" y="${y+12}" width="48" height="8" rx="2" fill="#c38345"/><circle cx="${cx}" cy="${y+43}" r="7" fill="#2c1a10" stroke="#111" stroke-width="2"/>`;
+            }
+            if(k=="U" && c===6){
+                L+=`<g transform="translate(${7*TS} ${y+14})"><circle cx="-13" cy="-28" r="6" fill="#5a3818"/><circle cx="13" cy="-28" r="6" fill="#5a3818"/><ellipse cx="0" cy="-2" rx="18" ry="14" fill="#111"/><polygon points="-7,-12 7,-12 0,4" fill="#fff"/><polygon points="-3,-10 3,-10 0,6" fill="#e74c3c"/><circle cx="0" cy="-19" r="14" fill="#8a5a2e"/><ellipse cx="0" cy="-14" rx="7" ry="5" fill="#d9b48a"/><ellipse cx="0" cy="-16" rx="3" ry="2" fill="#2a1a10"/><circle cx="-5" cy="-21" r="1.8" fill="#2a1a10"/><circle cx="5" cy="-21" r="1.8" fill="#2a1a10"/><rect x="-48" y="0" width="96" height="24" fill="#5c3a21"/><rect x="-48" y="-2" width="96" height="8" rx="2" fill="#c38345"/><text x="0" y="15" font-size="18" text-anchor="middle">🛎</text></g>`+svgPill(6.5*TS,y-4,"Фреш-бар");
+            }
+            if(["D","O","1","2","3","5","6","7"].includes(k)){
+                objs+=`<ellipse cx="${cx}" cy="${y+41}" rx="18" ry="5" fill="#0004"/><rect x="${x+6}" y="${y+6}" width="36" height="34" rx="7" fill="#8c5830" stroke="#f1c40f" stroke-width="1.8"/><rect x="${x+10}" y="${y+9}" width="28" height="24" rx="5" fill="#24160e"/>`;
+            }
+            if(k=="D"){ objs+=ico("🎡",21); L+=svgPill(x,y-4,"Колесо"); }
+            if(k=="O"){ objs+=ico("🎩",21); L+=svgPill(x,y-4,"Цилиндры"); }
+            if(k=="1"){ objs+=ico("🃏",21); L+=svgPill(x,y-4,"Карты"); }
+            if(k=="2"){ objs+=ico("🎰",21); L+=svgPill(x,y-4,"Три ягоды"); }
+            if(k=="3"){ objs+=ico("🪙",21); L+=svgPill(x,y-4,"Монетка"); }
+            if(k=="5"){ objs+=ico("⛏",21); L+=svgPill(x,y-4,"Прииск"); }
+            if(k=="6"){ objs+=ico("🧠",21); L+=svgPill(x,y-4,"Мемори"); }
+            if(k=="7"){ objs+=ico("♠️",21); L+=svgPill(x,y-4,"Дуэль 21"); }
+            if(k=="X" && c===6){
+                objs+=`<rect x="${6*TS+10}" y="${y+4}" width="76" height="44" rx="5" fill="#4a2617" stroke="#f1c40f" stroke-width="2"/><line x1="${7*TS}" y1="${y+4}" x2="${7*TS}" y2="${y+48}" stroke="#28150b" stroke-width="2"/><circle cx="${7*TS-6}" cy="${y+26}" r="2.5" fill="#f1c40f"/><circle cx="${7*TS+6}" cy="${y+26}" r="2.5" fill="#f1c40f"/>`;
+                L+=svgPill(6.5*TS,y-4,"Выход в лес");
             }
         }
-        if(k=="G"){ objs += svgClub(x,y); L += svgPill(x,y,"Клуб игр"); }
-        if(k=="Q"){
-            objs += `<g transform="translate(${x} ${y})">
-                <ellipse cx="24" cy="43" rx="16" ry="5" fill="#0003"/>
-                <rect x="11" y="24" width="4" height="19" fill="#5c3818"/>
-                <rect x="33" y="24" width="4" height="19" fill="#5c3818"/>
-                <rect x="7" y="10" width="34" height="22" rx="3" fill="#8c5830" stroke="#4d2c14" stroke-width="2"/>
-                <polygon points="5,11 24,3 43,11" fill="#6b401e"/>
-                <rect x="12" y="14" width="10" height="13" fill="#fff5dc"/><rect x="25" y="15" width="11" height="12" fill="#fbe8b2"/>
-            </g>`;
-            L += svgPill(x,y,"Задания",hasQuestReady);
-        }
-        if(k=="A"){
-            objs += `<g transform="translate(${x} ${y})">
-                <ellipse cx="24" cy="43" rx="16" ry="5" fill="#0003"/>
-                <line x1="15" y1="26" x2="11" y2="43" stroke="#5c3818" stroke-width="3.5" stroke-linecap="round"/>
-                <line x1="33" y1="26" x2="37" y2="43" stroke="#5c3818" stroke-width="3.5" stroke-linecap="round"/>
-                <circle cx="24" cy="22" r="15" fill="#e74c3c" stroke="#5c3818" stroke-width="2"/>
-                <circle cx="24" cy="22" r="10" fill="#fff"/>
-                <circle cx="24" cy="22" r="6" fill="#e74c3c"/>
-                <circle cx="24" cy="22" r="2.5" fill="#f1c40f"/>
-            </g>`;
-            L += svgPill(x,y,"Дартс");
-        }
-        if(k=="C"){
-            objs += `<g transform="translate(${x} ${y})">
-                <ellipse cx="24" cy="43" rx="18" ry="6" fill="#0003"/>
-                <g transform="rotate(-28 24 26)"><rect x="14" y="14" width="24" height="13" rx="5" fill="#34495e" stroke="#1a252f" stroke-width="2"/></g>
-                <circle cx="19" cy="34" r="8" fill="#8c5830" stroke="#4d2c14" stroke-width="2"/><circle cx="19" cy="34" r="2.5" fill="#f1c40f"/>
-                <circle cx="34" cy="11" r="4.5" fill="#ff5f6d"/><circle cx="41" cy="17" r="3.5" fill="#4ecdc4"/>
-            </g>`;
-            L += svgPill(x,y,"Пушка");
-        }
-        if(k=="S"){
-            objs += `<g transform="translate(${x} ${y})">
-                <ellipse cx="24" cy="43" rx="19" ry="6" fill="#0003"/>
-                <ellipse cx="24" cy="34" rx="15" ry="8" fill="#8c5830"/>
-                <ellipse cx="24" cy="26" rx="18" ry="10" fill="#c78d52" stroke="#6e4720" stroke-width="2"/>
-                <rect x="14" y="20" width="8" height="8" rx="2" fill="#e74c3c"/><rect x="25" y="20" width="8" height="8" rx="2" fill="#3498db"/>
-                <rect x="19" y="26" width="8" height="8" rx="2" fill="#f1c40f"/>
-            </g>`;
-            L += svgPill(x,y,"3 в ряд");
-        }
-        if(k=="Y"){
-            // Большой деревянный бочонок с ягодами (Suika-игра)
-            objs += `<g transform="translate(${x} ${y})">
-                <ellipse cx="24" cy="43" rx="19" ry="6" fill="#0003"/>
-                <rect x="9" y="16" width="30" height="26" rx="5" fill="#9c6638" stroke="#4d2c14" stroke-width="2"/>
-                <line x1="16" y1="16" x2="16" y2="42" stroke="#6b401e" stroke-width="1.5"/>
-                <line x1="24" y1="16" x2="24" y2="42" stroke="#6b401e" stroke-width="1.5"/>
-                <line x1="32" y1="16" x2="32" y2="42" stroke="#6b401e" stroke-width="1.5"/>
-                <rect x="8" y="21" width="32" height="3.5" fill="#576574"/>
-                <rect x="8" y="34" width="32" height="3.5" fill="#576574"/>
-                <circle cx="16" cy="14" r="5" fill="#364fc7"/><circle cx="24" cy="12" r="6" fill="#e03131"/><circle cx="32" cy="14" r="5" fill="#51cf66"/>
-            </g>`;
-            L += svgPill(x,y,"Ягодница");
-        }
-        if(k=="F"){
-            objs += `<g transform="translate(${x} ${y})">
-                <ellipse cx="64" cy="41" rx="7" ry="2.5" fill="none" stroke="#ffffffaa" stroke-width="1.5"/>
-                <ellipse cx="80" cy="41" rx="7" ry="2.5" fill="none" stroke="#ffffffaa" stroke-width="1.5"/>
-                <rect x="61" y="32" width="6" height="9" rx="1" fill="#3d2210"/>
-                <rect x="77" y="32" width="6" height="9" rx="1" fill="#3d2210"/>
-                <rect x="14" y="16" width="72" height="20" rx="3" fill="#6b401e"/>
-                <rect x="14" y="13" width="72" height="20" rx="3" fill="#9c6638" stroke="#4d2c14" stroke-width="1.5"/>
-                <line x1="24" y1="13" x2="24" y2="33" stroke="#5c3818" stroke-width="2"/>
-                <line x1="36" y1="13" x2="36" y2="33" stroke="#5c3818" stroke-width="2"/>
-                <line x1="48" y1="13" x2="48" y2="33" stroke="#5c3818" stroke-width="2"/>
-                <line x1="60" y1="13" x2="60" y2="33" stroke="#5c3818" stroke-width="2"/>
-                <line x1="72" y1="13" x2="72" y2="33" stroke="#5c3818" stroke-width="2"/>
-                <circle cx="18" cy="14" r="3" fill="#4d2c14"/><circle cx="18" cy="32" r="3" fill="#4d2c14"/>
-                <circle cx="81" cy="14" r="3" fill="#4d2c14"/><circle cx="81" cy="32" r="3" fill="#4d2c14"/>
-                <path d="M58 20 L88 5" stroke="#e0a02a" stroke-width="2.2" stroke-linecap="round"/>
-                <path d="M88 5 L88 24" stroke="#ffffffaa" stroke-width="1" stroke-dasharray="2 2"/>
-                <circle cx="88" cy="25" r="2.5" fill="#e74c3c" stroke="#fff" stroke-width="1"/>
-            </g>`;
-            L += svgPill(x+12,y,"Рыбалка");
-        }
-        if(k=="R"){
-            objs += `<g transform="translate(${x} ${y})">
-                <ellipse cx="24" cy="43" rx="22" ry="6" fill="#0003"/>
-                <path d="M3 42 Q22 18 45 38 Z" fill="#6b401e" stroke="#469c4b" stroke-width="2.5"/>
-                <g transform="translate(23 24) rotate(-18)">
-                    <rect x="-13" y="-6" width="26" height="10" rx="3" fill="#d63031" stroke="#7d1919" stroke-width="1.5"/>
-                    <path d="M-8 -6 L-4 -13 L6 -13 L10 -6" fill="none" stroke="#2c3e50" stroke-width="2"/>
-                    <circle cx="-8" cy="6" r="5" fill="#222"/><circle cx="-8" cy="6" r="2" fill="#f1c40f"/>
-                    <circle cx="8" cy="6" r="5" fill="#222"/><circle cx="8" cy="6" r="2" fill="#f1c40f"/>
-                </g>
-            </g>`;
-            L += svgPill(x,y,"Гараж");
-        }
-        if(k=="M"){
-            objs += `<g transform="translate(${x} ${y})">
-                <ellipse cx="24" cy="41" rx="20" ry="7" fill="#0003"/>
-                <ellipse cx="15" cy="35" rx="9" ry="4.5" fill="#5c3818"/>
-                <ellipse cx="33" cy="36" rx="9" ry="4.5" fill="#5c3818"/>
-                <ellipse cx="24" cy="29" rx="12" ry="6" fill="#4a2c12"/>
-                <path d="M17 29 C17 14 31 14 31 29 Z" fill="#8c5a32"/>
-                <ellipse cx="24" cy="23" rx="4" ry="2.8" fill="#f5b7b1"/><circle cx="24" cy="22" r="1.5" fill="#c0392b"/>
-                <circle cx="21" cy="19" r="1.5" fill="#111"/><circle cx="27" cy="19" r="1.5" fill="#111"/>
-            </g>`;
-            L += svgPill(x,y,"Кроты");
-        }
-    } else {
-        const ico=(t,z)=>`<text x="${cx}" y="${y+29}" font-size="${z}" text-anchor="middle">${t}</text>`;
-        if(k=="W"){
-            if(r<=10) objs += `<rect x="${x}" y="${y}" width="48" height="48" fill="#28150b"/><rect x="${x+3}" y="${y+4}" width="42" height="38" rx="3" fill="#3b2214" stroke="#593622" stroke-width="2"/><rect x="${x}" y="${y+43}" width="48" height="5" fill="#170b05"/>`;
-            else objs += `<rect x="${x}" y="${y}" width="48" height="48" fill="#1e1008"/>`;
-        }
-        if(k=="L") objs += `<rect x="${x}" y="${y}" width="48" height="48" fill="#28150b"/><circle cx="${cx}" cy="${cy}" r="18" fill="#f1c40f" opacity="0.32"/><circle cx="${cx}" cy="${cy}" r="8" fill="#ffe97a"/>`;
-        if(k=="B" || k=="U") {
-            objs += `<rect x="${x}" y="${y+14}" width="48" height="24" fill="#5c3a21"/><rect x="${x}" y="${y+12}" width="48" height="8" rx="2" fill="#c38345"/>`;
-            objs += `<circle cx="${cx}" cy="${y+43}" r="7" fill="#2c1a10" stroke="#111" stroke-width="2"/>`;
-        }
-        if(k=="U" && c===6) {
-            L+=`<g transform="translate(${7*TS} ${y+14})">
-                <circle cx="-13" cy="-28" r="6" fill="#5a3818"/><circle cx="13" cy="-28" r="6" fill="#5a3818"/>
-                <ellipse cx="0" cy="-2" rx="18" ry="14" fill="#111"/>
-                <polygon points="-7,-12 7,-12 0,4" fill="#fff"/>
-                <polygon points="-3,-10 3,-10 0,6" fill="#e74c3c"/>
-                <circle cx="0" cy="-19" r="14" fill="#8a5a2e"/>
-                <ellipse cx="0" cy="-14" rx="7" ry="5" fill="#d9b48a"/>
-                <ellipse cx="0" cy="-16" rx="3" ry="2" fill="#2a1a10"/>
-                <circle cx="-5" cy="-21" r="1.8" fill="#2a1a10"/><circle cx="5" cy="-21" r="1.8" fill="#2a1a10"/>
-                <rect x="-48" y="0" width="96" height="24" fill="#5c3a21"/>
-                <rect x="-48" y="-2" width="96" height="8" rx="2" fill="#c38345"/>
-                <text x="0" y="15" font-size="18" text-anchor="middle">🛎</text>
-            </g>`+svgPill(6.5*TS,y-4,"Фреш-бар");
-        }
-        if(["D","O","1","2","3","5","6","7"].includes(k)) {
-            objs+=`<ellipse cx="${cx}" cy="${y+41}" rx="18" ry="5" fill="#0004"/>`;
-            objs+=`<rect x="${x+6}" y="${y+6}" width="36" height="34" rx="7" fill="#8c5830" stroke="#f1c40f" stroke-width="1.8"/>`;
-            objs+=`<rect x="${x+10}" y="${y+9}" width="28" height="24" rx="5" fill="#24160e"/>`;
-        }
-        if(k=="D"){ objs+=ico("🎡",21); L+=svgPill(x,y-4,"Колесо"); }
-        if(k=="O"){ objs+=ico("🎩",21); L+=svgPill(x,y-4,"Цилиндры"); }
-        if(k=="1"){ objs+=ico("🃏",21); L+=svgPill(x,y-4,"Карты"); }
-        if(k=="2"){ objs+=ico("🎰",21); L+=svgPill(x,y-4,"Три ягоды"); }
-        if(k=="3"){ objs+=ico("🪙",21); L+=svgPill(x,y-4,"Монетка"); }
-        if(k=="5"){ objs+=ico("⛏",21); L+=svgPill(x,y-4,"Прииск"); }
-        if(k=="6"){ objs+=ico("🧠",21); L+=svgPill(x,y-4,"Мемори"); }
-        if(k=="7"){ objs+=ico("♠️",21); L+=svgPill(x,y-4,"Дуэль 21"); }
-        if(k=="X" && c===6){
-            objs+=`<rect x="${6*TS+10}" y="${y+4}" width="76" height="44" rx="5" fill="#4a2617" stroke="#f1c40f" stroke-width="2"/>`;
-            objs+=`<line x1="${7*TS}" y1="${y+4}" x2="${7*TS}" y2="${y+48}" stroke="#28150b" stroke-width="2"/>`;
-            objs+=`<circle cx="${7*TS-6}" cy="${y+26}" r="2.5" fill="#f1c40f"/><circle cx="${7*TS+6}" cy="${y+26}" r="2.5" fill="#f1c40f"/>`;
-            L+=svgPill(6.5*TS,y-4,"Выход в лес");
-        }
     }
-}
-const h=new Date().getHours(), nt=h>=22||h<5;
-const tint=isClub ? "rgba(20,5,10,0.10)" : (nt?"rgba(12,24,70,.45)":(h<8||h>=19?"rgba(255,140,60,.18)":"transparent"));
-const rn=(!isClub && weather===1)?`<div class="rain"></div>`:"";
-const amb=(!isClub && nt)?Array.from({length:12},()=>`<i class="ff" style="left:${R(100)}%;top:${R(100)}%;animation-delay:${R(40)/10}s"></i>`).join(""):(!isClub && h>=8&&h<19)?Array.from({length:3},()=>`<i class="bf" style="top:${15+R(60)}%;animation-delay:-${R(12)}s">🦋</i>`).join(""):"";
-const twinEl=S.twin?`<div id="pl2"><svg viewBox="30 20 140 170">${bear(100,130,1,false,TWINOPT)}</svg></div>`:"";
-return `<div id="wv" style="background:${isClub?'#28150b':'#4e8c3a'}"><div id="wm"><svg width="${Wpx}" height="${Hpx}">${bg}${waterBank}${waterFill}${waterTop}${pathBorder}${pathFill}${objs}${L}</svg><div id="pl"><svg viewBox="30 20 140 170">${bear(100,130,1)}</svg></div>${twinEl}</div>${amb}${rn}<div id="ov" style="background:${tint}"></div></div><div class="msg" id="dk">${isClub?"🕹 Игровой Клуб — выбери автомат или зайди в бар!":"Тапни по карте — Степан пойдёт ✨"}</div>`},
+    return (W._cache[mapId] = { base: bg+waterBank+waterFill+waterTop+pathBorder+pathFill+objs, L, Wpx, Hpx });
+},
+html(){
+    const isClub = S.mapId === 1;
+    const st = W.buildStatic(S.mapId);
+    let dynObjs = "", dynL = "";
+
+    if(!isClub){
+        const hasQuestReady = Q.some((q,i)=>q.v()>=q.n && !S.claimed.includes(i)) || (S.claimed.length>=6 && !S.dailyBonus) || ACH.some((a,i)=>a.v()>=a.n && !S.achClaimed.includes(i));
+        // Динамические объекты леса (Берлога, Пасека, Кусты ягод, бейдж Заданий)
+        dynObjs += svgDen(3*TS, 2*TS, S.house);
+        dynL += svgPill(3*TS, 2*TS, "Берлога");
+        dynL += svgPill(9*TS, 8*TS, "Задания", hasQuestReady);
+        if(S.items.hive){
+            dynObjs += `<g transform="translate(${11*TS} ${2*TS})"><ellipse cx="24" cy="42" rx="15" ry="5" fill="#0003"/><rect x="14" y="34" width="20" height="7" rx="2" fill="#6b4423"/><ellipse cx="24" cy="30" rx="14" ry="6" fill="#d99126"/><ellipse cx="24" cy="23" rx="13" ry="6" fill="#eba434"/><ellipse cx="24" cy="16" rx="10" ry="5" fill="#f5b841"/><circle cx="24" cy="26" r="3.5" fill="#2a1808"/><text x="10" y="14" font-size="13">🐝</text><text x="34" y="18" font-size="12">🐝</text></g>`;
+        }
+        [[1,6],[12,6],[2,14],[10,15]].forEach(([c,r])=>{
+            const x=c*TS, y=r*TS, ready=(W.bush[r*wid+c]||0)<=Date.now();
+            dynObjs += `<g transform="translate(${x} ${y})"><ellipse cx="24" cy="41" rx="19" ry="6" fill="#0003"/><circle cx="15" cy="29" r="12" fill="#2e7332"/><circle cx="33" cy="29" r="12" fill="#2e7332"/><circle cx="24" cy="22" r="14" fill="#3d8c40"/><circle cx="20" cy="19" r="9" fill="#52a655"/>${ready?`<circle cx="15" cy="25" r="3.5" fill="#2c5aa0" stroke="#a8c8ff" stroke-width="1"/><circle cx="25" cy="19" r="3.5" fill="#2c5aa0" stroke="#a8c8ff" stroke-width="1"/><circle cx="32" cy="27" r="3.5" fill="#2c5aa0" stroke="#a8c8ff" stroke-width="1"/><circle cx="22" cy="31" r="3.5" fill="#2c5aa0" stroke="#a8c8ff" stroke-width="1"/>`:``}</g>`;
+            dynL += svgPill(x,y,"Ягоды");
+        });
+    }
+
+    const h=new Date().getHours(), nt=h>=22||h<5;
+    const tint=isClub ? "rgba(20,5,10,0.10)" : (nt?"rgba(12,24,70,.45)":(h<8||h>=19?"rgba(255,140,60,.18)":"transparent"));
+    const rn=(!isClub && weather===1)?`<div class="rain"></div>`:"";
+    const amb=(!isClub && nt)?Array.from({length:8},()=>`<i class="ff" style="left:${R(100)}%;top:${R(100)}%;animation-delay:${R(40)/10}s"></i>`).join(""):(!isClub && h>=8&&h<19)?Array.from({length:2},()=>`<i class="bf" style="top:${15+R(60)}%;animation-delay:-${R(12)}s">🦋</i>`).join(""):"";
+    const twinEl=S.twin?`<div id="pl2"><svg viewBox="30 20 140 170">${bear(100,130,1,false,TWINOPT)}</svg></div>`:"";
+    return `<div id="wv" style="background:${isClub?'#28150b':'#4e8c3a'}"><div id="wm"><svg width="${st.Wpx}" height="${st.Hpx}">${st.base}${dynObjs}${st.L}${dynL}</svg><div id="pl"><svg viewBox="30 20 140 170">${bear(100,130,1)}</svg></div>${twinEl}</div>${amb}${rn}<div id="ov" style="background:${tint}"></div></div><div class="msg" id="dk">${isClub?"🕹 Игровой Клуб — выбери автомат или зайди в бар!":"Тапни по карте — Степан пойдёт ✨"}</div>`;
+},
 init(){
 const p=Array.isArray(S.pos)?S.pos:[3,3];W.pc=p[0];W.pr=p[1];
 if(W.pr>=getHei()||blk(at(W.pc,W.pr))){W.pc=S.mapId===1?6:3;W.pr=S.mapId===1?9:3;}
@@ -2899,10 +2747,14 @@ W.tpc=W.pc;W.tpr=W.pr;W.put();
 const wm=$("#wm");if(wm)wm.onpointerdown=e=>{const b=wm.getBoundingClientRect();W.go(Math.floor((e.clientX-b.left)/TS),Math.floor((e.clientY-b.top)/TS))};
 setTimeout(()=>$("#wm")&&$("#wm").classList.add("tr"),60);W.wk++;
 },
-put(){const wv=$("#wv");if(!wv)return;const hei=getHei(),vw=wv.clientWidth,vh=wv.clientHeight,cx=Math.max(0,Math.min(wid*TS-vw,W.pc*TS+24-vw/2)),cy=Math.max(0,Math.min(Math.max(0,hei*TS-vh),W.pr*TS+24-vh/2));
-const pl=$("#pl");if(pl)pl.style.transform=`translate(${W.pc*TS-7}px,${W.pr*TS-38}px)`;
-const p2=$("#pl2");if(p2)p2.style.transform=`translate(${W.tpc*TS-5}px,${W.tpr*TS-32}px)`;
-const wm=$("#wm");if(wm)wm.style.transform=`translate(${-cx}px,${-cy}px)`},
+put(){
+const wv=$("#wv");if(!wv)return;
+const hei=getHei(),vw=wv.clientWidth,vh=wv.clientHeight;
+const cx=Math.max(0,Math.min(wid*TS-vw,W.pc*TS+24-vw/2)),cy=Math.max(0,Math.min(Math.max(0,hei*TS-vh),W.pr*TS+24-vh/2));
+const pl=$("#pl");if(pl)pl.style.transform=`translate3d(${W.pc*TS-7}px,${W.pr*TS-38}px,0)`;
+const p2=$("#pl2");if(p2)p2.style.transform=`translate3d(${W.tpc*TS-5}px,${W.tpr*TS-32}px,0)`;
+const wm=$("#wm");if(wm)wm.style.transform=`translate3d(${-cx}px,${-cy}px,0)`;
+},
 say(t){const d=$("#dk");if(d)d.innerHTML=t},
 async go(tc,tr){
 const hei=getHei();
