@@ -29,10 +29,6 @@ button.b{background:linear-gradient(180deg,#d18747,#b36b2c);color:#fff;border:0;
 button.b:active{transform:translateY(2px);box-shadow:0 1px 0 #7d4618}
 button.b:disabled{opacity:.45;filter:grayscale(0.4);transform:none;box-shadow:none;cursor:default}
 button.exit-btn{background:linear-gradient(180deg,#6e8aa0,#536d82);box-shadow:0 3px 0 #384b59;width:100%;font-size:15px;padding:10px;margin:2px 0 0;}
-.qnav{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:6px}
-.qnav button{background:var(--card);color:var(--ink);border:1px solid var(--stroke);border-radius:11px;padding:5px 2px;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 2px 4px #0001;display:flex;flex-direction:column;align-items:center;gap:1px}
-.qnav button:active{transform:scale(0.94)}
-.qnav button i{font-style:normal;font-size:16px}
 svg{width:100%;display:block;border-radius:14px}
 .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
 .t{aspect-ratio:1;border:0;border-radius:12px;background:#e8d5b0;font-size:26px;padding:0;transition:transform .12s;box-shadow:0 3px 0 #c9b186;cursor:pointer}
@@ -45,7 +41,7 @@ svg{width:100%;display:block;border-radius:14px}
 .msg{text-align:center;min-height:22px;font-weight:700;margin:4px 0;font-size:14px}
 @keyframes bob{50%{transform:translateY(5px)}}@keyframes br{50%{transform:scale(1.02)}}
 .bear{animation:br 3s infinite;transform-origin:100px 150px}
-#wv{position:relative;overflow:hidden;height:min(56vh,470px);border-radius:16px;background:#4e8c3a;touch-action:none;box-shadow:0 6px 18px #0005;border:2px solid var(--stroke)}
+#wv{position:relative;overflow:hidden;height:min(64vh,540px);border-radius:16px;background:#4e8c3a;touch-action:none;box-shadow:0 6px 18px #0005;border:2px solid var(--stroke)}
 #wm{position:relative}#wm svg{width:auto;border-radius:0}
 #wm.tr,#wm.tr #pl,#wm.tr #pl2{transition:transform .2s linear}
 #pl{position:absolute;left:0;top:0;width:62px;pointer-events:none;z-index:2}#pl svg{width:62px;transition:transform .15s}
@@ -153,13 +149,13 @@ const CPU = (() => {
             const {chunkIdx, chunkLen} = p;
             const startX = chunkIdx * chunkLen, endX = startX + chunkLen;
             const coins = [], fuels = [], props = [];
-            for(let x = Math.max(300, startX + 100); x < endX - 80; x += 190 + R(90)){
-                const big = R(4) === 0;
-                for(let k=0; k<4; k++) coins.push({x: x + k*25, val: big && k===2 ? 15 : 3, got: false});
+            for(let x = Math.max(320, startX + 120); x < endX - 90; x += 240 + R(120)){
+                const big = R(6) === 0;
+                for(let k=0; k<3; k++) coins.push({x: x + k*26, val: big && k===1 ? 3 : 1, got: false});
             }
-            const fuelX = startX + 440 + R(260);
+            const fuelX = startX + 460 + R(260);
             if(fuelX > 340) fuels.push({x: fuelX, got: false});
-            for(let x = Math.max(240, startX + 50); x < endX; x += 75 + R(65)){
+            for(let x = Math.max(250, startX + 50); x < endX; x += 75 + R(65)){
                 props.push({x, type: R(4), s: 0.75 + Math.random()*0.55});
             }
             res = {chunkIdx, coins, fuels, props};
@@ -207,7 +203,7 @@ const beep=()=>snd('sine',800,0.1), boop=()=>snd('square',280,0.12), chng=()=>sn
 
 const $=s=>document.querySelector(s),R=n=>Math.random()*n|0;
 
-let S={coins:35,crys:5,total:0,hunger:85,mood:85,energy:85,house:1,hat:0,owned:[0],items:{},twin:false,fish:0,fishCaught:0,tiles:0,fed:0,berries:0,gamesPlayed:0,molesHit:0,racesDone:0,bestHill:0,hcUpg:{eng:1,susp:1,tires:1,fuel:1},barDrinks:0,steps:0,claimed:[],achClaimed:[],dailyBonus:false,t:Date.now(),sleepUntil:0,sleepStart:0,day:"",streak:0,lvl:1,xp:0,sick:false,qb:null,hiveA:0,mapId:0};
+let S={coins:35,crys:5,total:0,hunger:85,mood:85,energy:85,house:1,hat:0,owned:[0],items:{},twin:false,fish:0,fishCaught:0,tiles:0,fed:0,berries:0,berryMerges:0,bestBerry:0,gamesPlayed:0,molesHit:0,racesDone:0,bestHill:0,hcUpg:{eng:1,susp:1,tires:1,fuel:1},barDrinks:0,steps:0,claimed:[],achClaimed:[],dailyBonus:false,t:Date.now(),sleepUntil:0,sleepStart:0,day:"",streak:0,lvl:1,xp:0,sick:false,qb:null,hiveA:0,mapId:0};
 
 function sanitizeState(){
     if(!Array.isArray(S.owned))S.owned=[0];
@@ -218,13 +214,12 @@ function sanitizeState(){
     ["eng","susp","tires","fuel"].forEach(k=>{S.hcUpg[k]=Math.max(1,Math.min(5,S.hcUpg[k]|0||1))});
     if(!Array.isArray(S.pos))S.pos=[3,3];
     if(typeof S.mapId!=="number")S.mapId=0;
-    ["coins","crys","total","hunger","mood","energy","fish","fishCaught","tiles","fed","berries","gamesPlayed","molesHit","racesDone","bestHill","barDrinks","steps","lvl","xp","sleepUntil","sleepStart"].forEach(k=>{if(typeof S[k]!=="number"||!isFinite(S[k]))S[k]=k=="lvl"?1:0});
+    ["coins","crys","total","hunger","mood","energy","fish","fishCaught","tiles","fed","berries","berryMerges","bestBerry","gamesPlayed","molesHit","racesDone","bestHill","barDrinks","steps","lvl","xp","sleepUntil","sleepStart"].forEach(k=>{if(typeof S[k]!=="number"||!isFinite(S[k]))S[k]=k=="lvl"?1:0});
     S.house=Math.max(1,Math.min(4,S.house|0||1));
     S.hat=Math.max(0,Math.min(9,S.hat|0));
-    if(!S.qb||typeof S.qb!=="object") S.qb={f:S.fishCaught,t:S.tiles,e:S.fed,o:S.total,b:S.berries,g:S.gamesPlayed,m:S.molesHit,r:S.racesDone,d:S.barDrinks,s:S.steps};
+    if(!S.qb||typeof S.qb!=="object") S.qb={f:S.fishCaught,t:S.tiles,e:S.fed,o:S.total,b:S.berries,bm:S.berryMerges,g:S.gamesPlayed,m:S.molesHit,r:S.racesDone,d:S.barDrinks,s:S.steps};
     else {
-        ["b","g","m","r","d","s"].forEach((k,idx)=>{
-            const mapK=["berries","gamesPlayed","molesHit","racesDone","barDrinks","steps"][idx];
+        [["b","berries"],["bm","berryMerges"],["g","gamesPlayed"],["m","molesHit"],["r","racesDone"],["d","barDrinks"],["s","steps"]].forEach(([k,mapK])=>{
             if(S.qb[k]===undefined)S.qb[k]=S[mapK];
         });
     }
@@ -272,7 +267,7 @@ function addXp(amt){
     if(S.xp>=req){
         S.lvl++; S.xp-=req; S.hunger=100; S.mood=100; S.energy=100; S.sick=false;
         S.crys+=2; lvlup(); hap('heavy');
-        toast(`🎉 Уровень ${S.lvl}:${getTitle()}!\nСилы восстановлены + 2💎!`);
+        toast(`🎉 Уровень ${S.lvl}: ${getTitle()}!\nСилы восстановлены + 2💎!`);
     }
 }
 
@@ -335,7 +330,7 @@ return `<g transform="translate(${x-100*sc} ${y-130*sc}) scale(${sc})"><g class=
 const TWINOPT={body:'#9a6a3a',belly:'#c89a6a',head:'#a97a45',hat:0,bow:true};
 
 function scene(inner,h=290){const w=S.house, dens=[``,`<path d="M20 140 C20 70 120 70 120 140 Z" fill="#4a3a30"/><path d="M50 140 C50 90 90 90 90 140 Z" fill="#1a120c"/>`,`<rect x="14" y="90" width="104" height="50" fill="#8a5a38"/><rect x="10" y="85" width="112" height="10" fill="#6a4a28"/><rect x="54" y="105" width="24" height="35" rx="2" fill="#3a2410"/>`,`<polygon points="10,90 66,40 122,90" fill="#a33"/><rect x="18" y="90" width="96" height="50" fill="#c9955e"/><rect x="52" y="110" width="28" height="30" rx="3" fill="#3a2410"/><circle cx="34" cy="110" r="8" fill="#ffd34d"/><circle cx="98" cy="110" r="8" fill="#ffd34d"/>`,`<polygon points="5,80 66,20 127,80" fill="#803333"/><rect x="15" y="80" width="102" height="60" fill="#e6d5b8"/><rect x="50" y="100" width="32" height="40" rx="4" fill="#5a3a20"/><circle cx="30" cy="100" r="10" fill="#ffe270"/><circle cx="102" cy="100" r="10" fill="#ffe270"/><circle cx="48" cy="90" r="3" fill="#ff9"/><circle cx="84" cy="90" r="3" fill="#ff9"/>`];
-return `<svg viewBox="0 0 360 ${h}"><defs><linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9ccbe8"/><stop offset="1" stop-color="#e8f1e0"/></linearGradient></defs><rect width="360" height="${h}" fill="url(#sk)"/><path d="M0 110L70 50L130 100L200 40L280 105L360 60V150H0Z" fill="#6e8aa0"/><path d="M0 130L90 85L170 125L260 80L360 130V160H0Z" fill="#4f7a58"/><rect y="140" width="360" height="${h-140}" fill="#7bb15a"/><ellipse cx="270" cy="230" rx="110" ry="40" fill="#4aa3d6"/><ellipse cx="270" cy="230" rx="96" ry="32" fill="#69bde8"/>${[[330,150],[300,165],[345,185]].map(([a,b])=>`<path d="M${a}${b}l-14 36h28z" fill="#2f6a3a"/><path d="M${a}${b-14}l-12 30h24z" fill="#3b8048"/>`).join("")}<g transform="translate(10 0)">${dens[w]}</g>${inner}</svg>`}
+return `<svg viewBox="0 0 360 ${h}"><defs><linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9ccbe8"/><stop offset="1" stop-color="#e8f1e0"/></linearGradient></defs><rect width="360" height="${h}" fill="url(#sk)"/><path d="M0 110L70 50L130 100L200 40L280 105L360 60V150H0Z" fill="#6e8aa0"/><path d="M0 130L90 85L170 125L260 80L360 130V160H0Z" fill="#4f7a58"/><rect y="140" width="360" height="${h-140}" fill="#7bb15a"/><ellipse cx="270" cy="230" rx="110" ry="40" fill="#4aa3d6"/><ellipse cx="270" cy="230" rx="96" ry="32" fill="#69bde8"/>${[[330,150],[300,165],[345,185]].map(([a,b])=>`<path d="M${a} ${b}l-14 36h28z" fill="#2f6a3a"/><path d="M${a} ${b-14}l-12 30h24z" fill="#3b8048"/>`).join("")}<g transform="translate(10 0)">${dens[w]}</g>${inner}</svg>`}
 
 const ASSETS = {
   bg1: `<image href="Frame 6.svg" x="0" y="0" width="360" height="300" preserveAspectRatio="none"/>`,
@@ -456,7 +451,7 @@ ${sl ? `<div class="card"><button class="b exit-btn" style="background:linear-gr
 
 fish(){
 const tipX=S.items.rod?174:170; const tipY=S.items.rod?150:158;
-return `${scene(bear(90,230,.8,true)+`<g id="bob" style="animation:${fs=="bite"?"bob .3s infinite":"none"}"><path d="M${tipX}${tipY}L${fs=="idle"?205:245} ${fs=="idle"?115:205}" stroke="#fff9" stroke-width="1.5" fill="none"/><circle cx="${fs=="idle"?205:245}" cy="${fs=="idle"?115:215}" r="7" fill="${fs=="bite"?"#f33":"#fff"}" stroke="#c33" stroke-width="2"/></g>`,290)}
+return `${scene(bear(90,230,.8,true)+`<g id="bob" style="animation:${fs=="bite"?"bob .3s infinite":"none"}"><path d="M${tipX} ${tipY}L${fs=="idle"?205:245} ${fs=="idle"?115:205}" stroke="#fff9" stroke-width="1.5" fill="none"/><circle cx="${fs=="idle"?205:245}" cy="${fs=="idle"?115:215}" r="7" fill="${fs=="bite"?"#f33":"#fff"}" stroke="#c33" stroke-width="2"/></g>`,290)}
 <div class="msg">${msg||"Закинь удочку и жди клёва!"}</div>
 <div class="card">
   <button class="b" style="width:100%;margin-bottom:6px;font-size:16px;padding:12px" onclick="cast()">${fs=="idle"?"🎣 Забросить удочку":fs=="wait"?"🌊 Ждём поклёвку…":"❗ ПОДСЕКАЙ!"}</button>
@@ -623,7 +618,8 @@ ${bjActive ? `<div style="display:flex;gap:8px"><button class="b" style="flex:1;
 </div><button class="b exit-btn" onclick="go('world')">❌ В зал</button>` },
 
 race(){return `<div class="card" style="padding:4px;margin-bottom:6px"><canvas id="rcanvas"></canvas></div><div class="card" id="rmsg" style="padding:10px;text-align:center"></div><button class="b exit-btn" onclick="go('world')">🌲 В лес</button>`},
-bubble(){return `<div class="card" style="padding:4px"><canvas id="bcanvas"></canvas></div><div class="msg" id="bmsg">Тяни прицел и отпускай — сбивай шары одного цвета!</div><button class="b exit-btn" onclick="go('world')">🌲 В лес</button>`}
+bubble(){return `<div class="card" style="padding:4px"><canvas id="bcanvas"></canvas></div><div class="msg" id="bmsg">Тяни прицел и отпускай — сбивай шары одного цвета!</div><button class="b exit-btn" onclick="go('world')">🌲 В лес</button>`},
+berry(){return `<div class="card" style="padding:4px;margin-bottom:6px"><canvas id="ycanvas"></canvas></div><div class="msg" id="ymsg">Води пальцем влево-вправо и отпускай — соединяй одинаковые ягоды!</div><button class="b exit-btn" onclick="go('world')">🌲 В лес</button>`}
 };
 
 let fs="idle",ft,mid=0,mv=15,cl=0,sel=null,G=[],busy=false;
@@ -631,8 +627,9 @@ let fs="idle",ft,mid=0,mv=15,cl=0,sel=null,G=[],busy=false;
 const Q=[
     {t:"🐟 Поймать 3 рыбы в озере",n:3,r:15,v:()=>S.fishCaught-(S.qb?.f||0)},
     {t:"🧩 Собрать 40 фишек в «3 в ряд»",n:40,r:20,v:()=>S.tiles-(S.qb?.t||0)},
+    {t:"🫐 Соединить 15 ягод в Бочонке",n:15,r:20,v:()=>S.berryMerges-(S.qb?.bm||0)},
     {t:"🍯 Покормить Степана 3 раза",n:3,r:12,v:()=>S.fed-(S.qb?.e||0)},
-    {t:"🫐 Собрать ягоды с кустов 4 раза",n:4,r:18,v:()=>S.berries-(S.qb?.b||0)},
+    {t:"🌿 Собрать ягоды с кустов 4 раза",n:4,r:18,v:()=>S.berries-(S.qb?.b||0)},
     {t:"🚶 Прогуляться по лесу (35 шагов)",n:35,r:15,v:()=>S.steps-(S.qb?.s||0)},
     {t:"🐹 Поймать 10 кротов на поляне",n:10,r:20,v:()=>S.molesHit-(S.qb?.m||0)},
     {t:"🕹 Сыграть в мини-игры 5 раз",n:5,r:22,v:()=>S.gamesPlayed-(S.qb?.g||0)},
@@ -698,7 +695,7 @@ function wake(early=false){
     }
 }
 
-function chk(){const d=new Date().toDateString();if(S.day!==d){const yd=new Date(Date.now()-86400000).toDateString(); S.streak=(S.day===yd)?(S.streak||0)+1:1; S.day=d;S.claimed=[];S.dailyBonus=false;S.qb={f:S.fishCaught,t:S.tiles,e:S.fed,o:S.total,b:S.berries,g:S.gamesPlayed,m:S.molesHit,r:S.racesDone,d:S.barDrinks,s:S.steps}; weather=R(2); setTimeout(()=>{const r=S.streak*3; S.crys=(S.crys||0)+r; save(); addXp(10); hap('success'); chng(); hud(); popText(`+${r}💎`,"#b06ab3"); toast(`☀️ День ${S.streak}! Бонус: +${r}💎`);},900)}}
+function chk(){const d=new Date().toDateString();if(S.day!==d){const yd=new Date(Date.now()-86400000).toDateString(); S.streak=(S.day===yd)?(S.streak||0)+1:1; S.day=d;S.claimed=[];S.dailyBonus=false;S.qb={f:S.fishCaught,t:S.tiles,e:S.fed,o:S.total,b:S.berries,bm:S.berryMerges,g:S.gamesPlayed,m:S.molesHit,r:S.racesDone,d:S.barDrinks,s:S.steps}; weather=R(2); setTimeout(()=>{const r=S.streak*3; S.crys=(S.crys||0)+r; save(); addXp(10); hap('success'); chng(); hud(); popText(`+${r}💎`,"#b06ab3"); toast(`☀️ День ${S.streak}! Бонус: +${r}💎`);},900)}}
 function toast(t){const d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2200)}
 function play(){if(S.energy<10)return say("Степан устал, пора поспать 🥱"); S.mood=clamp(S.mood+18);S.energy=clamp(S.energy-5); addXp(4); hap('medium');beep();say("🧸 Степан весело играет!")}
 function playConsole(){if(S.energy<18)return say("Мало бодрости для приставки 🥱"); S.mood=clamp(S.mood+32);S.energy=clamp(S.energy-14); addXp(8); hap('heavy');beep();say("🎮 Прошёл уровень на приставке!")}
@@ -1143,7 +1140,7 @@ function setupCanvas(id, w, h){
     ctx.setTransform(dpr*cw/w,0,0,dpr*cw/w,0,0); ctx.textAlign='center'; ctx.textBaseline='middle'; return {c, ctx};
 }
 // =========================================================================
-// ===== НАСТОЯЩИЙ ГАРАЖ С ИНСТРУМЕНТАМИ И АНИМАЦИЕЙ ВЫЕЗДА В ПОЛЕ =====
+// ===== НАСТОЯЩИЙ ГАРАЖ, ПЛАВНЫЙ HILL CLIMB И СБАЛАНСИРОВАННЫЙ ДОХОД =====
 // =========================================================================
 let raf_r, r_act=false, RKEYS={};
 addEventListener('keydown',e=>RKEYS[e.key]=true);
@@ -1270,23 +1267,18 @@ function drawJeepModel(ctx, rr, sx, sy, a, compR, compF, headA, rotW){
     ctx.restore();
 }
 
-// Отрисовка настоящего гаража (задний план: стены, верстак, стенд с гаечными ключами, полка с маслом, запаски, лампа)
 function drawGarageBack(ctx, rr, ox, oy){
     if(ox < -320) return;
     ctx.save();
     ctx.translate(ox, oy);
 
-    // Кирпично-деревянная задняя стена гаража и крыша
     ctx.fillStyle = '#2d231e';
     ctx.fillRect(-40, 88, 268, 174);
     ctx.fillStyle = '#3a2d27';
     for(let y=96; y<255; y+=18){
-        for(let x=-35 + (y%36?14:0); x<215; x+=32){
-            ctx.fillRect(x, y, 28, 13);
-        }
+        for(let x=-35 + (y%36?14:0); x<215; x+=32) ctx.fillRect(x, y, 28, 13);
     }
 
-    // Деревянные балки и крыша гаража
     ctx.fillStyle = '#4a321f';
     ctx.fillRect(-45, 80, 282, 12);
     ctx.fillRect(-40, 88, 14, 174);
@@ -1295,20 +1287,17 @@ function drawGarageBack(ctx, rr, ox, oy){
     ctx.fillStyle = '#5c3a21'; ctx.fill();
     ctx.strokeStyle = '#3b2214'; ctx.lineWidth = 3; ctx.stroke();
 
-    // Бетонный пол гаража с жёлтой/чёрной разметкой у выезда
     ctx.fillStyle = '#485460';
     ctx.fillRect(-40, 256, 272, 16);
     ctx.fillStyle = '#f1c40f';
     for(let x=185; x<226; x+=10) ctx.fillRect(x, 256, 6, 6);
 
-    // Перфорированный стенд с инструментами (Pegboard)
-    ctx.fillStyle = '#1e272e';
-    ctx.strokeStyle = '#7f8c8d'; ctx.lineWidth = 2;
+    // Перфорированный стенд с гаечными ключами
+    ctx.fillStyle = '#1e272e'; ctx.strokeStyle = '#7f8c8d'; ctx.lineWidth = 2;
     rr(6, 118, 106, 66, 4); ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#485460';
     for(let px=14; px<=104; px+=10) for(let py=126; py<=176; py+=10) ctx.fillRect(px, py, 1.5, 1.5);
 
-    // Векторные гаечные ключи разных размеров на стенде
     [[22,130,36],[38,130,32],[54,130,27],[68,130,22]].forEach(([wx,wy,len])=>{
         ctx.strokeStyle = '#dfe6e9'; ctx.lineWidth = 3.5; ctx.lineCap = 'round';
         ctx.beginPath(); ctx.moveTo(wx, wy+4); ctx.lineTo(wx, wy+len); ctx.stroke();
@@ -1320,7 +1309,6 @@ function drawGarageBack(ctx, rr, ox, oy){
         ctx.beginPath(); ctx.arc(wx, wy+len, 1.8, 0, 7); ctx.fill();
     });
 
-    // Отвёртка и молоток на стенде
     ctx.strokeStyle = '#bdc3c7'; ctx.lineWidth = 2.5;
     ctx.beginPath(); ctx.moveTo(84, 140); ctx.lineTo(84, 166); ctx.stroke();
     ctx.fillStyle = '#e74c3c'; rr(80, 127, 8, 14, 3); ctx.fill();
@@ -1329,35 +1317,28 @@ function drawGarageBack(ctx, rr, ox, oy){
     ctx.beginPath(); ctx.moveTo(100, 134); ctx.lineTo(100, 168); ctx.stroke();
     ctx.fillStyle = '#95a5a6'; rr(92, 128, 16, 8, 2); ctx.fill();
 
-    // Полка с масляными канистрами и аккумулятором
-    ctx.fillStyle = '#5c3a21';
-    ctx.fillRect(124, 144, 78, 6);
-    // Красная и жёлтая канистры масла
+    // Полка с маслом и аккумулятором
+    ctx.fillStyle = '#5c3a21'; ctx.fillRect(124, 144, 78, 6);
     ctx.fillStyle = '#e74c3c'; rr(130, 122, 16, 22, 3); ctx.fill();
     ctx.fillStyle = '#fff'; ctx.fillRect(133, 128, 10, 7);
     ctx.fillStyle = '#f39c12'; rr(150, 126, 14, 18, 3); ctx.fill();
-    // Аккумулятор
     ctx.fillStyle = '#2c3e50'; rr(170, 126, 24, 18, 2); ctx.fill();
     ctx.fillStyle = '#e74c3c'; ctx.fillRect(173, 123, 5, 3);
     ctx.fillStyle = '#3498db'; ctx.fillRect(186, 123, 5, 3);
     ctx.fillStyle = '#f1c40f'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center';
     ctx.fillText('⚡', 182, 136);
 
-    // Верстак и красный инструментальный шкаф с ящиками
+    // Верстак с ящиками и тисками
     ctx.fillStyle = '#c0392b'; ctx.strokeStyle = '#7d1919'; ctx.lineWidth = 1.5;
     rr(4, 198, 76, 58, 3); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#e74c3c';
     for(let dy=204; dy<=240; dy+=12){
-        ctx.fillRect(9, dy, 66, 9);
+        ctx.fillStyle = '#e74c3c'; ctx.fillRect(9, dy, 66, 9);
         ctx.fillStyle = '#dfe6e9'; ctx.fillRect(34, dy+3, 16, 2.5);
-        ctx.fillStyle = '#e74c3c';
     }
-    // Столешница верстака и слесарные тиски
     ctx.fillStyle = '#d9a76a'; ctx.fillRect(0, 192, 84, 6);
-    ctx.fillStyle = '#34495e'; ctx.fillRect(64, 182, 14, 10);
-    ctx.fillRect(60, 185, 22, 4);
+    ctx.fillStyle = '#34495e'; ctx.fillRect(64, 182, 14, 10); ctx.fillRect(60, 185, 22, 4);
 
-    // Стопка запасных внедорожных шин у правой стойки
+    // Запасные шины
     for(let ty=244; ty>=220; ty-=12){
         ctx.fillStyle = '#1e272e'; ctx.strokeStyle = '#485460'; ctx.lineWidth = 1.5;
         rr(166, ty, 36, 11, 4); ctx.fill(); ctx.stroke();
@@ -1365,7 +1346,7 @@ function drawGarageBack(ctx, rr, ox, oy){
         for(let tx=170; tx<=196; tx+=6) ctx.fillRect(tx, ty+2, 3, 7);
     }
 
-    // Подвесная лампа и конус тёплого света
+    // Лампа под потолком
     ctx.strokeStyle = '#111'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(115, 92); ctx.lineTo(115, 108); ctx.stroke();
     ctx.fillStyle = '#2c3e50';
@@ -1382,23 +1363,19 @@ function drawGarageBack(ctx, rr, ox, oy){
     ctx.restore();
 }
 
-// Отрисовка передней арки гаража и подъёмных секционных ворот (перекрывают нос выезжающего джипа)
 function drawGarageFront(ctx, rr, ox, oy, doorOpen){
     if(ox < -320) return;
     ctx.save();
     ctx.translate(ox, oy);
 
-    // Подъёмные секционные ворота гаража (поднимаются вверх при doorOpen 0 -> 1)
     const maxDoorH = 136;
     const curDoorH = Math.max(8, maxDoorH * (1 - doorOpen));
     const doorX = 212, doorTopY = 120;
 
-    ctx.fillStyle = '#7f8c8d';
-    ctx.strokeStyle = '#2c3e50'; ctx.lineWidth = 2;
+    ctx.fillStyle = '#7f8c8d'; ctx.strokeStyle = '#2c3e50'; ctx.lineWidth = 2;
     ctx.fillRect(doorX, doorTopY, 12, curDoorH);
     ctx.strokeRect(doorX, doorTopY, 12, curDoorH);
 
-    // Секции ворот и предупреждающая полоса внизу
     ctx.strokeStyle = '#34495e'; ctx.lineWidth = 1.5;
     for(let sy = doorTopY + 16; sy < doorTopY + curDoorH - 4; sy += 16){
         ctx.beginPath(); ctx.moveTo(doorX, sy); ctx.lineTo(doorX + 12, sy); ctx.stroke();
@@ -1406,7 +1383,6 @@ function drawGarageFront(ctx, rr, ox, oy, doorOpen){
     ctx.fillStyle = '#f1c40f';
     ctx.fillRect(doorX + 1, doorTopY + curDoorH - 6, 10, 5);
 
-    // Передняя опорная колонна гаража и верхний короб ворот
     ctx.fillStyle = '#3b2214';
     ctx.fillRect(208, 88, 22, 34);
     ctx.fillStyle = '#f1c40f'; ctx.strokeStyle = '#222'; ctx.lineWidth = 1.2;
@@ -1422,7 +1398,6 @@ function drawGaragePreview(){
     const {ctx}=sc;
     const rr=(x,y,w,h,r)=>{ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath()};
 
-    // Небо и уральские холмы справа за воротами гаража
     const sky = ctx.createLinearGradient(0,0,0,240);
     sky.addColorStop(0,'#3a86ff'); sky.addColorStop(1,'#e0fbfc');
     ctx.fillStyle=sky; ctx.fillRect(0,0,340,240);
@@ -1431,7 +1406,6 @@ function drawGaragePreview(){
     ctx.fillStyle='#7f5539'; ctx.fillRect(0,192,340,48);
     ctx.fillStyle='#6a994e'; ctx.fillRect(200,186,140,8);
 
-    // Внутренность гаража, стоящий внутри джип и приоткрытые ворота
     const ox = 28, oy = -68;
     drawGarageBack(ctx, rr, ox, oy);
     drawJeepModel(ctx, rr, ox + 112, oy + 230, 0, 1, 1, 0, 0);
@@ -1451,17 +1425,16 @@ function startRace(){
     const u = S.hcUpg || {eng:1,susp:1,tires:1,fuel:1};
     const seed1 = Math.random()*6.28, seed2 = Math.random()*6.28, seed3 = Math.random()*6.28;
 
-    // До x = 235 пол гаража и выезд идеально ровные (y = 260), дальше начинаются холмы
+    // Очень плавный синусоидальный профиль холмов без резких микро-зубцов
     const getH = x => {
-        if(x <= 235) return 260;
-        const d = x - 235;
-        const ramp = Math.min(1, d / 380);
-        const diffScale = 1 + Math.min(2.1, d / 9000);
+        if(x <= 240) return 260;
+        const d = x - 240;
+        const ramp = Math.min(1, d / 450);
+        const diffScale = 1 + Math.min(1.85, d / 10000);
         return 260
-            + (Math.sin(d * 0.008 + seed1) * 42
-            + Math.sin(d * 0.020 + seed2) * 21
-            + Math.cos(d * 0.0036 + seed3) * 52
-            + Math.sin(d * 0.040 + seed1*2) * 7 * Math.min(1, d / 4200)) * ramp * diffScale;
+            + (Math.sin(d * 0.0062 + seed1) * 44
+            + Math.sin(d * 0.0145 + seed2) * 20
+            + Math.cos(d * 0.0031 + seed3) * 52) * ramp * diffScale;
     };
 
     const CHUNK_LEN = 1200;
@@ -1471,13 +1444,13 @@ function startRace(){
         if(idx < 0 || chunks.has(idx) || pendingChunks.has(idx)) return;
         pendingChunks.add(idx);
         CPU.run('hillChunk', {chunkIdx: idx, chunkLen: CHUNK_LEN}, () => {
-            const startX = idx * CHUNK_LEN, endX = startX + CHUNK_LEN;
+            const startX = idx * CHUNK_LEN, endX = startX + chunkLen;
             const coins = [], fuels = [], props = [];
-            for(let x = Math.max(300, startX + 100); x < endX - 80; x += 190 + R(90)){
-                const big = R(4) === 0;
-                for(let k=0; k<4; k++) coins.push({x: x + k*25, val: big && k===2 ? 15 : 3, got: false});
+            for(let x = Math.max(320, startX + 120); x < endX - 90; x += 240 + R(120)){
+                const big = R(6) === 0;
+                for(let k=0; k<3; k++) coins.push({x: x + k*26, val: big && k===1 ? 3 : 1, got: false});
             }
-            const fuelX = startX + 440 + R(260);
+            const fuelX = startX + 460 + R(260);
             if(fuelX > 340) fuels.push({x: fuelX, got: false});
             for(let x = Math.max(250, startX + 50); x < endX; x += 75 + R(65)){
                 props.push({x, type: R(4), s: 0.75 + Math.random()*0.55});
@@ -1492,13 +1465,12 @@ function startRace(){
     ensureChunk(0); ensureChunk(1); ensureChunk(2);
 
     const WHEEL_BASE = 24, WHEEL_R = 12.5, STRUT_LEN = 16;
-    const power = 0.27 + (u.eng - 1) * 0.04;
-    const maxSpd = 8.2 + (u.eng - 1) * 0.85;
-    const suspStiff = 0.25 + (u.susp - 1) * 0.035;
-    const gripK = 0.90 + (u.tires - 1) * 0.08;
-    const fuelRate = 0.058 * Math.pow(0.85, u.fuel - 1);
+    const power = 0.25 + (u.eng - 1) * 0.036;
+    const maxSpd = 7.8 + (u.eng - 1) * 0.8;
+    const suspStiff = 0.22 + (u.susp - 1) * 0.03;
+    const gripK = 0.90 + (u.tires - 1) * 0.07;
+    const fuelRate = 0.056 * Math.pow(0.85, u.fuel - 1);
 
-    // Джип стартует внутри гаража (x = 112) с анимацией открытия ворот (rollout: 0 -> 1)
     const car = {
         x: 112, y: 260 - WHEEL_R - STRUT_LEN,
         vx: 0, vy: 0,
@@ -1520,7 +1492,6 @@ function startRace(){
     const particles = [], floatTxt = [];
     let touchDir = 0;
 
-    // Звук открывающихся ворот и запуска мотора
     snd('triangle', 220, 0.25);
     setTimeout(()=>snd('sine', 440, 0.2), 250);
 
@@ -1542,7 +1513,7 @@ function startRace(){
     c.onpointerup = rel; c.onpointercancel = rel; c.onpointerleave = rel;
 
     const getInput = () => {
-        if(car.phase === "rollout") return car.rollTimer > 18 ? 1 : 0;
+        if(car.phase === "rollout") return car.rollTimer > 16 ? 1 : 0;
         const k = ((RKEYS.ArrowLeft||RKEYS.a||RKEYS['ф']||RKEYS['а'])?-1:0) + ((RKEYS.ArrowRight||RKEYS.d||RKEYS['в'])?1:0);
         return k || touchDir;
     };
@@ -1551,11 +1522,12 @@ function startRace(){
         if(car.over) return;
         car.over = true; r_act = false;
         const distM = Math.max(0, Math.floor((car.x - 220) / 10));
-        const distBonus = Math.floor(distM / 15);
+        // Сниженный бонус за дистанцию: 1 монета за каждые 60 м
+        const distBonus = Math.floor(distM / 60);
         const isRecord = distM > (S.bestHill || 0);
         if(isRecord) S.bestHill = distM;
         if(distBonus > 0) earn(distBonus);
-        addXp(Math.min(60, 10 + Math.floor(distM / 20)));
+        addXp(Math.min(45, 8 + Math.floor(distM / 30)));
         if(isRecord){ chng(); hap('success'); } else { boop(); hap('heavy'); }
         save(); hud();
 
@@ -1564,23 +1536,26 @@ function startRace(){
     }
 
     function stepPhysics(dt, dir){
-        const span = Math.max(14, Math.abs(Math.cos(car.a)) * WHEEL_BASE);
+        const span = Math.max(15, Math.abs(Math.cos(car.a)) * WHEEL_BASE);
         const wxR = car.x - span, wxF = car.x + span;
         const gyR = getH(wxR), gyF = getH(wxF);
         const groundA = Math.atan2(gyF - gyR, wxF - wxR);
         const targetY = (gyR + gyF) * 0.5 - WHEEL_R - STRUT_LEN;
 
         const pen = car.y - targetY;
-        const onGround = pen >= -2.5;
+        const onGround = pen >= -3.0;
 
         if(onGround){
+            // Мягкая безынерционная подвеска с плавным гашением колебаний
             if(pen > 0){
-                const bounce = pen * suspStiff;
-                car.vy -= bounce * dt;
-                car.vy *= Math.pow(0.68, dt);
-                if(pen > 5.5){ car.y = targetY + 5.5; if(car.vy > 0) car.vy = 0; }
+                car.vy -= pen * suspStiff * dt;
+                car.vy *= Math.pow(0.62, dt);
+                if(pen > 4.5){
+                    car.y += (targetY + 4.5 - car.y) * 0.65;
+                    if(car.vy > 0) car.vy *= 0.25;
+                }
             } else {
-                car.vy += 0.18 * dt;
+                car.vy += 0.16 * dt;
             }
 
             const diffA = Math.atan2(Math.sin(car.a - groundA), Math.cos(car.a - groundA));
@@ -1588,88 +1563,92 @@ function startRace(){
                 return endRun("💥 Джип перевернулся!");
             }
 
-            car.compR = Math.max(0, Math.min(9, pen + diffA * 10));
-            car.compF = Math.max(0, Math.min(9, pen - diffA * 10));
+            const tCompR = Math.max(0, Math.min(8.5, pen + diffA * 9));
+            const tCompF = Math.max(0, Math.min(8.5, pen - diffA * 9));
+            car.compR += (tCompR - car.compR) * 0.35 * dt;
+            car.compF += (tCompF - car.compF) * 0.35 * dt;
 
-            if(car.airTime > 24){
+            if(car.airTime > 26){
                 const flips = Math.floor((Math.abs(car.airRot) + 0.85) / (Math.PI * 2));
                 if(flips > 0){
-                    const bonus = flips * 15;
+                    const bonus = flips * 4;
                     car.got += bonus; earn(bonus, false);
                     chng(); hap('medium');
                     floatTxt.push({x: car.x, y: car.y - 45, t: `${car.airRot < 0 ? '🔥 САЛЬТО НАЗАД' : '🔥 САЛЬТО ВПЕРЁД'} ×${flips}! +${bonus}🪙`, col:'#ffe270', a: 1.25});
-                } else if(car.airTime > 48){
-                    car.got += 10; earn(10, false);
+                } else if(car.airTime > 52){
+                    car.got += 2; earn(2, false);
                     beep();
-                    floatTxt.push({x: car.x, y: car.y - 40, t: `🦅 ДОЛГИЙ ПОЛЁТ! +10🪙`, col:'#74b9ff', a: 1.15});
+                    floatTxt.push({x: car.x, y: car.y - 40, t: `🦅 ПОЛЁТ! +2🪙`, col:'#74b9ff', a: 1.15});
                 }
             }
             car.airTime = 0; car.airRot = 0;
 
-            car.va += (groundA - car.a) * 0.15 * dt;
-            car.va *= Math.pow(0.78, dt);
+            // Плавное выравнивание кузова вдоль склона
+            car.va += (groundA - car.a) * 0.13 * dt;
+            car.va *= Math.pow(0.75, dt);
 
-            car.vx -= Math.sin(groundA) * 0.17 * dt;
+            car.vx -= Math.sin(groundA) * 0.16 * dt;
 
             if(dir > 0 && car.fuel > 0){
-                const boost = car.vx < maxSpd ? power * gripK : power * 0.18;
+                const boost = car.vx < maxSpd ? power * gripK : power * 0.16;
                 car.vx += Math.cos(groundA) * boost * dt;
-                car.va -= 0.0032 * gripK * dt;
-                car.headVa -= 0.014 * dt;
+                car.va -= 0.0026 * gripK * dt;
+                car.headVa -= 0.012 * dt;
                 if(car.phase !== "rollout") car.fuel = Math.max(0, car.fuel - fuelRate * dt);
-                car.rpm = Math.min(1, car.rpm + 0.06 * dt);
+                car.rpm = Math.min(1, car.rpm + 0.055 * dt);
 
-                if(Math.random() < 0.55){
+                if(Math.random() < 0.45){
                     const inGarage = car.x < 225;
                     particles.push({
                         x: wxR - 6, y: gyR - (inGarage ? 12 : 2),
-                        vx: -1.5 - Math.random()*2, vy: -0.6 - Math.random()*1.4,
-                        r: inGarage ? 3.5 + Math.random()*3 : 2.5 + Math.random()*2.5,
-                        col: inGarage ? '#dfe6e9' : (Math.random() < 0.35 ? '#55a630' : '#7f5539'), a: 0.85
+                        vx: -1.4 - Math.random()*1.8, vy: -0.5 - Math.random()*1.3,
+                        r: inGarage ? 3.2 + Math.random()*2.5 : 2.2 + Math.random()*2.2,
+                        col: inGarage ? '#dfe6e9' : (Math.random() < 0.35 ? '#55a630' : '#7f5539'), a: 0.8
                     });
                 }
             } else if(dir < 0 && car.fuel > 0){
                 if(car.vx > 0.25){
-                    car.vx *= Math.pow(0.90, dt);
-                    car.va += 0.0028 * dt;
-                    car.headVa += 0.014 * dt;
+                    car.vx *= Math.pow(0.91, dt);
+                    car.va += 0.0024 * dt;
+                    car.headVa += 0.012 * dt;
                 } else {
-                    car.vx -= Math.cos(groundA) * power * 0.65 * dt;
-                    car.va += 0.002 * dt;
+                    car.vx -= Math.cos(groundA) * power * 0.6 * dt;
+                    car.va += 0.0018 * dt;
                 }
-                car.fuel = Math.max(0, car.fuel - fuelRate * 0.45 * dt);
+                car.fuel = Math.max(0, car.fuel - fuelRate * 0.4 * dt);
                 car.rpm = Math.min(0.7, car.rpm + 0.03 * dt);
             } else {
-                car.rpm = Math.max(0.12, car.rpm - 0.04 * dt);
+                car.rpm = Math.max(0.12, car.rpm - 0.035 * dt);
             }
 
-            car.vx *= Math.pow(0.991, dt);
+            car.vx *= Math.pow(0.992, dt);
 
             const nextTargetY = (getH(wxR + car.vx*dt) + getH(wxF + car.vx*dt))*0.5 - WHEEL_R - STRUT_LEN;
-            if(nextTargetY - car.y > 2.8 && Math.abs(car.vx) > 2.7){
-                car.vy = Math.sin(groundA) * car.vx * 0.85 - 1.1;
+            if(nextTargetY - car.y > 3.1 && Math.abs(car.vx) > 2.9){
+                car.vy = Math.sin(groundA) * car.vx * 0.82 - 0.95;
             }
         } else {
-            car.compR *= 0.8; car.compF *= 0.8;
+            car.compR *= Math.pow(0.85, dt);
+            car.compF *= Math.pow(0.85, dt);
             car.airTime += dt;
-            car.vy += 0.19 * dt;
-            if(dir > 0){ car.va -= 0.0042 * dt; car.rpm = Math.min(1, car.rpm + 0.05 * dt); }
-            else if(dir < 0){ car.va += 0.0042 * dt; car.rpm = Math.min(0.8, car.rpm + 0.04 * dt); }
+            car.vy += 0.18 * dt;
+            if(dir > 0){ car.va -= 0.0038 * dt; car.rpm = Math.min(1, car.rpm + 0.045 * dt); }
+            else if(dir < 0){ car.va += 0.0038 * dt; car.rpm = Math.min(0.8, car.rpm + 0.035 * dt); }
             else car.rpm = Math.max(0.15, car.rpm - 0.03 * dt);
-            car.va *= Math.pow(0.985, dt);
+            car.va *= Math.pow(0.986, dt);
             car.vx *= Math.pow(0.998, dt);
             car.airRot += car.va * dt;
         }
 
-        if(car.phase !== "rollout") car.fuel = Math.max(0, car.fuel - 0.006 * dt);
+        if(car.phase !== "rollout") car.fuel = Math.max(0, car.fuel - 0.0055 * dt);
         car.x = Math.max(85, car.x + car.vx * dt);
         car.y += car.vy * dt;
         car.a += car.va * dt;
-        car.rotW += car.vx * 0.095 * dt;
+        car.rotW += car.vx * 0.092 * dt;
 
-        car.headVa += (-car.headA * 0.18 - car.va * 0.4) * dt;
-        car.headVa *= Math.pow(0.82, dt);
-        car.headA = Math.max(-0.55, Math.min(0.55, car.headA + car.headVa * dt));
+        car.headVa += (-car.headA * 0.16 - car.va * 0.35) * dt;
+        car.headVa *= Math.pow(0.80, dt);
+        car.headA = Math.max(-0.5, Math.min(0.5, car.headA + car.headVa * dt));
     }
 
     function drawGauge(cx, cy, r, val, label, sub){
@@ -1706,10 +1685,9 @@ function startRace(){
     let lastT = performance.now();
     function loop(){
         if(!r_act) return;
-        const now = performance.now(), dt = Math.min((now - lastT) / 16.6 || 1, 2.4);
+        const now = performance.now(), dt = Math.min((now - lastT) / 16.6 || 1, 2.2);
         lastT = now;
 
-        // Логика анимации открытия ворот и выезда из гаража
         if(car.phase === "rollout"){
             car.rollTimer += dt;
             car.doorOpen = Math.min(1, car.doorOpen + 0.032 * dt);
@@ -1720,26 +1698,28 @@ function startRace(){
         }
 
         const dir = getInput();
-        const subDt = dt * 0.5;
-        stepPhysics(subDt, dir);
-        if(!car.over) stepPhysics(subDt, dir);
+        // 4 подшага физики на кадр для сверхплавного хода подвески
+        const SUB = 4, subDt = dt / SUB;
+        for(let s=0; s<SUB; s++){
+            if(!car.over) stepPhysics(subDt, dir);
+        }
         if(car.over) return;
 
         const curChunk = Math.floor(car.x / CHUNK_LEN);
         ensureChunk(curChunk); ensureChunk(curChunk + 1); ensureChunk(curChunk + 2);
 
-        const targetCamX = car.x - 90 + Math.max(0, car.vx * 8);
+        const targetCamX = car.x - 90 + Math.max(0, car.vx * 7);
         const targetCamY = car.y - 165;
-        camX += (targetCamX - camX) * 0.14 * dt;
-        camY += (targetCamY - camY) * 0.11 * dt;
+        camX += (targetCamX - camX) * 0.11 * dt;
+        camY += (targetCamY - camY) * 0.09 * dt;
 
         const distM = Math.max(0, Math.floor((car.x - 220) / 10));
         if(distM >= 150 && !car.questMarked){
             car.questMarked = true; S.racesDone++; save();
         }
         if(distM >= car.nextMilestone){
-            const bonus = 10 + Math.floor(car.nextMilestone / 100) * 5;
-            car.got += bonus; earn(bonus, false); addXp(8);
+            const bonus = 3;
+            car.got += bonus; earn(bonus, false); addXp(6);
             chng(); hap('success');
             floatTxt.push({x: car.x, y: car.y - 50, t: `🚩 ${car.nextMilestone} МЕТРОВ! +${bonus}🪙`, col:'#2ecc71', a: 1.3});
             car.nextMilestone += 100;
@@ -1753,7 +1733,7 @@ function startRace(){
                 if(Math.hypot(o.x - car.x, oy - car.y) < 28){
                     o.got = true; car.got += o.val; earn(o.val, false);
                     beep(); hap('light');
-                    floatTxt.push({x: o.x, y: oy - 12, t: `+${o.val}🪙`, col: o.val>5?'#ff9f43':'#ffe270', a: 1});
+                    floatTxt.push({x: o.x, y: oy - 12, t: `+${o.val}🪙`, col: o.val>1?'#ff9f43':'#ffe270', a: 1});
                 }
             }
             for(const f of ch.fuels){
@@ -1886,7 +1866,6 @@ function startRace(){
         ctx.strokeStyle = biome===2 ? '#ffffff' : (biome===1 ? '#d4a373' : '#6a994e');
         ctx.lineWidth = 6; ctx.stroke();
 
-        // Отрисовка заднего плана гаража (стены, верстак, ключи, полки, запаски)
         drawGarageBack(ctx, rr, -camX, -camY);
 
         for(let ci = curChunk - 1; ci <= curChunk + 1; ci++){
@@ -1896,8 +1875,8 @@ function startRace(){
                 const sx = o.x - camX;
                 if(sx < -20 || sx > Wpx + 20) continue;
                 const sy = getH(o.x) - 18 - camY;
-                ctx.fillStyle = o.val > 5 ? '#ff9f43' : '#ffd34d';
-                ctx.beginPath(); ctx.arc(sx, sy, o.val > 5 ? 10 : 8, 0, 7); ctx.fill();
+                ctx.fillStyle = o.val > 1 ? '#ff9f43' : '#ffd34d';
+                ctx.beginPath(); ctx.arc(sx, sy, o.val > 1 ? 9.5 : 7.5, 0, 7); ctx.fill();
                 ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 1.8; ctx.stroke();
                 ctx.fillStyle = '#7d4618'; ctx.font = 'bold 9px sans-serif'; ctx.textAlign = 'center';
                 ctx.fillText(o.val, sx, sy + 0.5);
@@ -1924,10 +1903,7 @@ function startRace(){
             ctx.globalAlpha = 1;
         }
 
-        // Джип со Степаном
         drawJeepModel(ctx, rr, car.x - camX, car.y - camY, car.a, car.compR, car.compF, car.headA, car.rotW);
-
-        // Передняя арка гаража и поднимающиеся ворота (перекрывают джип в момент выезда)
         drawGarageFront(ctx, rr, -camX, -camY, car.doorOpen);
 
         for(let i=floatTxt.length-1; i>=0; i--){
@@ -1990,6 +1966,328 @@ function startRace(){
 
     r_act = true;
     raf_r = requestAnimationFrame(loop);
+}
+
+// =========================================================================
+// ===== ЯГОДНЫЙ БОЧОНОК (SUIKA-ИГРА С МЕДВЕДЕМ И СЛИЯНИЕМ ЯГОД) =====
+// =========================================================================
+let raf_y, y_act=false;
+const BERRIES = [
+    {e:"🫐", r:14, c1:"#5c7cfa", c2:"#364fc7", pts:2},
+    {e:"🍒", r:19, c1:"#ff6b6b", c2:"#c92a2a", pts:4},
+    {e:"🍓", r:25, c1:"#ff8787", c2:"#e03131", pts:8},
+    {e:"🍄", r:32, c1:"#f08c00", c2:"#b45309", pts:14},
+    {e:"🍎", r:40, c1:"#fa5252", c2:"#a61e4d", pts:22},
+    {e:"🍐", r:49, c1:"#94d82d", c2:"#5c940d", pts:34},
+    {e:"🍉", r:59, c1:"#51cf66", c2:"#2b8a3e", pts:50},
+    {e:"🍯", r:70, c1:"#fcc419", c2:"#d97706", pts:80},
+    {e:"👑", r:82, c1:"#ffd43b", c2:"#9c36b5", pts:140}
+];
+
+function initBerry(){
+    if(!checkState()) return;
+    S.gamesPlayed++; save();
+    go('berry');
+
+    const Wpx = 340, Hpx = 450;
+    const sc = setupCanvas('#ycanvas', Wpx, Hpx); if(!sc) return;
+    const {c, ctx} = sc;
+    y_act = false; cancelAnimationFrame(raf_y);
+
+    const BX0 = 28, BX1 = 312, BY0 = 104, BY1 = 426;
+    const st = {
+        bx: Wpx / 2,
+        cur: R(3),
+        next: R(3),
+        cooldown: 0,
+        score: 0,
+        coinsGot: 0,
+        dangerTimer: 0,
+        over: false,
+        items: [],
+        pops: []
+    };
+
+    const clampX = (x, lv) => {
+        const r = BERRIES[lv].r;
+        return Math.max(BX0 + r + 2, Math.min(BX1 - r - 2, x));
+    };
+
+    const evX = e => {
+        const rect = c.getBoundingClientRect();
+        return (e.clientX - rect.left) * (Wpx / rect.width);
+    };
+
+    let dragging = false;
+    c.onpointerdown = e => {
+        if(st.over) return;
+        dragging = true;
+        st.bx = clampX(evX(e), st.cur);
+        try{c.setPointerCapture(e.pointerId)}catch(_){}
+    };
+    c.onpointermove = e => {
+        if(!dragging || st.over) return;
+        st.bx = clampX(evX(e), st.cur);
+    };
+    const dropBerry = () => {
+        if(!dragging || st.over) return;
+        dragging = false;
+        if(st.cooldown > 0) return;
+        const lv = st.cur;
+        const r = BERRIES[lv].r;
+        st.items.push({
+            x: clampX(st.bx, lv),
+            y: BY0 - 10,
+            vx: (Math.random() - 0.5) * 0.4,
+            vy: 1.5,
+            r, lv,
+            age: 0
+        });
+        st.cur = st.next;
+        st.next = R(4);
+        st.bx = clampX(st.bx, st.cur);
+        st.cooldown = 22;
+        snd('sine', 520, 0.07);
+        hap('light');
+    };
+    c.onpointerup = dropBerry;
+    c.onpointercancel = () => { dragging = false; };
+
+    function drawBearDropper(x, curLv, ready){
+        ctx.save();
+        ctx.translate(x, 62);
+        // Уши и голова Степана над бочонком
+        ctx.fillStyle = '#5a3818';
+        ctx.beginPath(); ctx.arc(-16, -24, 8, 0, 7); ctx.arc(16, -24, 8, 0, 7); ctx.fill();
+        ctx.fillStyle = '#c98e62';
+        ctx.beginPath(); ctx.arc(-16, -24, 4, 0, 7); ctx.arc(16, -24, 4, 0, 7); ctx.fill();
+        ctx.fillStyle = '#8a5a2e';
+        ctx.beginPath(); ctx.arc(0, -10, 21, 0, 7); ctx.fill();
+        ctx.fillStyle = '#d9b48a';
+        ctx.beginPath(); ctx.ellipse(0, -4, 10, 7.5, 0, 0, 7); ctx.fill();
+        ctx.fillStyle = '#2a1a10';
+        ctx.beginPath(); ctx.ellipse(0, -7, 4.5, 3, 0, 0, 7); ctx.fill();
+        ctx.beginPath(); ctx.arc(-7, -13, 2.5, 0, 7); ctx.arc(7, -13, 2.5, 0, 7); ctx.fill();
+        // Лапки, держащие ягоду
+        ctx.fillStyle = '#6a421f';
+        ctx.beginPath(); ctx.arc(-14, 12, 7, 0, 7); ctx.arc(14, 12, 7, 0, 7); ctx.fill();
+        ctx.restore();
+
+        if(ready){
+            drawBerryBall(x, 86, BERRIES[curLv].r, curLv);
+        }
+    }
+
+    function drawBerryBall(x, y, r, lv){
+        const b = BERRIES[lv];
+        ctx.save();
+        ctx.translate(x, y);
+        const g = ctx.createRadialGradient(-r*0.3, -r*0.35, r*0.15, 0, 0, r);
+        g.addColorStop(0, b.c1);
+        g.addColorStop(1, b.c2);
+        ctx.fillStyle = g;
+        ctx.strokeStyle = '#ffffff55';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.fill(); ctx.stroke();
+
+        ctx.fillStyle = '#ffffff44';
+        ctx.beginPath(); ctx.arc(-r*0.32, -r*0.32, r*0.26, 0, 7); ctx.fill();
+
+        ctx.font = `${Math.round(r * 1.15)}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(b.e, 0, 1);
+        ctx.restore();
+    }
+
+    function loop(){
+        if(!y_act) return;
+        if(st.cooldown > 0) st.cooldown--;
+
+        // Физика ягод: 6 итераций на кадр для плотной укладки без дрожания
+        const SUB = 6;
+        let mergedPair = null;
+
+        for(let s=0; s<SUB; s++){
+            for(const it of st.items){
+                it.vy += 0.24 / SUB;
+                it.x += it.vx / SUB;
+                it.y += it.vy / SUB;
+
+                if(it.x - it.r < BX0){ it.x = BX0 + it.r; it.vx = Math.abs(it.vx) * 0.4; }
+                if(it.x + it.r > BX1){ it.x = BX1 - it.r; it.vx = -Math.abs(it.vx) * 0.4; }
+                if(it.y + it.r > BY1){
+                    it.y = BY1 - it.r;
+                    it.vy = -Math.abs(it.vy) * 0.22;
+                    it.vx *= 0.96;
+                }
+            }
+
+            const N = st.items.length;
+            for(let i=0; i<N; i++){
+                const a = st.items[i];
+                for(let j=i+1; j<N; j++){
+                    const b = st.items[j];
+                    const dx = b.x - a.x, dy = b.y - a.y;
+                    const dist = Math.hypot(dx, dy);
+                    const minD = a.r + b.r;
+                    if(dist < minD){
+                        if(!mergedPair && a.lv === b.lv && a.lv < BERRIES.length - 1){
+                            mergedPair = [i, j];
+                        } else if(dist > 0.001){
+                            const overlap = (minD - dist) * 0.52;
+                            const nx = dx / dist, ny = dy / dist;
+                            const mA = a.r * a.r, mB = b.r * b.r, mSum = mA + mB;
+                            a.x -= nx * overlap * (mB / mSum) * 2;
+                            a.y -= ny * overlap * (mB / mSum) * 2;
+                            b.x += nx * overlap * (mA / mSum) * 2;
+                            b.y += ny * overlap * (mA / mSum) * 2;
+
+                            const rvx = b.vx - a.vx, rvy = b.vy - a.vy;
+                            const vn = rvx * nx + rvy * ny;
+                            if(vn < 0){
+                                const imp = -vn * 0.35;
+                                a.vx -= nx * imp * (mB / mSum);
+                                a.vy -= ny * imp * (mB / mSum);
+                                b.vx += nx * imp * (mA / mSum);
+                                b.vy += ny * imp * (mA / mSum);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        for(const it of st.items) it.age++;
+
+        // Слияние двух одинаковых ягод в более крупную!
+        if(mergedPair){
+            const [i, j] = mergedPair;
+            const a = st.items[i], b = st.items[j];
+            const newLv = a.lv + 1;
+            const mx = (a.x + b.x) * 0.5, my = (a.y + b.y) * 0.5;
+            st.items.splice(j, 1);
+            st.items.splice(i, 1);
+            st.items.push({
+                x: clampX(mx, newLv),
+                y: Math.min(BY1 - BERRIES[newLv].r, my),
+                vx: 0, vy: -1.2,
+                r: BERRIES[newLv].r,
+                lv: newLv,
+                age: 20
+            });
+
+            const pts = BERRIES[newLv].pts;
+            st.score += pts;
+            S.berryMerges++;
+            if(st.score > (S.bestBerry || 0)) S.bestBerry = st.score;
+
+            // Монетки начисляются за крупные слияния (начиная с Земляники/Грибка), чтобы экономика была честной
+            let coinGain = newLv >= 7 ? 6 : (newLv >= 5 ? 3 : (newLv >= 3 ? 1 : 0));
+            if(coinGain > 0){
+                st.coinsGot += coinGain;
+                earn(coinGain, false);
+            }
+            addXp(2); save(); hud();
+            chng(); hap(newLv >= 4 ? 'medium' : 'light');
+
+            st.pops.push({
+                x: mx, y: my, r: BERRIES[newLv].r * 1.35, a: 1,
+                txt: coinGain > 0 ? `${BERRIES[newLv].e} +${coinGain}🪙` : `+${pts}`
+            });
+        }
+
+        // Проверка переполнения бочонка выше пунктирной линии
+        let overLine = false;
+        for(const it of st.items){
+            if(it.age > 55 && it.y - it.r < BY0){ overLine = true; break; }
+        }
+        if(overLine){
+            st.dangerTimer++;
+            if(st.dangerTimer > 85){
+                st.over = true; y_act = false;
+                boop(); hap('heavy');
+                const ym = $('#ymsg');
+                if(ym) ym.innerHTML = `💥 Бочонок полон! Очки: <b>${st.score}</b> · Монеты: <b>+${st.coinsGot}🪙</b><br><button class="b" onclick="initBerry()">🔁 Сыграть ещё раз</button>`;
+            }
+        } else {
+            st.dangerTimer = Math.max(0, st.dangerTimer - 2);
+        }
+
+        // Отрисовка сцены
+        ctx.clearRect(0, 0, Wpx, Hpx);
+        const bg = ctx.createLinearGradient(0, 0, 0, Hpx);
+        bg.addColorStop(0, '#2d4a22');
+        bg.addColorStop(1, '#182812');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, Wpx, Hpx);
+
+        // Верхняя плашка со счётом и следующей ягодой
+        ctx.fillStyle = 'rgba(0,0,0,0.45)';
+        ctx.fillRect(0, 0, Wpx, 32);
+        ctx.fillStyle = '#ffe270'; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'left';
+        ctx.fillText(`🫐 Очки: ${st.score} (Рек: ${S.bestBerry||0})`, 10, 17);
+        ctx.fillStyle = '#ffd34d'; ctx.textAlign = 'right';
+        ctx.fillText(`🪙 +${st.coinsGot}   След: ${BERRIES[st.next].e}`, Wpx - 10, 17);
+
+        // Прицельная вертикальная линия от лап Степана
+        if(!st.over && st.cooldown === 0){
+            ctx.strokeStyle = 'rgba(255,255,255,0.32)';
+            ctx.setLineDash([5, 5]); ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(st.bx, 90); ctx.lineTo(st.bx, BY1); ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        // Медведь Степан с ягодой в лапах
+        drawBearDropper(st.bx, st.cur, st.cooldown === 0 && !st.over);
+
+        // Деревянный контейнер (бочонок) для ягод
+        ctx.fillStyle = 'rgba(255, 248, 230, 0.08)';
+        ctx.fillRect(BX0, BY0, BX1 - BX0, BY1 - BY0);
+
+        // Линия переполнения
+        ctx.strokeStyle = st.dangerTimer > 0 ? '#ff4757' : 'rgba(255,100,100,0.45)';
+        ctx.setLineDash([6, 6]); ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(BX0, BY0); ctx.lineTo(BX1, BY0); ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Стенки и дно деревянного бочонка с металлическими обручами
+        ctx.strokeStyle = '#8c5830'; ctx.lineWidth = 10; ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(BX0 - 4, BY0 - 4); ctx.lineTo(BX0 - 4, BY1 + 4); ctx.lineTo(BX1 + 4, BY1 + 4); ctx.lineTo(BX1 + 4, BY0 - 4);
+        ctx.stroke();
+        ctx.strokeStyle = '#5c3818'; ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // Отрисовка всех ягод в контейнере
+        for(const it of st.items){
+            drawBerryBall(it.x, it.y, it.r, it.lv);
+        }
+
+        // Эффекты слияния
+        for(let i=st.pops.length-1; i>=0; i--){
+            const p = st.pops[i];
+            p.y -= 0.7; p.a -= 0.035;
+            if(p.a <= 0){ st.pops.splice(i, 1); continue; }
+            ctx.globalAlpha = p.a;
+            ctx.strokeStyle = '#ffe270'; ctx.lineWidth = 2.5;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.r * (1.2 - p.a * 0.3), 0, 7); ctx.stroke();
+            ctx.fillStyle = '#ffe270'; ctx.font = 'bold 13px sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText(p.txt, p.x, p.y - 10);
+            ctx.globalAlpha = 1;
+        }
+
+        // Шкала эволюции ягод в самом низу
+        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        ctx.fillRect(0, Hpx - 20, Wpx, 20);
+        ctx.fillStyle = '#fff'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('🫐 → 🍒 → 🍓 → 🍄 → 🍎 → 🍐 → 🍉 → 🍯 → 👑', Wpx / 2, Hpx - 9);
+
+        if(!st.over) raf_y = requestAnimationFrame(loop);
+    }
+
+    y_act = true;
+    raf_y = requestAnimationFrame(loop);
 }
 
 // ===== ПУШКА =====
@@ -2162,8 +2460,8 @@ function initBubble(){
 
 function go(t){
     if(t!="fish"){clearTimeout(ft);fs="idle"}
-    r_act=false; b_act=false; RKEYS={}; dartAct=false; wheelBusy=false; cfBusy=false; catchTime=0; memLock=false;
-    cancelAnimationFrame(raf_r); cancelAnimationFrame(raf_b); cancelAnimationFrame(dartRaf);
+    r_act=false; b_act=false; y_act=false; RKEYS={}; dartAct=false; wheelBusy=false; cfBusy=false; catchTime=0; memLock=false;
+    cancelAnimationFrame(raf_r); cancelAnimationFrame(raf_b); cancelAnimationFrame(raf_y); cancelAnimationFrame(dartRaf);
     clearInterval(catchInt); clearInterval(slotSp); clearInterval(thimIv);
     clearTimeout(wheelTmr); clearTimeout(cfTmr); clearTimeout(thimTmr); clearTimeout(memTmr);
     wake(false);chk();tab=t;save();
@@ -2186,7 +2484,7 @@ const M0=[
   "T.C.......~~~T",
   "T..g..S..~~~~T",
   "Tgg......~~~~T",
-  "T..f..ppF~~~~T",
+  "T..Y..ppF~~~~T",
   "T.b...p...~~~T",
   "T..g..p...bg.T",
   "TT.A..p.M..TTT",
@@ -2313,19 +2611,6 @@ function svgPill(x,y,txt,badge=false){
         <text x="0" y="2" font-size="10.5" font-weight="800" fill="#fffaf0" text-anchor="middle">${txt}</text>
         ${badge?`<circle cx="${w/2-2}" cy="-7" r="5" fill="#e74c3c" stroke="#fff" stroke-width="1.5"/>`:""}
     </g>`;
-}
-
-function quickJump(target){
-    hap('light');
-    if(target === 'club'){
-        S.mapId = 1; S.pos = [6,9]; go('world');
-    } else if(target === 'forest'){
-        S.mapId = 0; S.pos = [6,7]; go('world');
-    } else if(target === 'race'){
-        initRace();
-    } else {
-        go(target);
-    }
 }
 
 const W={pc:3,pr:3,tpc:3,tpr:3,wk:0,fl:1,bush:{},
@@ -2494,6 +2779,20 @@ for(let r=0;r<hei;r++)for(let c=0;c<wid;c++){
             </g>`;
             L += svgPill(x,y,"3 в ряд");
         }
+        if(k=="Y"){
+            // Большой деревянный бочонок с ягодами (Suika-игра)
+            objs += `<g transform="translate(${x} ${y})">
+                <ellipse cx="24" cy="43" rx="19" ry="6" fill="#0003"/>
+                <rect x="9" y="16" width="30" height="26" rx="5" fill="#9c6638" stroke="#4d2c14" stroke-width="2"/>
+                <line x1="16" y1="16" x2="16" y2="42" stroke="#6b401e" stroke-width="1.5"/>
+                <line x1="24" y1="16" x2="24" y2="42" stroke="#6b401e" stroke-width="1.5"/>
+                <line x1="32" y1="16" x2="32" y2="42" stroke="#6b401e" stroke-width="1.5"/>
+                <rect x="8" y="21" width="32" height="3.5" fill="#576574"/>
+                <rect x="8" y="34" width="32" height="3.5" fill="#576574"/>
+                <circle cx="16" cy="14" r="5" fill="#364fc7"/><circle cx="24" cy="12" r="6" fill="#e03131"/><circle cx="32" cy="14" r="5" fill="#51cf66"/>
+            </g>`;
+            L += svgPill(x,y,"Ягодница");
+        }
         if(k=="F"){
             objs += `<g transform="translate(${x} ${y})">
                 <ellipse cx="64" cy="41" rx="7" ry="2.5" fill="none" stroke="#ffffffaa" stroke-width="1.5"/>
@@ -2592,22 +2891,7 @@ const tint=isClub ? "rgba(20,5,10,0.10)" : (nt?"rgba(12,24,70,.45)":(h<8||h>=19?
 const rn=(!isClub && weather===1)?`<div class="rain"></div>`:"";
 const amb=(!isClub && nt)?Array.from({length:12},()=>`<i class="ff" style="left:${R(100)}%;top:${R(100)}%;animation-delay:${R(40)/10}s"></i>`).join(""):(!isClub && h>=8&&h<19)?Array.from({length:3},()=>`<i class="bf" style="top:${15+R(60)}%;animation-delay:-${R(12)}s">🦋</i>`).join(""):"";
 const twinEl=S.twin?`<div id="pl2"><svg viewBox="30 20 140 170">${bear(100,130,1,false,TWINOPT)}</svg></div>`:"";
-const quickNav = isClub ? `<div class="qnav">
-    <button onclick="quickJump('bar')"><i>🍹</i>Бар</button>
-    <button onclick="quickJump('wheel')"><i>🎡</i>Колесо</button>
-    <button onclick="initMines()"><i>⛏</i>Прииск</button>
-    <button onclick="initBJ()"><i>♠️</i>Дуэль 21</button>
-    <button onclick="initMemory()"><i>🧠</i>Мемори</button>
-    <button onclick="quickJump('forest')"><i>🌲</i>В лес</button>
-</div>` : `<div class="qnav">
-    <button onclick="quickJump('home')"><i>🏠</i>Дом</button>
-    <button onclick="quickJump('shop')"><i>🏪</i>Лавка</button>
-    <button onclick="quickJump('quest')"><i>📋</i>Квесты</button>
-    <button onclick="quickJump('fish')"><i>🎣</i>Озеро</button>
-    <button onclick="quickJump('race')"><i>🔧</i>Гараж</button>
-    <button onclick="quickJump('club')"><i>🕹</i>Клуб</button>
-</div>`;
-return `<div id="wv" style="background:${isClub?'#28150b':'#4e8c3a'}"><div id="wm"><svg width="${Wpx}" height="${Hpx}">${bg}${waterBank}${waterFill}${waterTop}${pathBorder}${pathFill}${objs}${L}</svg><div id="pl"><svg viewBox="30 20 140 170">${bear(100,130,1)}</svg></div>${twinEl}</div>${amb}${rn}<div id="ov" style="background:${tint}"></div></div>${quickNav}<div class="msg" id="dk">${isClub?"🕹 Выбери автомат в зале или нажми кнопку выше":"Тапни по карте или выбери локацию на панели"}</div>`},
+return `<div id="wv" style="background:${isClub?'#28150b':'#4e8c3a'}"><div id="wm"><svg width="${Wpx}" height="${Hpx}">${bg}${waterBank}${waterFill}${waterTop}${pathBorder}${pathFill}${objs}${L}</svg><div id="pl"><svg viewBox="30 20 140 170">${bear(100,130,1)}</svg></div>${twinEl}</div>${amb}${rn}<div id="ov" style="background:${tint}"></div></div><div class="msg" id="dk">${isClub?"🕹 Игровой Клуб — выбери автомат или зайди в бар!":"Тапни по карте — Степан пойдёт ✨"}</div>`},
 init(){
 const p=Array.isArray(S.pos)?S.pos:[3,3];W.pc=p[0];W.pr=p[1];
 if(W.pr>=getHei()||blk(at(W.pc,W.pr))){W.pc=S.mapId===1?6:3;W.pr=S.mapId===1?9:3;}
@@ -2662,7 +2946,11 @@ if(k=="5") return initMines();
 if(k=="6") return initMemory();
 if(k=="7") return initBJ();
 
-const m={H:"home",K:"shop",Q:"quest",F:"fish"}[k];if(m)return go(m);if(k=="S")return newM3(); if(k=="R")return initRace(); if(k=="C")return initBubble();
+const m={H:"home",K:"shop",Q:"quest",F:"fish"}[k];if(m)return go(m);
+if(k=="S")return newM3();
+if(k=="R")return initRace();
+if(k=="C")return initBubble();
+if(k=="Y")return initBerry();
 if(k=="b"){const i=W.pr*wid+W.pc,now=Date.now();if((W.bush[i]||0)>now){boop();return W.say("Ягоды ещё не созрели 🌿")}W.bush[i]=now+60000;
 const bn=S.items.clover?6:3; S.berries++; earn(bn); addXp(5); hap('success');chng();S.hunger=clamp(S.hunger+6);S.mood=clamp(S.mood+3);hud();go("world");W.say(`🫐 Собраны лесные ягоды! +${bn}🪙`)}
 },
