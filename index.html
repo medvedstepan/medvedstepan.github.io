@@ -127,7 +127,7 @@ const tg=(window.Telegram&&window.Telegram.WebApp)||{expand(){},ready(){},BackBu
 try{tg.expand();tg.ready();tg.BackButton.onClick(()=>leaveVenueMenu());}catch(e){}
 
 const GOOGLE_SHEETS_URL = "";
-const API_BASE = "https://myst1cxs.duckdns.org"; // замени на адрес API на VPS, без слэша в конце
+const API_BASE = "https://myst1cxs.duckdns.org:8443"; // замени на адрес API на VPS, без слэша в конце
 
 const ICO = {
     coin:`<svg class="ui-ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="#e5b94c" stroke="#9e7322" stroke-width="1.6"/><circle cx="12" cy="12" r="6.8" fill="#f0cb6e" opacity=".6"/><path d="M10.5 8.5h2.8a2.2 2.2 0 0 1 0 4.4h-2.8V8.5zm0 4.4h3.2M10.5 7.5v9" stroke="#6e4b12" stroke-width="1.8" stroke-linecap="round"/></svg>`,
