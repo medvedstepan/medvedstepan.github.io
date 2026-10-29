@@ -48,7 +48,7 @@ svg.scene-svg{width:100%;max-height:330px;display:block;border-radius:14px;margi
 @keyframes bob{50%{transform:translateY(5px)}}@keyframes br{50%{transform:scale(1.02)}}
 .bear{animation:br 3s infinite;transform-origin:100px 150px}
 #wv{position:relative;overflow:hidden;height:min(65vh,560px);border-radius:16px;background:#558c42;touch-action:none;box-shadow:0 6px 18px #0004;border:2px solid var(--stroke);contain:strict;margin:0 auto;width:100%}
-#wm{position:relative;will-change:transform;backface-visibility:hidden}#wm svg{width:auto;border-radius:0;display:block}
+#wm{position:relative;will-change:transform;backface-visibility:hidden;transform-origin:top left}#wm svg{width:auto;border-radius:0;display:block}
 #wm.tr,#wm.tr #pl,#wm.tr #pl2{transition:transform .2s linear}
 #pl{position:absolute;left:0;top:0;width:62px;pointer-events:none;z-index:2;will-change:transform;backface-visibility:hidden}#pl svg{width:62px;transition:transform .15s}
 #pl2{position:absolute;left:0;top:0;width:46px;pointer-events:none;z-index:1;will-change:transform;backface-visibility:hidden}#pl2 svg{width:46px;transition:transform .15s}
@@ -95,10 +95,36 @@ canvas{background:#1c1612;border-radius:14px;width:100%;max-width:440px;margin:0
 @media (min-width:1024px){
   #app{max-width:960px;}
 }
+
+@keyframes swimR{from{transform:translateX(-60px)}to{transform:translateX(430px)}}
+@keyframes swimL{from{transform:translateX(430px)}to{transform:translateX(-60px)}}
+@keyframes fApproach{from{transform:translate(80px,26px);opacity:.2}to{transform:translate(0,0);opacity:1}}
+@keyframes fWig{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
+@keyframes fThrash{from{transform:rotate(-26deg)}to{transform:rotate(26deg)}}
+@keyframes bobw{50%{transform:translateY(2px)}}
+@keyframes nib{0%,100%{transform:translateY(0)}35%{transform:translateY(4px)}65%{transform:translateY(1px)}}
+@keyframes dip{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+@keyframes castX{from{transform:translateX(-52px)}to{transform:translateX(0)}}
+@keyframes castY{0%{transform:translateY(-42px);animation-timing-function:ease-out}38%{transform:translateY(-92px);animation-timing-function:ease-in}100%{transform:translateY(0)}}
+@keyframes jumpX{0%{transform:translateX(0);opacity:1}88%{opacity:1}100%{transform:translateX(-140px);opacity:0}}
+@keyframes jumpY{0%{transform:translateY(0);animation-timing-function:ease-out}45%{transform:translateY(-84px);animation-timing-function:ease-in}100%{transform:translateY(-10px)}}
+@keyframes jumpR{from{transform:rotate(25deg)}to{transform:rotate(-30deg)}}
+@keyframes twk{0%,100%{opacity:0}50%{opacity:1}}
+@keyframes ench{0%,100%{opacity:.15}50%{opacity:.85}}
+@keyframes popI{from{transform:translateY(0) scale(1)}to{transform:translateY(-4px) scale(1.12)}}
+@keyframes cloudD{from{transform:translateX(0)}to{transform:translateX(70px)}}
+@keyframes spl{0%{transform:translate(0,0);opacity:1}100%{transform:translate(var(--sx),-24px);opacity:0}}
+.shopc .card{padding:7px 10px;margin-bottom:5px}
+.shopc .row{padding:4px 0;gap:6px}
+.shopc .row small{font-size:10px;margin-top:0;line-height:1.2}
+.shopc .row span{font-size:13px;line-height:1.2}
+.shopc button.b{padding:5px 10px;font-size:12px;margin:0}
+.shopc .tab-strip{margin-bottom:5px}.shopc .tab-strip button{padding:5px 6px;font-size:11px;min-width:60px}
+.shopc button.exit-btn{padding:7px;font-size:13px}
 </style></head><body><div id="app"></div>
 <script>
 const tg=(window.Telegram&&window.Telegram.WebApp)||{expand(){},ready(){},BackButton:{show(){},hide(){},onClick(){}},HapticFeedback:{impactOccurred(){}},CloudStorage:{getItem(){},setItem(){}},sendData(){},close(){},showAlert(m){try{alert(m)}catch(e){}},initDataUnsafe:{}};
-try{tg.expand();tg.ready();tg.BackButton.onClick(()=>go("world"));}catch(e){}
+try{tg.expand();tg.ready();tg.BackButton.onClick(()=>leaveVenueMenu());}catch(e){}
 
 const GOOGLE_SHEETS_URL = "";
 
@@ -114,7 +140,8 @@ const ICO = {
     sleep:`<svg class="ui-ic" viewBox="0 0 24 24"><path d="M14.5 3.5a8.5 8.5 0 1 0 5.8 13.5 7.5 7.5 0 0 1-5.8-13.5z" fill="#e5c063" stroke="#8f6c22" stroke-width="1.6"/></svg>`,
     tree:`<svg class="ui-ic" viewBox="0 0 24 24"><rect x="10.2" y="16" width="3.6" height="5.5" fill="#6b4728"/><polygon points="12,2.5 4.5,12 19.5,12" fill="#689e5b" stroke="#36592e" stroke-width="1.4" stroke-linejoin="round"/><polygon points="12,7.5 3.5,17.5 20.5,17.5" fill="#578c4b" stroke="#36592e" stroke-width="1.4" stroke-linejoin="round"/></svg>`,
     door:`<svg class="ui-ic" viewBox="0 0 24 24"><rect x="5.5" y="2.5" width="13" height="19" rx="2" fill="#9c6b3f" stroke="#4d3118" stroke-width="1.6"/><circle cx="15.2" cy="12" r="1.4" fill="#e5b94c"/></svg>`,
-    rod:`<svg class="ui-ic" viewBox="0 0 24 24"><path d="M4.5 19.5L17.5 4.5" stroke="#9c6b3f" stroke-width="2.2" stroke-linecap="round"/><path d="M17.5 4.5v9.5" stroke="#b0bec5" stroke-width="1.4"/><circle cx="17.5" cy="15" r="2.3" fill="#cf6a5f" stroke="#523a28" stroke-width="1.2"/></svg>`,
+    rod:`<svg class="ui-ic" viewBox="0 0 24 24" shape-rendering="crispEdges"><rect x="3" y="18" width="3" height="3" fill="#5a3a1c"/><rect x="6" y="15" width="3" height="3" fill="#8a5a2b"/><rect x="9" y="12" width="3" height="3" fill="#a47038"/><rect x="12" y="9" width="3" height="3" fill="#5a3a1c"/><rect x="15" y="6" width="3" height="3" fill="#8a5a2b"/><rect x="18" y="3" width="3" height="3" fill="#a47038"/><path d="M20 6v9" stroke="#e8eef2" stroke-width="1"/><rect x="18" y="15" width="4" height="4" fill="#d8352a"/><rect x="18" y="17" width="4" height="2" fill="#f4f4f4"/></svg>`,
+    rodE:`<svg class="ui-ic" viewBox="0 0 24 24" shape-rendering="crispEdges"><rect x="3" y="18" width="3" height="3" fill="#6b3fa0"/><rect x="6" y="15" width="3" height="3" fill="#b982ff"/><rect x="9" y="12" width="3" height="3" fill="#6b3fa0"/><rect x="12" y="9" width="3" height="3" fill="#b982ff"/><rect x="15" y="6" width="3" height="3" fill="#6b3fa0"/><rect x="18" y="3" width="3" height="3" fill="#b982ff"/><path d="M20 6v9" stroke="#e8eef2" stroke-width="1"/><rect x="18" y="15" width="4" height="4" fill="#d8352a"/><rect x="18" y="17" width="4" height="2" fill="#f4f4f4"/><rect x="1" y="4" width="2" height="2" fill="#e8d4ff"/><rect x="14" y="14" width="2" height="2" fill="#e8d4ff"/></svg>`,
     chest:`<svg class="ui-ic" viewBox="0 0 24 24"><rect x="3.5" y="7" width="17" height="12.5" rx="2.5" fill="#b87844" stroke="#523218" stroke-width="1.6"/><path d="M3.5 12h17" stroke="#523218" stroke-width="1.8"/><rect x="10.2" y="10" width="3.6" height="4.5" rx="1" fill="#e5b94c" stroke="#523218" stroke-width="1.3"/></svg>`,
     cup:`<svg class="ui-ic" viewBox="0 0 24 24"><path d="M6.5 3.5h11v6.5a5.5 5.5 0 0 1-11 0V3.5z" fill="#e5b94c" stroke="#8f671c" stroke-width="1.6"/><path d="M12 15.5v4M8.5 19.5h7" stroke="#8f671c" stroke-width="1.8" stroke-linecap="round"/></svg>`,
     wrench:`<svg class="ui-ic" viewBox="0 0 24 24"><path d="M14.5 6.5a3.8 3.8 0 0 0-5.2 5.2L4.2 16.8l2.8 2.8 5.1-5.1a3.8 3.8 0 0 0 5.2-5.2l-2.3 2.3-1.8-1.8 2.3-2.3z" fill="#b0bec5" stroke="#455a64" stroke-width="1.5" stroke-linejoin="round"/></svg>`,
@@ -324,6 +351,7 @@ setInterval(()=>{
     decay(dt);
     if(now<S.sleepUntil) S.energy=clamp(S.energy+dt*240);
     if(S.items.coffee) S.energy=clamp(S.energy+dt*14);
+    if(S.items.thermos) S.energy=clamp(S.energy+dt*8);
     if(S.items.hive){ S.hiveA=(S.hiveA||0)+dt; while(S.hiveA>=1){ S.hiveA-=1; earn(2,false); } }
     S.t=now; wake(false); save(); hud();
 }, 5000);
@@ -344,12 +372,15 @@ let tab="world", msg="", shopSec="all";
 const HATS=[["Без шапки",0],["Зимняя шапка",40],["Тёплый шарф",60],["Золотая корона",120],["Синяя кепка",50],["Цветочный венок",90],["Солнечные очки",110],["Цилиндр",150],["Корона правителя","В Колесе"],["Пиксельные очки","В Колесе"]];
 const HOUSES=["","Разбитая халупа","Берлога с брёвнами","Домик с обоями","Усадьба с ковром"], HC=[0,0,60,160,320];
 const ITEMS=[
- ["rod","Удочка Pro",150,"Клёв в 2 раза быстрее, чаще золотая рыба"],
+ ["rod","Зачарованная удочка",150,"Чары на удачу: клёв в 2 раза быстрее, чаще золотая рыба"],
  ["hive","Пасека у лавки",220,"Приносит +2 монеты каждую минуту"],
  ["doll","Плюшевый мишка",90,"Радость падает на 30% медленнее"],
  ["bed","Мягкие перины",140,"Сон восстанавливает 100% бодрости"],
  ["clover","Клевер удачи",120,"Ягодные кусты дают вдвое больше монет"],
  ["sneakers","Быстрые кеды",180,"Степан бегает по лесу в 2 раза быстрее"],
+ ["thermos","Походный термос",110,"Постепенно возвращает +8% бодрости в минуту"],
+ ["basket","Корзинка сборщика",100,"Каждый сбор ягод приносит ещё +2 монеты"],
+ ["compass","Компас следопыта",145,"Помогает чаще встречать лесных белок"],
  ["coffee","Кофеварка",250,"Бодрость понемногу растёт сама"],
  ["radio","Ретро-радио",130,"Музыка дома поддерживает настроение"],
  ["vip","Клубная карта",200,"+20% к призам в клубе и скидки в баре"]
@@ -474,6 +505,20 @@ function openShopSec(sec){
     go("shop");
 }
 
+function leaveVenueMenu(){
+    if((tab==="shop" && S.mapId===2) || (tab==="bar" && S.mapId===1)){
+        const [c,r]=Array.isArray(S.pos)?S.pos:(S.mapId===2?[1,1]:[6,2]);
+        const candidates=S.mapId===2
+            ? [[c+1,r],[c-1,r],[c,r+1],[c,r-1]]
+            : [[c,r+1],[c-1,r],[c+1,r],[c,r-1]];
+        const spot=candidates.find(([nc,nr])=>nc>=0&&nc<WD()&&nr>=0&&nr<getHei()&&!blk(at(nc,nr)));
+        if(spot){
+            S.pos=spot; W.pc=spot[0]; W.pr=spot[1]; W.tpc=W.pc; W.tpr=W.pr; save();
+        }
+    }
+    go("world");
+}
+
 const V={world(){return W.html()},
 home(){
 const sl=Date.now()<S.sleepUntil;
@@ -525,12 +570,10 @@ ${sl ? `<div class="card"><button class="b exit-btn" style="background:linear-gr
 <div class="card" style="padding:8px;margin-top:8px"><div style="display:flex; gap:6px;"><button class="b exit-btn" style="margin:0" onclick="go('world')">${ICO.tree} В лес</button><button class="b exit-btn" style="margin:0;background:linear-gradient(180deg,#523c2b,#36261a);" onclick="saveAndClose()">${ICO.door} Выйти</button></div></div>`}`},
 
 fish(){
-const tipX=S.items.rod?174:170; const tipY=S.items.rod?150:158;
-const ripples = fs!=="idle" ? `<ellipse cx="245" cy="216" rx="${fs=='bite'?18:12}" ry="${fs=='bite'?6:4}" fill="none" stroke="#ffffffaa" stroke-width="1.5"/>` : "";
-return `${scene(bear(90,230,.8,true)+ripples+`<g id="bob" style="animation:${fs=="bite"?"bob .28s infinite":"none"}"><path d="M${tipX} ${tipY}L${fs=="idle"?205:245} ${fs=="idle"?115:205}" stroke="#fff9" stroke-width="1.5" fill="none"/><circle cx="${fs=="idle"?205:245}" cy="${fs=="idle"?115:215}" r="7" fill="${fs=="bite"?"#cf6a5f":"#f5efe6"}" stroke="#a8463b" stroke-width="2"/></g>`,290)}
+return `${fishScene()}
 <div class="msg">${msg||"Закинь удочку и жди поклёвки!"}</div>
 <div class="card">
-  <button class="b" style="width:100%;margin-bottom:6px;font-size:16px;padding:12px" onclick="cast()">${ICO.rod} ${fs=="idle"?"Забросить удочку":fs=="wait"?"Ждём поклёвку…":"ПОДСЕКАЙ!"}</button>
+  <button class="b" style="width:100%;margin-bottom:6px;font-size:16px;padding:12px" onclick="cast()">${S.items.rod?ICO.rodE:ICO.rod} ${fs=="idle"?"Забросить удочку":fs=="wait"?"Ждём поклёвку…":"ПОДСЕКАЙ!"}</button>
   ${S.fish>0?`<button class="b" style="width:100%;margin-bottom:6px;background:linear-gradient(180deg,#5e9450,#46733b)" onclick="sellFish()">${ICO.coin} Продать рыбу (${S.fish} шт. = +${S.fish*6})</button>`:""}
   <button class="b exit-btn" onclick="go('world')">${ICO.tree} В лес</button>
 </div>`},
@@ -563,7 +606,6 @@ return `<div class="card" style="background:linear-gradient(135deg,var(--card),v
 shop(){
 const sec = shopSec || "all";
 const nav = `<div class="tab-strip">
-  <button class="${sec=='all'?'act':''}" onclick="openShopSec('all')">Все отделы</button>
   <button class="${sec=='upg'?'act':''}" onclick="openShopSec('upg')">Стройка</button>
   <button class="${sec=='hats'?'act':''}" onclick="openShopSec('hats')">Гардероб</button>
   <button class="${sec=='items'?'act':''}" onclick="openShopSec('items')">Техника</button>
@@ -572,12 +614,15 @@ const nav = `<div class="tab-strip">
 const bUpg = `<div class="card"><b>Чертёжный стол: ${HOUSES[S.house]}</b>${S.house<4?`<div class="row"><span>Построить «${HOUSES[S.house+1]}»</span><button class="b" onclick="upg()">${HC[S.house+1]} ${ICO.coin}</button></div>`:"<div style='padding:6px 0;color:var(--ok);font-weight:700'>Максимальный уровень усадьбы!</div>"}
 <div class="row"><span>Подружка Степана<small>Своя кровать, гуляет рядом и находит монетки</small></span><button class="b" ${S.twin?"disabled":""} onclick="twin()">${S.twin?"Вместе":"300 "+ICO.coin}</button></div></div>`;
 const bHats = `<div class="card"><b>Зеркало и Гардероб</b>${HATS.map((h,i)=>`<div class="row"><span>${h[0]}</span><button class="b" ${typeof h[1]==='string'&&!S.owned.includes(i)?"disabled":""} onclick="hat(${i})">${S.owned.includes(i)?(S.hat==i?"Надето":"Надеть"):(typeof h[1]==='number'?h[1]+" "+ICO.coin:h[1])}</button></div>`).join("")}</div>`;
-const bItems = `<div class="card"><b>Полезные вещи и инвентарь</b>${ITEMS.map((it,i)=>`<div class="row"><span>${it[1]}<small>${it[3]}</small></span><button class="b" ${S.items[it[0]]?"disabled":""} onclick="buyItem(${i})">${S.items[it[0]]?"Куплено":it[2]+" "+ICO.coin}</button></div>`).join("")}</div>`;
-const bFood = `<div class="card"><b>Бочки с припасами</b>
+const bItems = `<div class="card"><b>Полезные вещи и инвентарь</b>${ITEMS.map((it,i)=>`<div class="row"><span>${it[0]=='rod'?ICO.rodE+' ':''}${it[1]}<small>${it[3]}</small></span><button class="b" ${S.items[it[0]]?"disabled":""} onclick="buyItem(${i})">${S.items[it[0]]?"Куплено":it[2]+" "+ICO.coin}</button></div>`).join("")}</div>`;
+const bFood = `<div class="card"><b>Полка с припасами</b>
 <div class="row"><span>${ICO.fish} Свежая рыба ×3<small>Запас еды для дома</small></span><button class="b" onclick="buySnack('fish')">18 ${ICO.coin}</button></div>
-<div class="row"><span>${ICO.berry} Ягодный нектар<small>Сразу даёт +25% бодрости</small></span><button class="b" onclick="buySnack('juice')">8 ${ICO.coin}</button></div></div>`;
-return `${nav}<div class="${sec=='all'?'dual-grid':''}">${(sec=='all'||sec=='upg')?bUpg:''}${(sec=='all'||sec=='hats')?bHats:''}${(sec=='all'||sec=='items')?bItems:''}${(sec=='all'||sec=='food')?bFood:''}</div>
-<button class="b exit-btn" onclick="go('world')">${ICO.bag} Вернуться в зал Лавки</button>`},
+<div class="row"><span>${ICO.berry} Ягодный нектар<small>Сразу даёт +25% бодрости</small></span><button class="b" onclick="buySnack('juice')">8 ${ICO.coin}</button></div>
+<div class="row"><span>${ICO.honey} Медовые орешки<small>+15% бодрости и +15% радости</small></span><button class="b" onclick="buySnack('nuts')">12 ${ICO.coin}</button></div>
+<div class="row"><span>${ICO.berry} Ягодный пирог<small>+25% сытости и +18% радости</small></span><button class="b" onclick="buySnack('pie')">14 ${ICO.coin}</button></div>
+<div class="row"><span>${ICO.fish} Копчёная форель<small>+35% сытости и +8% бодрости</small></span><button class="b" onclick="buySnack('trout')">16 ${ICO.coin}</button></div></div>`;
+return `<div class="shopc">${nav}<div class="${sec=='all'?'dual-grid':''}">${(sec=='all'||sec=='upg')?bUpg:''}${(sec=='all'||sec=='hats')?bHats:''}${(sec=='all'||sec=='items')?bItems:''}${(sec=='all'||sec=='food')?bFood:''}</div>
+<button class="b exit-btn" onclick="leaveVenueMenu()">${ICO.bag} Вернуться в зал Лавки</button></div>`},
 
 bar(){
 const disc = S.items.vip ? 0.8 : 1;
@@ -590,7 +635,7 @@ return `<div class="card"><b>Фреш-бар Клуба ${S.items.vip?'<span cla
 <div class="row"><span>Царский медовик<small>Любимый десерт (+60% сытости, +40% радости)</small></span><button class="b" onclick="buyDrinks('cake',${pr(25)})">${pr(25)} ${ICO.coin}</button></div>
 <div class="row"><span>Эликсир бодрости<small>Снимает простуду и даёт 100% бодрости</small></span><button class="b" style="background:linear-gradient(180deg,#8c629c,#6d497a)" onclick="buyDrinks('elixir',5)">5 ${ICO.crys}</button></div>
 <div class="row"><span>Выдержанная медовуха<small>Восстанавливает все шкалы на 100%</small></span><button class="b" style="background:linear-gradient(180deg,#8c629c,#6d497a)" onclick="buyDrinks('mead',10)">10 ${ICO.crys}</button></div>
-</div><button class="b exit-btn" onclick="go('world')">Отойти от стойки</button>`},
+</div><button class="b exit-btn" onclick="leaveVenueMenu()">Отойти от стойки</button>`},
 
 wheel(){return `<div class="card" style="text-align:center"><b>Колесо Удачи</b>
 <div class="msg" id="cas-msg">Крути барабан и выигрывай редкие шапки или монеты!</div>
@@ -806,9 +851,12 @@ function hat(i){
 function twin(){if(S.twin)return;if(S.coins<300)return toast("Не хватает монет");S.coins-=300;S.twin=true; addXp(100); chng();toast("У Степана появилась подружка!");go("shop")}
 function buyItem(i){const[k,n,p]=ITEMS[i];if(S.items[k])return;if(S.coins<p)return toast("Не хватает монет");S.coins-=p;S.items[k]=1; addXp(20); chng();hap('success');toast(n+" куплено!");go("shop")}
 function buySnack(k){
-    if(k=='fish'){if(S.coins<18)return toast("Не хватает монет");S.coins-=18;S.fish+=3;beep();toast("+3 рыбы в запасе!");}
-    else if(k=='juice'){if(S.coins<8)return toast("Не хватает монет");S.coins-=8;S.energy=clamp(S.energy+25);chng();toast("Бодрость +25%!");}
-    hud(); go("shop");
+    if(k==='fish'){if(S.coins<18)return toast("Не хватает монет");S.coins-=18;S.fish+=3;beep();toast("+3 рыбы в запасе!");}
+    else if(k==='juice'){if(S.coins<8)return toast("Не хватает монет");S.coins-=8;S.energy=clamp(S.energy+25);S.fed++;chng();toast("Бодрость +25%!");}
+    else if(k==='nuts'){if(S.coins<12)return toast("Не хватает монет");S.coins-=12;S.energy=clamp(S.energy+15);S.mood=clamp(S.mood+15);S.fed++;chng();toast("Медовые орешки: +15 бодрости и радости!");}
+    else if(k==='pie'){if(S.coins<14)return toast("Не хватает монет");S.coins-=14;S.hunger=clamp(S.hunger+25);S.mood=clamp(S.mood+18);S.fed++;chng();toast("Ягодный пирог: +25 сытости, +18 радости!");}
+    else if(k==='trout'){if(S.coins<16)return toast("Не хватает монет");S.coins-=16;S.hunger=clamp(S.hunger+35);S.energy=clamp(S.energy+8);S.fed++;chng();toast("Копчёная форель: +35 сытости!");}
+    save();hud();go("shop");
 }
 
 function buyDrinks(k, cost){
@@ -1188,19 +1236,91 @@ function bjStand(){
 }
 
 // ===== РЫБАЛКА =====
+
+function fishSpr(c1,c2,eye){eye=eye||"#10202e";return `<g shape-rendering="crispEdges"><rect x="-14" y="-5" width="24" height="10" fill="${c1}"/><rect x="-14" y="1" width="24" height="4" fill="${c2}"/><rect x="10" y="-3" width="3" height="6" fill="${c1}"/><rect x="-20" y="-7" width="6" height="5" fill="${c1}"/><rect x="-20" y="2" width="6" height="5" fill="${c1}"/><rect x="-17" y="-2" width="4" height="4" fill="${c1}"/><rect x="-5" y="-8" width="9" height="3" fill="${c2}"/><rect x="5" y="-3" width="3" height="3" fill="${eye}"/></g>`}
+function fishScene(){
+  const BX=292,BY=214,TX=240,TY=172,HX=164,HY=244,ench=!!S.items.rod;
+  const wait=fs=="wait", bite=fs=="bite", idle=fs=="idle";
+  // небо, горы, дальний берег
+  const hills=[30,36,44,40,50,58,52,44,36,40,48,56,48,40,34,38,46,52,44,36].map((h,i)=>`<rect x="${i*18}" y="${172-h}" width="18" height="${h}" fill="#5b8a58"/><rect x="${i*18}" y="${172-h}" width="18" height="4" fill="#74a86a"/>`).join("");
+  const hills2=[16,22,18,26,20,14,24,28,18,20,26,16,22,18,24,20,14,22,26,18].map((h,i)=>`<rect x="${i*18}" y="${172-h}" width="18" height="${h}" fill="#4a7a4b"/>`).join("");
+  const farTrees=[236,282,326].map(x=>`<rect x="${x+6}" y="152" width="4" height="16" fill="#5a3a1c"/><rect x="${x}" y="136" width="16" height="18" fill="#2f6b3a"/><rect x="${x+4}" y="130" width="8" height="8" fill="#3b8148"/>`).join("");
+  const cloud=(x,y,d)=>`<g style="animation:cloudD ${d}s linear infinite alternate" shape-rendering="crispEdges"><rect x="${x}" y="${y+8}" width="56" height="12" fill="#fff" opacity=".92"/><rect x="${x+10}" y="${y}" width="28" height="10" fill="#fff" opacity=".92"/><rect x="${x+38}" y="${y+4}" width="14" height="6" fill="#fff" opacity=".92"/></g>`;
+  const sky=`<defs><linearGradient id="fSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#78c0f4"/><stop offset="1" stop-color="#cfeafb"/></linearGradient><linearGradient id="fWater" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5db3ea"/><stop offset=".55" stop-color="#2f7fc4"/><stop offset="1" stop-color="#1d5a98"/></linearGradient></defs>
+    <rect width="360" height="300" fill="url(#fSky)"/><rect x="296" y="20" width="26" height="26" fill="#ffe36a"/><rect x="300" y="24" width="18" height="18" fill="#fff3a8"/>${cloud(30,34,22)}${cloud(190,58,30)}${hills}${hills2}${farTrees}`;
+  // вода
+  const sparkles=[[120,190],[200,184],[310,198],[250,230],[330,262],[170,284],[90,210],[40,285]].map(([x,y],i)=>`<rect x="${x}" y="${y}" width="${10+(i%3)*4}" height="2" fill="#fff" style="animation:twk ${2.4+i*.3}s ${i*.4}s infinite"/>`).join("");
+  const water=`<rect y="168" width="360" height="132" fill="url(#fWater)"/><rect y="168" width="360" height="3" fill="#a9dcf7" opacity=".7"/>${sparkles}`;
+  // рыбы в воде
+  const dec=[[226,1,19,-4,1],[246,-1,23,-11,1.15],[268,1,27,-18,1.3],[284,-1,21,-7,.9],[236,-1,31,-22,.8]].map(([y,dir,dur,dl,s])=>`<g transform="translate(0 ${y})"><g style="animation:${dir>0?"swimR":"swimL"} ${dur}s ${dl}s linear infinite"><g style="animation:fWig 1.3s ease-in-out infinite alternate"><g transform="scale(${dir*s} ${s})" opacity=".62">${fishSpr("#2f6e96","#24577a")}</g></g></g></g>`).join("");
+  const hookFish=fgold?fishSpr("#f5c542","#d99a1c","#3a2a00"):fishSpr("#8ec9e6","#5a9fc4");
+  let myFish="";
+  if(wait) myFish=`<g transform="translate(${BX} ${BY+26})"><g style="animation:fApproach ${Math.round(fwait*.8)}ms cubic-bezier(.3,.6,.4,1) both"><g style="animation:fWig .45s ease-in-out infinite alternate"><g transform="scale(-1 1) translate(-13 0)">${hookFish}</g></g></g></g>`;
+  if(bite) myFish=`<g transform="translate(${BX} ${BY+26})"><g style="animation:fThrash .14s ease-in-out infinite alternate"><g transform="scale(-1 1) translate(-13 0)">${hookFish}</g></g></g>`;
+  // берег, пирс
+  const shore=`<rect x="0" y="212" width="64" height="88" fill="#7b5430"/><rect x="0" y="212" width="64" height="12" fill="#5faa3e"/><rect x="0" y="224" width="64" height="4" fill="#4a8a30"/>
+    ${[[6,236],[22,248],[40,238],[12,266],[34,276],[52,262]].map(([x,y])=>`<rect x="${x}" y="${y}" width="8" height="8" fill="#63421f"/>`).join("")}
+    <rect x="22" y="148" width="10" height="66" fill="#6b4a26"/><rect x="26" y="148" width="3" height="66" fill="#583b1c"/>
+    <rect x="2" y="104" width="50" height="30" fill="#2f7a3a"/><rect x="-4" y="122" width="62" height="34" fill="#388a44"/><rect x="12" y="92" width="30" height="14" fill="#3f9a4c"/>
+    ${[[8,112],[30,108],[40,128],[14,138],[46,142]].map(([x,y])=>`<rect x="${x}" y="${y}" width="8" height="8" fill="#2a6a33"/>`).join("")}`;
+  const posts=[66,112,158,198].map(x=>`<rect x="${x}" y="262" width="8" height="38" fill="#5b3b1c"/><rect x="${x}" y="262" width="3" height="38" fill="#7a5230"/>`).join("");
+  const sub=`<rect x="60" y="276" width="150" height="24" fill="#2a70b4" opacity=".55"/><rect x="60" y="276" width="150" height="2" fill="#bfe6fb" opacity=".6"/>`;
+  const planks=Array.from({length:8},(_,i)=>`<rect x="${64+i*18}" y="250" width="2" height="12" fill="#6f4a22"/>`).join("");
+  const deck=`<rect x="56" y="250" width="148" height="12" fill="#9a6a38"/><rect x="56" y="250" width="148" height="3" fill="#bd8a4c"/>${planks}<rect x="56" y="262" width="148" height="8" fill="#6f4a22"/><rect x="56" y="262" width="148" height="2" fill="#583a1a"/>
+    <rect x="56" y="224" width="5" height="26" fill="#583a1a"/><rect x="52" y="212" width="13" height="12" fill="#ffd45a" stroke="#8a5a1a" stroke-width="1.5"/><rect x="55" y="215" width="7" height="6" fill="#fff3b0"/>
+    <rect x="68" y="240" width="12" height="10" fill="#8f9aa0"/><rect x="66" y="238" width="16" height="3" fill="#aeb9bd"/><path d="M69 238q5-8 10 0" stroke="#6a747a" stroke-width="1.5" fill="none"/>`;
+  // удочка
+  const rodSq=Array.from({length:15},(_,i)=>{const x=HX+5*i,y=HY-2-5*i;const c=ench?(i%2?"#b982ff":"#7a3fc4"):(i<3?"#5a3a1c":(i%2?"#a47038":"#8a5a2b"));return `<rect x="${x}" y="${y}" width="6" height="6" fill="${c}"/>`}).join("");
+  const reel=`<rect x="${HX+9}" y="${HY-14}" width="6" height="6" fill="#9aa4a8"/><rect x="${HX+11}" y="${HY-12}" width="2" height="2" fill="#4a5256"/>`;
+  const glow=ench?Array.from({length:15},(_,i)=>`<rect x="${HX+5*i-3}" y="${HY-5-5*i}" width="12" height="12" fill="#c58bff" style="animation:ench 1.6s ${i*.09}s infinite"/>`).join("")+[[250,162],[226,150],[268,176],[216,190],[196,206],[258,152]].map(([x,y],i)=>`<g style="animation:twk ${1.4+i*.25}s ${i*.3}s infinite"><rect x="${x-3}" y="${y}" width="7" height="2" fill="#f0dcff"/><rect x="${x}" y="${y-3}" width="2" height="8" fill="#f0dcff"/></g>`).join(""):"";
+  const rodAnim=bite?`<animateTransform attributeName="transform" type="rotate" values="0 ${HX} ${HY};5 ${HX} ${HY};0 ${HX} ${HY}" dur=".32s" repeatCount="indefinite"/>`:"";
+  const rod=`<g>${glow}${rodSq}${reel}${rodAnim}</g>`;
+  // леска и поплавок
+  const bobber=`<g shape-rendering="crispEdges"><rect x="-4" y="-6" width="8" height="5" fill="#d8352a"/><rect x="-4" y="-1" width="8" height="5" fill="#f4f4f4"/><rect x="-4" y="-6" width="8" height="10" fill="none" stroke="#3a1a1a" stroke-width="1"/><rect x="-1" y="-9" width="2" height="3" fill="#3a1a1a"/></g>`;
+  const under=`<path d="M${BX} ${BY+4}V${BY+24}" stroke="#dfe8ec" stroke-width="1" opacity=".8"/><rect x="${BX-1}" y="${BY+24}" width="2" height="4" fill="#9aa4a8"/><rect x="${BX-3}" y="${BY+27}" width="4" height="2" fill="#9aa4a8"/><rect x="${BX-4}" y="${BY+22}" width="3" height="3" fill="#e58aa0"/>`;
+  const ripple=(dur,begin,maxr)=>`<ellipse cx="${BX}" cy="${BY+4}" rx="4" ry="1.5" fill="none" stroke="#fff" stroke-width="1.5"><animate attributeName="rx" values="4;${maxr}" dur="${dur}s" begin="${begin}s" repeatCount="indefinite"/><animate attributeName="ry" values="1.5;${maxr/3}" dur="${dur}s" begin="${begin}s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="${dur}s" begin="${begin}s" repeatCount="indefinite"/></ellipse>`;
+  let line="";
+  if(idle){
+    line=`<path d="M${TX} ${TY}Q${TX+4} ${TY+8} ${TX+2} ${TY+16}" stroke="#fff" stroke-width="1.5" fill="none" opacity=".9"/><rect x="${TX+1}" y="${TY+16}" width="2" height="4" fill="#9aa4a8"/><rect x="${TX-1}" y="${TY+19}" width="4" height="2" fill="#9aa4a8"/>`;
+  } else if(wait){
+    line=`<path fill="none" stroke="#fff" stroke-width="1.5" opacity=".95" d="M${TX} ${TY}Q262 200 ${BX} ${BY-4}"><animate attributeName="d" dur=".55s" fill="freeze" keyTimes="0;.38;1" values="M${TX} ${TY}Q${TX} ${TY} ${TX} ${TY};M${TX} ${TY}Q250 126 260 118;M${TX} ${TY}Q262 200 ${BX} ${BY-4}"/></path>
+      <g style="animation:castX .55s linear both"><g style="animation:castY .55s both"><g transform="translate(${BX} ${BY})"><g style="animation:nib .6s ${Math.round(fwait*.75)}ms 3"><g style="animation:bobw 1.6s ease-in-out infinite">${bobber}</g></g></g></g></g>
+      <g style="animation:twk .01s .5s both;opacity:0">${under}</g>
+      <g opacity="0" style="animation:twk .01s .55s forwards">${ripple(1.6,.55,16)}${ripple(1.6,1.35,16)}</g>
+      ${[[-9,0],[8,.05],[-3,.1]].map(([sx,dl])=>`<rect x="${BX-1}" y="${BY}" width="3" height="3" fill="#cfeeff" style="--sx:${sx}px;animation:spl .45s ${.55+dl}s both;opacity:0"/>`).join("")}`;
+  } else {
+    line=`<path fill="none" stroke="#fff" stroke-width="1.5" d="M${TX} ${TY}L${BX} ${BY-4}"><animate attributeName="d" dur=".32s" repeatCount="indefinite" values="M${TX} ${TY}L${BX} ${BY-4};M${TX+6} ${TY+7}L${BX} ${BY+4};M${TX} ${TY}L${BX} ${BY-4}"/></path>
+      <g transform="translate(${BX} ${BY})"><g style="animation:dip .32s linear infinite">${bobber}</g></g>${under}
+      ${ripple(.6,0,22)}${ripple(.6,.3,22)}
+      ${[[-12,0],[10,.12],[-5,.24],[14,.06]].map(([sx,dl])=>`<rect x="${BX-1}" y="${BY+2}" width="3" height="3" fill="#cfeeff" style="--sx:${sx}px;animation:spl .5s ${dl}s infinite"/>`).join("")}`;
+  }
+  const bangSign=bite?`<g transform="translate(128 108)"><g style="animation:popI .3s ease-in-out infinite alternate"><rect x="-10" y="-24" width="20" height="26" rx="3" fill="#e63b2e" stroke="#fff" stroke-width="2"/><rect x="-2.5" y="-19" width="5" height="11" fill="#fff"/><rect x="-2.5" y="-5" width="5" height="4" fill="#fff"/></g></g>`:"";
+  let jump="";
+  if(fcatch){const g=fcatch=="gold";jump=`<g transform="translate(${BX} ${BY})"><g style="animation:jumpX .8s linear both"><g style="animation:jumpY .8s both"><g style="animation:jumpR .8s linear both"><g transform="scale(-1.3 1.3)">${g?fishSpr("#f5c542","#d99a1c","#3a2a00"):fishSpr("#8ec9e6","#5a9fc4")}</g></g></g></g></g>
+    ${[-10,0,10].map((sx,i)=>`<rect x="${BX-1}" y="${BY}" width="3" height="3" fill="#cfeeff" style="--sx:${sx}px;animation:spl .5s ${i*.05}s both"/>`).join("")}`;
+    if(g) jump+=[[286,150],[268,170],[240,178],[200,190]].map(([x,y],i)=>`<g style="animation:twk .5s ${i*.12}s 2"><rect x="${x-3}" y="${y}" width="7" height="2" fill="#ffe36a"/><rect x="${x}" y="${y-3}" width="2" height="8" fill="#ffe36a"/></g>`).join("");}
+  return `<svg class="scene-svg" viewBox="0 0 360 300">${sky}${water}${dec}${myFish}${shore}${posts}${sub}${deck}${bear(128,221,.8,false,{noShadow:false})}${rod}${line}${bangSign}${jump}</svg>`;
+}
+
+let fwait=1500,fgold=false,fcatch=null,fcT=0;
 function cast(){
     if(!checkState()) return;
-    if(fs=="idle"){fs="wait";msg="";go("fish");hap();
-        const wait=S.items.rod?650+R(950):1200+R(1800);
+    if(fs=="idle"){
+        fs="wait";msg="";fcatch=null;
+        fwait=S.items.rod?650+R(950):1200+R(1800);
+        fgold=R(10)<(S.items.rod?3:1);
+        go("fish");hap();
         ft=setTimeout(()=>{fs="bite";msg="Клюёт! Подсекай!";go("fish");hap('heavy');
-            ft=setTimeout(()=>{fs="idle";say("Уплыла… Слишком долго ждал!")},S.items.rod?1750:1400)},wait)}
+            ft=setTimeout(()=>{fs="idle";say("Уплыла… Слишком долго ждал!")},S.items.rod?1750:1400)},fwait)}
     else if(fs=="wait"){clearTimeout(ft);fs="idle";boop();hap('error');say("Слишком рано! Подожди поклёвки")}
     else if(fs=="bite"){
         clearTimeout(ft);fs="idle";
-        const gr=S.items.rod?3:1, r=R(10), isGold=r<gr;
+        const isGold=fgold;
         S.fishCaught++;chng();hap('success');
         if(isGold){earn(12);msg=`${ICO.toy} Золотая рыбка! +12 монет`;}else{S.fish++;msg=`${ICO.fish} Поймал! (+1 рыба в запас)`;}
-        addXp(6); S.mood=clamp(S.mood+4);hud();go("fish");
+        addXp(6); S.mood=clamp(S.mood+4);hud();
+        fcatch=isGold?"gold":"fish"; go("fish");
+        clearTimeout(fcT); fcT=setTimeout(()=>{fcatch=null},1000);
     }
 }
 
@@ -2329,11 +2449,11 @@ function initBerry(){
 // =========================================================================
 let raf_cb, cb_act=false;
 const CRANE_PAL = [
-    ['#689e5b','#4b783e','#e5b94c'],
-    ['#c9864d','#9c6230','#f5e9d6'],
-    ['#588bae','#3d6682','#f0cb6e'],
-    ['#b8564b','#873830','#f5e9d6'],
-    ['#8c629c','#634170','#f0cb6e']
+    ['#795338','#4b3323','#d5ad78'],
+    ['#876044','#553a27','#e0bb83'],
+    ['#6e4b32','#453020','#cda574'],
+    ['#81583a','#513725','#d8b07a'],
+    ['#735035','#483221','#e3bf89']
 ];
 
 function initCraneBuild(){
@@ -2355,6 +2475,9 @@ function initCraneBuild(){
         targetCamY: 0,
         towerSway: 0,
         swingT: 0,
+        ropeAngle: 0,
+        loadX: Wpx / 2,
+        roofAnnounced: false,
         hookX: Wpx / 2,
         hookY: 88,
         curPal: 0,
@@ -2373,27 +2496,43 @@ function initCraneBuild(){
         const [cMain, cBorder, cTrim] = CRANE_PAL[palIdx % CRANE_PAL.length];
         const x = cx - w * 0.5;
 
-        // Основной деревянный фасад этажа
+        // Тёплый фасад с фактурой коры: слои древесины, прожилки и сучки.
         ctx.fillStyle = cMain;
         ctx.strokeStyle = cBorder;
         ctx.lineWidth = 2;
-        rrPath(ctx, x, topY, w, h, 3);
+        rrPath(ctx, x, topY, w, h, 4);
         ctx.fill(); ctx.stroke();
-        ctx.fillStyle = 'rgba(255,255,255,.13)';
-        ctx.fillRect(x + 3, topY + 3, Math.max(0,w - 6), 2);
-        ctx.fillStyle = 'rgba(0,0,0,.12)';
-        ctx.fillRect(x + w - 7, topY + 4, 4, Math.max(0,h - 8));
+        ctx.save();
+        rrPath(ctx, x + 1, topY + 1, w - 2, h - 2, 3);
+        ctx.clip();
+        ctx.fillStyle = 'rgba(255,225,175,.10)';
+        ctx.fillRect(x + 2, topY + 2, Math.max(0,w - 4), 2);
+        ctx.fillStyle = 'rgba(28,17,10,.16)';
+        ctx.fillRect(x + w - 8, topY + 3, 5, Math.max(0,h - 6));
 
-        // Горизонтальные брёвна сруба
-        ctx.strokeStyle = 'rgba(0,0,0,0.12)';
-        ctx.lineWidth = 1;
-        for(let ly = topY + 8; ly < topY + h - 4; ly += 8){
-            ctx.beginPath(); ctx.moveTo(x + 2, ly); ctx.lineTo(x + w - 2, ly); ctx.stroke();
+        // Неровные волокна коры и горизонтальные стыки брёвен.
+        for(let ly = topY + 8; ly < topY + h - 3; ly += 8){
+            ctx.strokeStyle = 'rgba(34,20,11,.30)'; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(x + 2, ly);
+            ctx.bezierCurveTo(x + w*.28, ly - 1.5, x + w*.66, ly + 1.8, x + w - 2, ly - .5);
+            ctx.stroke();
+            ctx.strokeStyle = 'rgba(236,199,145,.18)';
+            ctx.beginPath(); ctx.moveTo(x + 4, ly + 2); ctx.bezierCurveTo(x + w*.4, ly + 1, x + w*.7, ly + 3, x + w - 4, ly + 1.5); ctx.stroke();
         }
+        for(let g=0; g<3; g++){
+            const gx=x+12+((palIdx*19+g*31)%(Math.max(18,w-24)));
+            const gy=topY+7+((palIdx*5+g*11)%(Math.max(8,h-12)));
+            ctx.strokeStyle='rgba(42,25,14,.34)'; ctx.lineWidth=1;
+            ctx.beginPath(); ctx.ellipse(gx,gy,3.4,1.35,0,0,Math.PI*2); ctx.stroke();
+            ctx.beginPath(); ctx.ellipse(gx,gy,1.4,.65,0,0,Math.PI*2); ctx.stroke();
+        }
+        ctx.restore();
 
-        // Карниз крыши этажа
+        // Тёмные торцы брёвен подчёркивают сруб.
         ctx.fillStyle = cBorder;
         ctx.fillRect(x - 3, topY - 2, w + 6, 5);
+        ctx.fillStyle = 'rgba(227,190,135,.34)';
+        ctx.fillRect(x - 2, topY - 1, w + 4, 1);
 
         if(isBase){
             // Входная деревянная дверь на 1-м этаже и 2 окошка по бокам (как на картинке)
@@ -2433,12 +2572,35 @@ function initCraneBuild(){
         }
     }
 
+    function drawRoof(cx, baseY, blockW){
+        const rw = Math.max(84, blockW + 26), peakY = baseY - 34;
+        const left = cx - rw/2, right = cx + rw/2;
+        // Двускатная крыша из тёмных коровых плашек с коньком и стропилами.
+        ctx.beginPath(); ctx.moveTo(cx, peakY); ctx.lineTo(left, baseY + 2); ctx.lineTo(right, baseY + 2); ctx.closePath();
+        ctx.fillStyle = '#493323'; ctx.strokeStyle = '#2a2019'; ctx.lineWidth = 2.5; ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx, peakY + 5); ctx.lineTo(left + 9, baseY - 1); ctx.lineTo(cx - 3, baseY - 1); ctx.closePath();
+        ctx.fillStyle = '#765337'; ctx.fill();
+        ctx.beginPath(); ctx.moveTo(cx, peakY + 5); ctx.lineTo(cx + 3, baseY - 1); ctx.lineTo(right - 9, baseY - 1); ctx.closePath();
+        ctx.fillStyle = '#68492f'; ctx.fill();
+        ctx.strokeStyle = 'rgba(224,187,131,.72)'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(cx, peakY + 2); ctx.lineTo(left, baseY + 2); ctx.moveTo(cx, peakY + 2); ctx.lineTo(right, baseY + 2); ctx.stroke();
+        // Короткие тёмные штрихи создают фактуру коры на скатах.
+        ctx.strokeStyle = 'rgba(33,22,15,.55)'; ctx.lineWidth = 1;
+        for(let i=1;i<=4;i++){
+            const t=i/5, yy=peakY+(baseY-peakY)*t;
+            ctx.beginPath(); ctx.moveTo(cx-rw*.42*t, yy); ctx.lineTo(cx-4, yy+1); ctx.moveTo(cx+4, yy+1); ctx.lineTo(cx+rw*.42*t, yy); ctx.stroke();
+        }
+        ctx.fillStyle = '#9a7046'; ctx.fillRect(left-4,baseY,rw+8,4);
+        ctx.fillStyle = '#d5ad78'; ctx.fillRect(cx-7,peakY-2,14,5);
+    }
+
     c.onpointerdown = () => {
         if(st.over || st.falling) return;
         const prev = st.blocks[st.blocks.length - 1];
         const bw = Math.max(58, prev.w - (st.score > 10 ? 2 : 0));
         st.falling = {
-            x: st.hookX,
+            x: st.loadX,
+            vx: Math.sin(st.ropeAngle) * 0.8,
             y: st.hookY + 16 - st.camY,
             w: bw,
             h: 32,
@@ -2458,6 +2620,9 @@ function initCraneBuild(){
         // Тележка плавно едет по стреле; груз всегда висит вертикально.
         st.hookX = (trolleyMinX + trolleyMaxX) / 2 + Math.sin(st.swingT) * (trolleyMaxX - trolleyMinX) / 2;
         st.hookY = 88;
+        // Ветер и движение каретки раскачивают подвешенный трос и груз.
+        st.ropeAngle = Math.sin(st.swingT * 1.55) * 0.28;
+        st.loadX = st.hookX + Math.sin(st.ropeAngle) * 48;
 
         st.camY += (st.targetCamY - st.camY) * 0.10;
 
@@ -2465,6 +2630,8 @@ function initCraneBuild(){
             const f = st.falling;
             f.vy += 0.36;
             f.y += f.vy;
+            f.x += f.vx || 0;
+            f.vx = (f.vx || 0) * 0.985;
 
             const topB = st.blocks[st.blocks.length - 1];
             const topSwayOffset = Math.sin(st.swingT * 0.7) * st.towerSway * Math.min(1, st.blocks.length / 8);
@@ -2516,6 +2683,11 @@ function initCraneBuild(){
                         });
                     }
 
+                    if(st.score === 150 && !st.roofAnnounced){
+                        st.roofAnnounced = true;
+                        st.pops.push({ x: landedX, y: topB.y - f.h - 42, t: `150 ЭТАЖЕЙ — КРЫША ГОТОВА!`, col: '#f5e9d6', a: 2.0 });
+                        chng(); hap('success');
+                    }
                     if(st.score > (S.bestCrane || 0)) S.bestCrane = st.score;
                     S.craneScore = (S.craneScore || 0) + 1;
                     addXp(3); save(); hud();
@@ -2603,6 +2775,13 @@ function initCraneBuild(){
             drawHouseBlock(b.x + sway, sy, b.w, b.h, b.pal, b.isBase);
         }
 
+        // На 150-м этаже появляется законченная крыша; она остаётся на вершине башни.
+        if(st.score >= 150){
+            const top=st.blocks[st.blocks.length-1];
+            const roofSway=Math.sin(st.swingT*.7)*st.towerSway*((st.blocks.length-1)/Math.max(1,st.blocks.length));
+            drawRoof(top.x+roofSway, top.y+st.camY, top.w);
+        }
+
         // Падающий этаж
         if(st.falling){
             const f = st.falling;
@@ -2633,29 +2812,34 @@ function initCraneBuild(){
         rrPath(ctx, 25, 24, 35, 20, 4); ctx.fill(); ctx.stroke();
         ctx.fillStyle = '#e6b85b'; ctx.fillRect(29, 27, 27, 4);
 
-        // Подвижная каретка и вертикальный грузовой трос.
+        // Подвижная каретка, изогнутый раскачивающийся трос и подвес.
         ctx.fillStyle = '#d98943'; ctx.strokeStyle = '#7d4b24';
         rrPath(ctx, st.hookX - 12, 28, 24, 18, 5); ctx.fill(); ctx.stroke();
         ctx.fillStyle = '#343b40'; ctx.beginPath(); ctx.arc(st.hookX - 6, 45, 3, 0, Math.PI*2); ctx.fill();
         ctx.beginPath(); ctx.arc(st.hookX + 6, 45, 3, 0, Math.PI*2); ctx.fill();
-        ctx.strokeStyle = '#2c353d'; ctx.lineWidth = 2;
+        ctx.strokeStyle = '#253039'; ctx.lineWidth = 2.8;
         ctx.beginPath();
-        ctx.moveTo(st.hookX - 3, 46); ctx.lineTo(st.hookX - 3, st.hookY);
-        ctx.moveTo(st.hookX + 3, 46); ctx.lineTo(st.hookX + 3, st.hookY);
+        ctx.moveTo(st.hookX, 46);
+        ctx.quadraticCurveTo(st.hookX + Math.sin(st.ropeAngle)*14, 66, st.loadX, st.hookY);
+        ctx.stroke();
+        ctx.strokeStyle = 'rgba(220,230,228,.72)'; ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(st.hookX + 2, 47);
+        ctx.quadraticCurveTo(st.hookX + Math.sin(st.ropeAngle)*14 + 2, 66, st.loadX + 2, st.hookY);
         ctx.stroke();
         ctx.strokeStyle = '#343b40'; ctx.lineWidth = 2.5;
-        ctx.beginPath(); ctx.arc(st.hookX, st.hookY + 1, 5, 0.1*Math.PI, 0.95*Math.PI); ctx.stroke();
+        ctx.beginPath(); ctx.arc(st.loadX, st.hookY + 1, 5, 0.1*Math.PI, 0.95*Math.PI); ctx.stroke();
 
         if(!st.falling && !st.over){
             const prev = st.blocks[st.blocks.length - 1];
             const bw = Math.max(58, prev.w - (st.score > 10 ? 2 : 0));
-            // Стропы к углам блока
+            // Стропы держат этаж под крюком и движутся вместе с раскачкой.
             ctx.strokeStyle = '#3d4852'; ctx.lineWidth = 1.5;
             ctx.beginPath();
-            ctx.moveTo(st.hookX, st.hookY); ctx.lineTo(st.hookX - 18, st.hookY + 14);
-            ctx.moveTo(st.hookX, st.hookY); ctx.lineTo(st.hookX + 18, st.hookY + 14);
+            ctx.moveTo(st.loadX, st.hookY + 3); ctx.lineTo(st.loadX - 18, st.hookY + 14);
+            ctx.moveTo(st.loadX, st.hookY + 3); ctx.lineTo(st.loadX + 18, st.hookY + 14);
             ctx.stroke();
-            drawHouseBlock(st.hookX, st.hookY + 14, bw, 32, st.curPal, false);
+            drawHouseBlock(st.loadX, st.hookY + 14, bw, 32, st.curPal, false);
         }
 
         // Осколки и всплывающие надписи
@@ -3121,31 +3305,61 @@ $("#app").innerHTML=`<div id="hud"></div><div id="main"></div>`;
 // === НАЧАЛО ЧАСТИ 3 ===
 function svgShopDesk(x, y, title){
     return `<g transform="translate(${x} ${y})">
-        <ellipse cx="24" cy="44" rx="21" ry="5" fill="#0004"/>
-        <rect x="5" y="8" width="38" height="17" rx="4" fill="#3f3023" stroke="#d4a76c" stroke-width="1.5"/>
-        <rect x="9" y="12" width="30" height="9" rx="2" fill="#8d6139"/>
-        <circle cx="14" cy="16.5" r="2.5" fill="#e5b94c"/><circle cx="24" cy="16.5" r="2.5" fill="#79a768"/><circle cx="34" cy="16.5" r="2.5" fill="#cf765b"/>
-        <rect x="3" y="25" width="42" height="17" rx="3" fill="#a56e3c" stroke="#4b2f1b" stroke-width="2"/>
-        <rect x="7" y="29" width="34" height="5" rx="1" fill="#744724"/>
-        <path d="M9 36h30" stroke="#d4a76c" stroke-width="1.3" opacity=".8"/>
-        <text x="24" y="7" font-size="9.5" font-weight="800" fill="#fff0d3" text-anchor="middle">${title}</text>
+        <ellipse cx="24" cy="44" rx="21" ry="4" fill="#0002"/>
+        <rect x="4" y="8" width="40" height="34" rx="3" fill="#4a5154" stroke="#272d30" stroke-width="1.5"/>
+        <rect x="7" y="10" width="34" height="11" rx="2" fill="#47785a"/>
+        <rect x="7" y="18" width="34" height="3" fill="#a94c47"/>
+        <text x="24" y="17" font-size="7.5" font-weight="900" fill="#fff" text-anchor="middle">${title}</text>
+        <rect x="9" y="23" width="30" height="14" rx="1.5" fill="#596164" stroke="#737c7e"/>
+        <rect x="12" y="25" width="5" height="8" rx="1" fill="#e6b553"/><rect x="20" y="24" width="6" height="9" rx="1" fill="#d76b5e"/><rect x="29" y="26" width="7" height="7" rx="1" fill="#74a879"/>
+        <path d="M9 35h30" stroke="#899294" stroke-width="2"/>
+        <rect x="11" y="38" width="26" height="2.5" rx="1" fill="#697275"/>
+    </g>`;
+}
+
+
+function svgShopStock(x,y,kind){
+    const G={
+    u:`<rect x="8" y="11" width="9" height="5" fill="#b5523f"/><rect x="18" y="11" width="9" height="5" fill="#c4604a"/><rect x="13" y="6" width="9" height="5" fill="#a94a38"/><rect x="33" y="7" width="3" height="9" fill="#8a5a2b"/><rect x="30" y="5" width="10" height="4" rx="1" fill="#8a949a"/>
+        <rect x="7" y="22" width="15" height="3" fill="#c99a5b"/><rect x="7" y="25" width="15" height="3" fill="#b58547"/><rect x="27" y="20" width="12" height="8" rx="1" fill="#eadfbc"/><path d="M29 23h8M29 26h6" stroke="#6a5a3a" stroke-width="1"/>
+        <rect x="9" y="32" width="12" height="8" fill="#c9955e"/><polygon points="7,32 15,26 23,32" fill="#9e423b"/><rect x="13" y="35" width="4" height="5" fill="#4a2c14"/><circle cx="33" cy="36" r="4" fill="#e5b94c" stroke="#8f671c"/>`,
+    h:`<polygon points="8,16 8,8 13,12 17,6 21,12 26,8 26,16" fill="#e5b94c" stroke="#8f671c" stroke-width="1"/><path d="M31 16q1-7 6-7t6 7z" fill="#527aa3"/><rect x="38" y="14" width="7" height="2" fill="#3d5f82"/>
+        <rect x="11" y="19" width="8" height="8" fill="#1f1b18"/><rect x="8" y="26" width="14" height="2" fill="#1f1b18"/><rect x="28" y="22" width="5" height="4" fill="#1f1b18"/><rect x="35" y="22" width="5" height="4" fill="#1f1b18"/><rect x="33" y="23" width="2" height="1.5" fill="#1f1b18"/>
+        <rect x="8" y="34" width="14" height="6" rx="2" fill="#c98038"/><rect x="10" y="38" width="3" height="4" fill="#c98038"/><circle cx="29" cy="37" r="3" fill="#e58aa0"/><circle cx="35" cy="37" r="3" fill="#6fa875"/><circle cx="41" cy="37" r="3" fill="#e5b84f"/>`,
+    i:`<rect x="8" y="13" width="3" height="3" fill="#7a3fc4"/><rect x="11" y="10" width="3" height="3" fill="#b982ff"/><rect x="14" y="7" width="3" height="3" fill="#7a3fc4"/><rect x="17" y="4" width="3" height="3" fill="#b982ff"/><rect x="24" y="2" width="2" height="2" fill="#e8d4ff"/><ellipse cx="34" cy="13" rx="7" ry="3" fill="#d99126"/><ellipse cx="34" cy="8" rx="6" ry="3" fill="#eba434"/><circle cx="34" cy="11" r="1.6" fill="#2a1808"/>
+        <circle cx="13" cy="23" r="4" fill="#8a5a2e"/><circle cx="9" cy="19.5" r="1.8" fill="#8a5a2e"/><circle cx="17" cy="19.5" r="1.8" fill="#8a5a2e"/><rect x="9" y="26" width="8" height="2" fill="#8a5a2e"/><rect x="30" y="20" width="6" height="8" rx="1" fill="#aeb9bd"/><rect x="30" y="18" width="6" height="3" fill="#cf6a5f"/>
+        <path d="M8 40v-5h6l4 2h4v3z" fill="#527aa3"/><rect x="8" y="39" width="14" height="1.5" fill="#f4f4f4"/><rect x="28" y="33" width="13" height="7" rx="1" fill="#5c5348"/><circle cx="33" cy="36.5" r="2.4" fill="#2a251f"/><rect x="37" y="34.5" width="3" height="1.5" fill="#e5b94c"/>`,
+    f:`<ellipse cx="14" cy="11" rx="6" ry="3.5" fill="#639ec2"/><polygon points="19,11 24,7.5 24,14.5" fill="#4f86a8"/><circle cx="10.5" cy="10" r="1" fill="#fff"/><ellipse cx="34" cy="11" rx="6" ry="3.5" fill="#c98d6a"/><polygon points="39,11 44,7.5 44,14.5" fill="#a86f4f"/><circle cx="30.5" cy="10" r="1" fill="#fff"/>
+        <rect x="8" y="19" width="8" height="9" rx="1.5" fill="#cfe3e8" opacity=".9"/><circle cx="12" cy="24" r="2" fill="#cf4b45"/><circle cx="12" cy="21.5" r="1.5" fill="#a83632"/><rect x="20" y="19" width="8" height="9" rx="1.5" fill="#e0a02e"/><rect x="20" y="19" width="8" height="2.5" fill="#b8761e"/><rect x="34" y="17" width="5" height="11" rx="1.5" fill="#845896"/><rect x="35" y="15" width="3" height="3" fill="#c8b07a"/>
+        <ellipse cx="14" cy="37" rx="8" ry="3.5" fill="#d49a52" stroke="#9a6a30" stroke-width="1"/><circle cx="11" cy="36" r="1.2" fill="#a83632"/><circle cx="15" cy="37" r="1.2" fill="#a83632"/><circle cx="18" cy="36" r="1.2" fill="#a83632"/><rect x="30" y="31" width="10" height="9" rx="2" fill="#b58547"/><rect x="30" y="31" width="10" height="3" fill="#8a5a2b"/><circle cx="35" cy="37" r="2" fill="#e5b94c"/>`
+    };
+    const acc={u:'#cf6a5f',h:'#e5b94c',i:'#7a8fc4',f:'#64a273'}[kind];
+    return `<g transform="translate(${x} ${y})" shape-rendering="geometricPrecision">
+        <ellipse cx="24" cy="46" rx="21" ry="2.5" fill="#0003"/>
+        <rect x="1" y="0" width="46" height="46" rx="3" fill="#454c4f" stroke="#737d80" stroke-width="1.5"/>
+        <rect x="4" y="3" width="40" height="40" rx="1.5" fill="#5a6265"/>
+        <rect x="4" y="3" width="40" height="2.5" fill="${acc}"/>
+        <g transform="translate(0 0)">${G[kind]}</g>
+        <path d="M4 17h40M4 29h40M4 41h40" stroke="#899396" stroke-width="2"/>
     </g>`;
 }
 
 function svgShopShelf(x,y,variant=0){
-    const produce=variant%3;
-    const goods=produce===0
-        ? `<rect x="10" y="11" width="7" height="9" rx="2" fill="#e0a34e"/><rect x="20" y="9" width="8" height="11" rx="2" fill="#79a768"/><rect x="31" y="12" width="7" height="8" rx="2" fill="#cf765b"/>`
-        : produce===1
-        ? `<path d="M11 19v-8h7v8zM22 19v-10h7v10zM33 19v-7h6v7z" fill="#d9b17a"/><path d="M12 13h5M23 12h5M34 14h4" stroke="#76502e" stroke-width="1.2"/>`
-        : `<circle cx="14" cy="15" r="4" fill="#d87d47"/><circle cx="24" cy="14" r="4" fill="#e5b94c"/><circle cx="34" cy="15" r="4" fill="#6d9a63"/>`;
+    const accent=variant%3===0?'#d9574d':(variant%3===1?'#e3ad43':'#64a273');
+    const row=(yy,kind)=>kind===0
+        ? `<circle cx="13" cy="${yy+4}" r="3.2" fill="#d9574d"/><circle cx="22" cy="${yy+4}" r="3.2" fill="#e5b84f"/><circle cx="31" cy="${yy+4}" r="3.2" fill="#6fa875"/><path d="M11 ${yy+1}l2-2 2 2M20 ${yy+1}l2-2 2 2M29 ${yy+1}l2-2 2 2" stroke="#527e54" stroke-width="1" fill="none"/>`
+        : kind===1
+        ? `<rect x="10" y="${yy}" width="6" height="7" rx="1" fill="#e5b84f"/><rect x="18" y="${yy-1}" width="7" height="8" rx="1" fill="#d9574d"/><rect x="27" y="${yy}" width="5" height="7" rx="1" fill="#6fa875"/><rect x="34" y="${yy-1}" width="5" height="8" rx="1" fill="#759cc4"/><path d="M11 ${yy+2}h4M19 ${yy+2}h5M28 ${yy+2}h3M35 ${yy+2}h3" stroke="#fff" stroke-width="1" opacity=".7"/>`
+        : `<path d="M11 ${yy+2}q0-3 2-3t2 3v5h-4zM20 ${yy+1}q0-3 2.5-3t2.5 3v6h-5zM29 ${yy+2}q0-3 2-3t2 3v5h-4zM36 ${yy+1}q0-2.5 2-2.5t2 2.5v6h-4z" fill="#6fa875" stroke="#477d55" stroke-width=".8"/><path d="M11 ${yy+3}h4M20 ${yy+3}h5M29 ${yy+3}h4M36 ${yy+3}h4" stroke="#f8f4df" stroke-width="1.2"/>`;
+    const goods=[0,1,2].map(i=>row(9+i*9,(variant+i)%3)).join('');
     return `<g transform="translate(${x} ${y})">
-        <ellipse cx="24" cy="44" rx="19" ry="4" fill="#0003"/>
-        <rect x="5" y="4" width="38" height="38" rx="4" fill="#49301e" stroke="#2f2118" stroke-width="1.5"/>
-        <rect x="8" y="7" width="32" height="29" rx="2" fill="#785333"/>
-        ${goods}<path d="M8 21h32M8 30h32" stroke="#d1a06a" stroke-width="3"/>
-        <path d="M10 22v7M38 22v7" stroke="#59391f" stroke-width="1.2"/>
-        <rect x="4" y="37" width="40" height="5" rx="2" fill="#a56e3c" stroke="#4b2f1b" stroke-width="1.3"/>
+        <ellipse cx="24" cy="45" rx="20" ry="2.5" fill="#0003"/>
+        <rect x="2" y="1" width="44" height="46" rx="3" fill="#454c4f" stroke="#737d80" stroke-width="1.5"/>
+        <rect x="5" y="4" width="38" height="38" rx="1.5" fill="#5a6265"/>
+        <rect x="5" y="4" width="38" height="3" fill="${accent}"/>
+        ${goods}
+        <path d="M5 17h38M5 26h38M5 35h38" stroke="#899396" stroke-width="2.2"/>
+        <path d="M5 41h38" stroke="#737d80" stroke-width="3.5"/>
     </g>`;
 }
 
@@ -3164,10 +3378,14 @@ function svgShopkeeper(x,y){
         <ellipse cx="24" cy="15" rx="7" ry="5" fill="#d9b48a"/>
         <circle cx="19" cy="10" r="1.6" fill="#241810"/><circle cx="29" cy="10" r="1.6" fill="#241810"/>
         <ellipse cx="24" cy="13" rx="2.7" ry="1.8" fill="#241810"/><path d="M21 17q3 2 6 0" stroke="#241810" stroke-width="1.2" fill="none"/>
-        <rect x="-3" y="36" width="54" height="8" rx="3" fill="#9c6638" stroke="#4b2f1b" stroke-width="1.8"/>
-        <path d="M1 39h46" stroke="#d6a56f" stroke-width="1.2" opacity=".8"/>
-        <rect x="-1" y="44" width="50" height="4" rx="2" fill="#59391f"/>
-        <path d="M-6 36h60" stroke="#e7bc78" stroke-width="2" stroke-linecap="round"/>
+        <rect x="-5" y="35" width="58" height="10" rx="3" fill="#485053" stroke="#252c2f" stroke-width="1.8"/>
+        <rect x="-2" y="38" width="52" height="4" rx="1" fill="#30373a"/>
+        <path d="M2 40h12" stroke="#d9574d" stroke-width="1.4"/>
+        <rect x="37" y="27" width="10" height="7" rx="1.5" fill="#46534c" stroke="#28332d" stroke-width="1"/>
+        <rect x="39" y="28" width="6" height="3" rx=".6" fill="#cbe5d1"/>
+        <path d="M41 34v2" stroke="#46534c" stroke-width="1.4"/>
+        <rect x="-2" y="45" width="52" height="4" rx="2" fill="#687174"/>
+        <path d="M-6 35h60" stroke="#aeb6b8" stroke-width="2" stroke-linecap="round"/>
     </g>`;
 }
 
@@ -3221,22 +3439,21 @@ const M1=[
   "WWWWWWWWWWWWWW"
 ];
 const M2=[
-  "WWWWWWWWWWWWWW",
-  "Wu..h..i..f..W",
-  "Ws..........sW",
-  "Ws..........sW",
-  "Ws....M.....sW",
-  "Ws..........sW",
-  "Ws..........sW",
-  "W............W",
-  "W............W",
-  "WWWWWWxWWWWWWW"
+  "WWWWWWWWW",
+  "Wu.h.i.fW",
+  "W.......W",
+  "W...M...W",
+  "W.......W",
+  "W.......W",
+  "WWWWxWWWW"
 ];
 const getM=()=>S.mapId===2?M2:(S.mapId===1?M1:M0);
-const getHei=()=>S.mapId===2?10:(S.mapId===1?14:18);
-const at=(c,r)=>(getM()[r]&&getM()[r][c])||"T",blk=k=>k=="T"||k=="~"||k=="W"||k=="B"||k=="L"||(S.mapId===2&&k=="M");
+const getHei=()=>S.mapId===2?7:(S.mapId===1?14:18);
+const at=(c,r)=>(getM()[r]&&getM()[r][c])||"T",blk=k=>k=="T"||k=="~"||k=="W"||k=="B"||k=="L"||(S.mapId===2&&(k=="M"||k=="s"));
 const isRoad=k=>k=="p"||k=="F";
 const TS=48,wid=14;
+const WD=()=>S.mapId===2?9:14;
+const shopScale=()=>{const w=$("#wv");return Math.min(.9,(w&&w.clientWidth?w.clientWidth:370)/(9*TS))};
 
 function svgTree(x,y,alt){
     if(alt){
@@ -3343,27 +3560,21 @@ buildStatic(mapId){
     if(W._cache[mapId]) return W._cache[mapId];
     let bg="",waterBank="",waterFill="",waterTop="",pathBorder="",pathFill="",objs="",L="";
     const isClub = mapId === 1, isShop = mapId === 2;
-    const hei = isClub ? 14 : (isShop ? 10 : 18);
-    const Wpx = wid*TS, Hpx = hei*TS;
+    const hei = isClub ? 14 : (isShop ? 7 : 18);
+    const WW = isShop?9:14; const Wpx = WW*TS, Hpx = hei*TS;
     const mAt = (c,r)=>((isShop?M2:(isClub?M1:M0))[r]&&(isShop?M2:(isClub?M1:M0))[r][c])||"T";
 
     if(isShop){
-        bg += `<rect width="${Wpx}" height="${Hpx}" fill="#5a3d28"/>`;
-        for(let r=0;r<hei;r++){
-            const y=r*TS, tone=r%2?'#684831':'#725036';
-            bg += `<rect x="0" y="${y}" width="${Wpx}" height="${TS}" fill="${tone}"/>`;
-            bg += `<path d="M0 ${y+2}H${Wpx} M0 ${y+TS-2}H${Wpx}" stroke="#3e291b" stroke-width="2" opacity=".7"/>`;
-            for(let c=(r%2?0:1);c<wid;c+=2){
-                const x=c*TS;
-                bg += `<path d="M${x} ${y+3}V${y+TS-3}" stroke="#4b321f" stroke-width="1.5" opacity=".7"/>`;
-            }
+        bg += `<rect width="${Wpx}" height="${Hpx}" fill="#34393c"/>`;
+        for(let r=0;r<hei;r++)for(let c=0;c<WW;c++){
+            const x=c*TS,y=r*TS,tone=(r+c)%2?'#41474a':'#3d4346';
+            // Straight, even grout lines; no offset corner highlights.
+            bg += `<rect x="${x}" y="${y}" width="${TS}" height="${TS}" fill="${tone}" stroke="#303639" stroke-width="1.25"/>`;
         }
-        bg += `<rect x="${5*TS+5}" y="${5*TS+6}" width="${4*TS-10}" height="${2*TS-12}" rx="12" fill="#8b4e39" opacity=".82" stroke="#d6ad73" stroke-width="2.5"/>`;
-        bg += `<rect x="${5*TS+12}" y="${5*TS+13}" width="${4*TS-24}" height="${2*TS-26}" rx="8" fill="none" stroke="#e5c38c" stroke-width="1.5" opacity=".72"/>`;
-        bg += `<path d="M24 0V${Hpx} M${Wpx-24} 0V${Hpx}" stroke="#d6ad73" stroke-width="3" opacity=".34"/>`;
+        bg += `<rect x="${TS*3+6}" y="${TS*5+10}" width="${TS*2-12}" height="${TS-12}" rx="4" fill="#5b4a3a" opacity=".75"/><rect x="${TS*3+12}" y="${TS*5+16}" width="${TS*2-24}" height="${TS-24}" rx="3" fill="none" stroke="#a94c47" stroke-width="2" opacity=".7"/>`;
     } else if(isClub){
         bg += `<rect width="${Wpx}" height="${Hpx}" fill="#28150b"/>`;
-        for(let r=0;r<11;r++)for(let c=0;c<wid;c++){
+        for(let r=0;r<11;r++)for(let c=0;c<WW;c++){
             const x=c*TS,y=r*TS;
             bg += `<rect x="${x}" y="${y}" width="48" height="48" fill="${(r+c)%2?'#4a2d1d':'#3e2416'}" stroke="#2e190e" stroke-width="0.8"/>`;
         }
@@ -3375,18 +3586,25 @@ buildStatic(mapId){
         });
     }
 
-    for(let r=0;r<hei;r++)for(let c=0;c<wid;c++){
+    for(let r=0;r<hei;r++)for(let c=0;c<WW;c++){
         const k=mAt(c,r),x=c*TS,y=r*TS,cx=x+24,cy=y+24;
         if(isShop){
             if(k=="W"){
-                objs += `<rect x="${x}" y="${y}" width="48" height="48" fill="${r===0?'#4b301d':'#52371f'}" stroke="#2e1d10" stroke-width="1"/><line x1="${x}" y1="${y+24}" x2="${x+48}" y2="${y+24}" stroke="#2e1d10" stroke-width="1" opacity=".6"/>`;
-                if(r===0) objs += `<path d="M${x+8} ${y+10}h32M${x+8} ${y+16}h32" stroke="#805735" stroke-width="1.2" opacity=".7"/>`;
+                const wallTone=r===0?'#454b4e':(r===hei-1?'#2e3437':'#383e41');
+                objs += `<rect x="${x}" y="${y}" width="48" height="48" fill="${wallTone}" stroke="#252b2e" stroke-width="1.2"/>`;
+                if(r===0){
+                    objs += `<rect x="${x}" y="${y+34}" width="48" height="8" fill="#47785a"/><rect x="${x}" y="${y+42}" width="48" height="3" fill="#a94c47"/><path d="M${x+5} ${y+10}h38" stroke="#687174" stroke-width="1.3"/>`;
+                } else if(r===hei-1){
+                    objs += `<rect x="${x}" y="${y+39}" width="48" height="7" fill="#47785a"/><rect x="${x}" y="${y+46}" width="48" height="2" fill="#a94c47"/>`;
+                } else if(c===0||c===WW-1){
+                    objs += `<rect x="${x+5}" y="${y+4}" width="38" height="40" rx="2" fill="#41474a" stroke="#596164" stroke-width="1"/>`;
+                }
             }
             if(k=="s") objs += svgShopShelf(x,y,(r+c)%3);
-            if(k=="u"){ objs += svgShopDesk(x,y,"Стройка"); L += svgPill(x,y,"Стройка"); }
-            if(k=="h"){ objs += svgShopDesk(x,y,"Гардероб"); L += svgPill(x,y,"Гардероб"); }
-            if(k=="i"){ objs += svgShopDesk(x,y,"Техника"); L += svgPill(x,y,"Техника"); }
-            if(k=="f"){ objs += svgShopDesk(x,y,"Припасы"); L += svgPill(x,y,"Припасы"); }
+            if(k=="u"){ objs += svgShopStock(x,y,"u"); L += svgPill(x,y,"Стройка"); }
+            if(k=="h"){ objs += svgShopStock(x,y,"h"); L += svgPill(x,y,"Гардероб"); }
+            if(k=="i"){ objs += svgShopStock(x,y,"i"); L += svgPill(x,y,"Техника"); }
+            if(k=="f"){ objs += svgShopStock(x,y,"f"); L += svgPill(x,y,"Припасы"); }
             if(k=="x"){ objs += `<rect x="${x+4}" y="${y+12}" width="40" height="28" rx="6" fill="#5c3818" stroke="#382212" stroke-width="2"/><text x="${cx}" y="${y+28}" font-size="12" font-weight="800" fill="#f5efe6" text-anchor="middle">В ЛЕС</text>`; L += svgPill(x,y,"Выход"); }
         } else if(!isClub){
             if(isRoad(k)){
@@ -3478,10 +3696,10 @@ html(){
     let dynObjs = "", dynL = "";
 
     if(isShop){
-        dynObjs += `<g transform="translate(${4.5*TS} 4)"><rect width="${5*TS}" height="36" rx="7" fill="#56351f" stroke="#d6ad73" stroke-width="2.5"/><rect x="7" y="6" width="${5*TS-14}" height="24" rx="4" fill="#784a29"/><text x="${2.5*TS}" y="23" text-anchor="middle" fill="#f7e4bc" font-size="15" font-weight="900" letter-spacing="1">ЛАВКА ПОТАПЫЧА</text></g>`;
-        dynObjs += `<g fill="#f2d27e" opacity=".9"><circle cx="${3.5*TS}" cy="${1.5*TS}" r="5"/><circle cx="${10.5*TS}" cy="${1.5*TS}" r="5"/></g>`;
-        dynObjs += `<g transform="translate(${6*TS+24} ${4*TS+24}) scale(1.22) translate(-24 -24)">${svgShopkeeper(0,0)}</g>`;
-        dynL += svgPill(1*TS, 1*TS, "Стройка") + svgPill(4*TS, 1*TS, "Гардероб") + svgPill(7*TS, 1*TS, "Техника") + svgPill(10*TS, 1*TS, "Припасы");
+        dynObjs += `<g transform="translate(${2*TS} 4)"><rect width="${5*TS}" height="36" rx="6" fill="#282e31" stroke="#737d80" stroke-width="2.5"/><rect x="2" y="2" width="${5*TS-4}" height="6" rx="3" fill="#47785a"/><rect x="2" y="31" width="${5*TS-4}" height="3" fill="#a94c47"/><text x="${2.5*TS}" y="23" text-anchor="middle" fill="#e1e5e3" font-size="13" font-weight="900" letter-spacing=".8">ПОТАПЫЧ МАРКЕТ</text></g>`;
+        dynObjs += `<g><path d="M${2.5*TS} ${1.5*TS-8}v8M${6.5*TS} ${1.5*TS-8}v8" stroke="#aeb9b0" stroke-width="2"/><circle cx="${2.5*TS}" cy="${1.5*TS}" r="6" fill="#fff6c9" stroke="#d7c87a"/><circle cx="${6.5*TS}" cy="${1.5*TS}" r="6" fill="#fff6c9" stroke="#d7c87a"/></g>`;
+        dynObjs += `<g transform="translate(${4*TS+24} ${3*TS+24}) scale(1.22) translate(-24 -24)">${svgShopkeeper(0,0)}</g>`;
+        
     } else if(!isClub){
         const hasQuestReady = Q.some((q,i)=>q.v()>=q.n && !S.claimed.includes(i)) || (S.claimed.length>=6 && !S.dailyBonus) || ACH.some((a,i)=>a.v()>=a.n && !S.achClaimed.includes(i));
         dynObjs += svgDen(3*TS, 2*TS, S.house);
@@ -3498,41 +3716,43 @@ html(){
     }
 
     const h=new Date().getHours(), nt=h>=22||h<5;
-    const tint=isClub ? "rgba(20,5,10,0.10)" : (isShop ? "rgba(40,25,15,0.18)" : (nt?"rgba(12,24,70,.45)":"transparent"));
+    const tint=isClub ? "rgba(20,5,10,0.10)" : (isShop ? "transparent" : (nt?"rgba(12,24,70,.45)":"transparent"));
     const rn=(!isClub && !isShop && weather===1)?`<div class="rain"></div>`:"";
     const amb=(!isClub && !isShop && nt)?Array.from({length:8},()=>`<i class="ff" style="left:${R(100)}%;top:${R(100)}%;animation-delay:${R(40)/10}s"></i>`).join(""):"";
     const twinEl=S.twin?`<div id="pl2"><svg viewBox="30 20 140 170">${bear(100,130,1,false,TWINOPT)}</svg></div>`:"";
-    return `<div id="wv" style="background:${isClub?'#28150b':(isShop?'#36251b':'#558c42')}"><div id="wm"><svg width="${st.Wpx}" height="${st.Hpx}">${st.base}${dynObjs}${st.L}${dynL}</svg><div id="pl"><svg viewBox="30 20 140 170">${bear(100,130,1)}</svg></div>${twinEl}</div>${amb}${rn}<div id="ov" style="background:${tint}"></div></div><div class="msg" id="dk">${isClub?"Игровой Клуб — выбери автомат или зайди в бар!":(isShop?"Лесная Лавка Потапыча — выбери отдел или товар":"Тапни по карте — Степан пойдёт")}</div>`;
+    return `<div id="wv" style="background:${isClub?'#28150b':(isShop?'#34393c':'#558c42')}${isShop?';width:min(100%,372px);height:min(70vh,300px)':''}"><div id="wm"><svg width="${st.Wpx}" height="${st.Hpx}">${st.base}${dynObjs}${st.L}${dynL}</svg><div id="pl"><svg viewBox="30 20 140 170">${bear(100,130,1)}</svg></div>${twinEl}</div>${amb}${rn}<div id="ov" style="background:${tint}"></div></div><div class="msg" id="dk">${isClub?"Игровой Клуб — выбери автомат или зайди в бар!":(isShop?"Потапыч Маркет — выбери отдел или товар":"Тапни по карте — Степан пойдёт")}</div>`;
 },
 init(){
 const p=Array.isArray(S.pos)?S.pos:[3,3];W.pc=p[0];W.pr=p[1];
 const hei=getHei();
-if(W.pr>=hei||blk(at(W.pc,W.pr))){W.pc=S.mapId===1?6:(S.mapId===2?6:3);W.pr=S.mapId===1?9:(S.mapId===2?8:3);}
+if(W.pr>=hei||blk(at(W.pc,W.pr))){W.pc=S.mapId===1?6:(S.mapId===2?4:3);W.pr=S.mapId===1?9:(S.mapId===2?5:3);}
 W.tpc=W.pc;W.tpr=W.pr;W.put();
-const wm=$("#wm");if(wm)wm.onpointerdown=e=>{const b=wm.getBoundingClientRect();W.go(Math.floor((e.clientX-b.left)/TS),Math.floor((e.clientY-b.top)/TS))};
+const wm=$("#wm");if(wm)wm.onpointerdown=e=>{const b=wm.getBoundingClientRect(),scale=S.mapId===2?shopScale():1;W.go(Math.floor((e.clientX-b.left)/(TS*scale)),Math.floor((e.clientY-b.top)/(TS*scale)))};
 setTimeout(()=>$("#wm")&&$("#wm").classList.add("tr"),60);W.wk++;
 },
 put(){
 const wv=$("#wv");if(!wv)return;
-const hei=getHei(),vw=wv.clientWidth,vh=wv.clientHeight;
-const cx=Math.max(0,Math.min(wid*TS-vw,W.pc*TS+24-vw/2)),cy=Math.max(0,Math.min(Math.max(0,hei*TS-vh),W.pr*TS+24-vh/2));
+const hei=getHei(),vw=wv.clientWidth,vh=wv.clientHeight,scale=S.mapId===2?shopScale():1;
+const viewW=vw/scale,viewH=vh/scale,mapW=WD()*TS,mapH=hei*TS;
+const cx=Math.max(0,Math.min(Math.max(0,mapW-viewW),W.pc*TS+24-viewW/2)),cy=Math.max(0,Math.min(Math.max(0,mapH-viewH),W.pr*TS+24-viewH/2));
+const ox=S.mapId===2?Math.max(0,(vw-mapW*scale)/2):0,oy=S.mapId===2?Math.max(0,(vh-mapH*scale)/2):0;
 const pl=$("#pl");if(pl)pl.style.transform=`translate3d(${W.pc*TS-7}px,${W.pr*TS-38}px,0)`;
 const p2=$("#pl2");if(p2)p2.style.transform=`translate3d(${W.tpc*TS-5}px,${W.tpr*TS-32}px,0)`;
-const wm=$("#wm");if(wm)wm.style.transform=`translate3d(${-cx}px,${-cy}px,0)`;
+const wm=$("#wm");if(wm)wm.style.transform=`translate3d(${ox}px,${oy}px,0) scale(${scale}) translate3d(${-cx}px,${-cy}px,0)`;
 },
 say(t){const d=$("#dk");if(d)d.innerHTML=t},
 async go(tc,tr){
 const hei=getHei();
-if(tc<0||tc>=wid||tr<0||tr>=hei||blk(at(tc,tr))){boop();hap('error');return W.say("Сюда нельзя");}
+if(tc<0||tc>=WD()||tr<0||tr>=hei||blk(at(tc,tr))){boop();hap('error');return W.say("Сюда нельзя");}
 if(tc==W.pc&&tr==W.pr)return W.act(at(tc,tr));hap();
 const reqId = ++W.wk;
 
 const path = await CPU.run('path', {
-    grid: getM(), wid, hei, sc: W.pc, sr: W.pr, tc, tr, blkSet: S.mapId===2?["T","~","W","B","L","M"]:["T","~","W","B","L"]
+    grid: getM(), wid: WD(), hei, sc: W.pc, sr: W.pr, tc, tr, blkSet: S.mapId===2?["T","~","W","B","L","M","s"]:["T","~","W","B","L"]
 }, () => {
-    const id=(c,r)=>r*wid+c, start=id(W.pc,W.pr), target=id(tc,tr), open=[start], cameFrom={}, gScore={[start]:0}, fScore={[start]:Math.abs(sc-tc)+Math.abs(sr-tr)}; let curr;
-    while(open.length>0){open.sort((a,b)=>fScore[a]-fScore[b]); curr=open.shift(); if(curr===target) break; const c=curr%wid, r=Math.floor(curr/wid);
-    for(const [dc,dr] of [[1,0],[-1,0],[0,1],[0,-1]]){const nc=c+dc, nr=r+dr, n=id(nc,nr); if(nc<0||nc>=wid||nr<0||nr>=hei||blk(at(nc,nr))) continue;
+    const id=(c,r)=>r*WD()+c, start=id(W.pc,W.pr), target=id(tc,tr), open=[start], cameFrom={}, gScore={[start]:0}, fScore={[start]:Math.abs(sc-tc)+Math.abs(sr-tr)}; let curr;
+    while(open.length>0){open.sort((a,b)=>fScore[a]-fScore[b]); curr=open.shift(); if(curr===target) break; const c=curr%WD(), r=Math.floor(curr/WD());
+    for(const [dc,dr] of [[1,0],[-1,0],[0,1],[0,-1]]){const nc=c+dc, nr=r+dr, n=id(nc,nr); if(nc<0||nc>=WD()||nr<0||nr>=hei||blk(at(nc,nr))) continue;
     const tg2 = gScore[curr]+1; if(tg2 < (gScore[n] ?? Infinity)){cameFrom[n]=curr; gScore[n]=tg2; fScore[n]=tg2+Math.abs(nc-tc)+Math.abs(nr-tr); if(!open.includes(n)) open.push(n);}}}
     if(curr!==target) return null;
     const p=[]; while(cameFrom[curr]!==undefined){p.unshift(curr);curr=cameFrom[curr];} return p;
@@ -3543,10 +3763,10 @@ if(!path){boop();return W.say("Не добраться")}
 const mk=document.createElement("i");mk.className="mk";mk.style.cssText=`left:${tc*TS+8}px;top:${tr*TS+8}px`;const wm=$("#wm");if(wm){wm.appendChild(mk);setTimeout(()=>mk.remove(),700)}
 const pl=$("#pl"),p2=$("#pl2");if(pl)pl.classList.add("walk");if(p2)p2.classList.add("walk");W.say("");let i=0;
 const st=()=>{if(reqId!=W.wk||tab!="world")return;if(i>=path.length){if(pl)pl.classList.remove("walk");if(p2)p2.classList.remove("walk");hud();return W.act(at(W.pc,W.pr))}
-const n=path[i++],nc=n%wid,opc=W.pc,opr=W.pr;if(nc!=W.pc){W.fl=nc<W.pc?-1:1;[pl,p2].forEach(p=>{if(p&&p.firstChild)p.firstChild.style.transform=`scaleX(${W.fl})`})}
-W.pc=nc;W.pr=Math.floor(n/wid);W.tpc=opc;W.tpr=opr;W.put();S.pos=[W.pc,W.pr];S.steps++;
+const n=path[i++],nc=n%WD(),opc=W.pc,opr=W.pr;if(nc!=W.pc){W.fl=nc<W.pc?-1:1;[pl,p2].forEach(p=>{if(p&&p.firstChild)p.firstChild.style.transform=`scaleX(${W.fl})`})}
+W.pc=nc;W.pr=Math.floor(n/WD());W.tpc=opc;W.tpr=opr;W.put();S.pos=[W.pc,W.pr];S.steps++;
 if(S.twin&&Math.random()<0.05){earn(1);hud();W.say(`${ICO.coin} Подружка нашла монетку! +1`);}
-if(S.mapId!==2 && at(W.pc,W.pr)=="g"&&Math.random()<.08){if(pl)pl.classList.remove("walk");if(p2)p2.classList.remove("walk");return W.enc()} 
+if(S.mapId!==2 && at(W.pc,W.pr)=="g"&&Math.random()<(S.items.compass?0.16:0.08)){if(pl)pl.classList.remove("walk");if(p2)p2.classList.remove("walk");return W.enc()} 
 setTimeout(st, S.items.sneakers ? 105 : 195)};st()},
 act(k){
 if(S.mapId === 2){
@@ -3575,7 +3795,7 @@ if(k=="8") return initBlockBlast();
 if(k=="4") return initCraneBuild();
 
 if(k=="K"){
-    S.mapId=2; S.pos=[6,8]; W.pc=6; W.pr=8; W.tpc=6; W.tpr=8; save(); hap('medium'); chng();
+    S.mapId=2; S.pos=[4,5]; W.pc=4; W.pr=5; W.tpc=4; W.tpr=5; save(); hap('medium'); chng();
     shopSec="all"; go("world"); return W.say("Вы зашли в Лавку Потапыча!");
 }
 
@@ -3586,7 +3806,7 @@ if(k=="C")return initBubble();
 if(k=="Y")return initBerry();
 if(k=="Z")return initBlockBlast();
 if(k=="b"){const i=W.pr*wid+W.pc,now=Date.now();if((W.bush[i]||0)>now){boop();return W.say("Ягоды ещё не созрели")}W.bush[i]=now+60000;
-const bn=S.items.clover?6:3; S.berries++; earn(bn); addXp(5); hap('success');chng();S.hunger=clamp(S.hunger+6);S.mood=clamp(S.mood+3);hud();go("world");W.say(`${ICO.berry} Собраны лесные ягоды! +${bn}`)}
+const bn=(S.items.clover?6:3)+(S.items.basket?2:0); S.berries++; earn(bn); addXp(5); hap('success');chng();S.hunger=clamp(S.hunger+6);S.mood=clamp(S.mood+3);hud();go("world");W.say(`${ICO.berry} Собраны лесные ягоды! +${bn}`)}
 },
 enc(){W.say(`Лесная белка зовёт сыграть!<br><button class="b" onclick="newM3()">${ICO.blocks} Сыграть</button><button class="b" onclick="W.say('Белка убежала')">Идти дальше</button>`)}
 };
