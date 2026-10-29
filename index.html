@@ -127,6 +127,7 @@ const tg=(window.Telegram&&window.Telegram.WebApp)||{expand(){},ready(){},BackBu
 try{tg.expand();tg.ready();tg.BackButton.onClick(()=>leaveVenueMenu());}catch(e){}
 
 const GOOGLE_SHEETS_URL = "";
+const API_BASE = "https://myst1cxs.duckdns.org"; // замени на адрес API на VPS, без слэша в конце
 
 const ICO = {
     coin:`<svg class="ui-ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="#e5b94c" stroke="#9e7322" stroke-width="1.6"/><circle cx="12" cy="12" r="6.8" fill="#f0cb6e" opacity=".6"/><path d="M10.5 8.5h2.8a2.2 2.2 0 0 1 0 4.4h-2.8V8.5zm0 4.4h3.2M10.5 7.5v9" stroke="#6e4b12" stroke-width="1.8" stroke-linecap="round"/></svg>`,
@@ -299,21 +300,116 @@ function sanitizeState(){
     }
 }
 
-try{Object.assign(S,JSON.parse(localStorage.getItem("stepan")||"{}"))}catch(e){}
+let legacyLocalState=null;
+try{
+    const raw=localStorage.getItem("stepan");
+    if(raw){legacyLocalState=JSON.parse(raw);if(legacyLocalState&&typeof legacyLocalState==="object"&&!Array.isArray(legacyLocalState))Object.assign(S,legacyLocalState);}
+}catch(e){}
 sanitizeState();
 
-try{tg.CloudStorage.getItem('stepan',(e,v)=>{if(!e&&v){try{Object.assign(S,JSON.parse(v));sanitizeState();}catch(_){}hud();if(tab=="world")W.init&&W.init()}})}catch(e){}
+let gameReady=false, saveTmr, saveRetryTmr=null, serverSaveInFlight=false, pendingServerSave=null;
+const getInitData=()=>window.Telegram?.WebApp?.initData||"";
 
-let saveTmr;
+function readLegacyCloudSave(){
+    return new Promise(resolve=>{
+        if(!getInitData()||!window.Telegram?.WebApp?.CloudStorage?.getItem)return resolve(null);
+        let finished=false;
+        const done=value=>{if(finished)return;finished=true;clearTimeout(timer);resolve(value)};
+        const timer=setTimeout(()=>done(null),1800);
+        try{
+            tg.CloudStorage.getItem("stepan",(err,value)=>{
+                if(err||!value)return done(null);
+                try{const parsed=JSON.parse(value);done(parsed&&typeof parsed==="object"&&!Array.isArray(parsed)?parsed:null)}catch(e){done(null)}
+            });
+        }catch(e){done(null)}
+    });
+}
+
+async function putServerSave(snapshot,initData=getInitData()){
+    const response=await fetch(`${API_BASE}/api/save`,{
+        method:"PUT",
+        headers:{"Content-Type":"application/json","X-Telegram-Init-Data":initData},
+        body:JSON.stringify({state:JSON.parse(snapshot)}),
+        keepalive:true
+    });
+    if(!response.ok)throw new Error("Save API returned "+response.status);
+    return response.json().catch(()=>({ok:true}));
+}
+
+async function flushServerSave(){
+    if(!gameReady||!getInitData()||serverSaveInFlight||!pendingServerSave)return;
+    if(saveRetryTmr){clearTimeout(saveRetryTmr);saveRetryTmr=null;}
+    const snapshot=pendingServerSave;pendingServerSave=null;serverSaveInFlight=true;
+    try{await putServerSave(snapshot)}
+    catch(e){
+        if(!pendingServerSave)pendingServerSave=snapshot;
+        if(!saveRetryTmr)saveRetryTmr=setTimeout(()=>{saveRetryTmr=null;flushServerSave()},5000);
+    }
+    finally{
+        serverSaveInFlight=false;
+        if(pendingServerSave&&!saveRetryTmr)queueMicrotask(()=>flushServerSave());
+    }
+}
+
 const save=()=>{
     clearTimeout(saveTmr);
-    saveTmr = setTimeout(()=>{
-        const d=JSON.stringify(S);
-        try{localStorage.setItem("stepan",d)}catch(e){}
-        try{tg.CloudStorage.setItem('stepan',d)}catch(e){}
-        if(GOOGLE_SHEETS_URL) fetch(GOOGLE_SHEETS_URL,{method:'POST',mode:'no-cors',body:JSON.stringify({id:tg.initDataUnsafe?.user?.id, name:tg.initDataUnsafe?.user?.first_name, state:S})}).catch(()=>{});
-    }, 1200);
+    saveTmr=setTimeout(()=>{
+        const d=JSON.stringify(S),initData=getInitData();
+        if(!initData){
+            try{localStorage.setItem("stepan",d)}catch(e){}
+            try{tg.CloudStorage.setItem("stepan",d)}catch(e){}
+            return;
+        }
+        if(!gameReady)return;
+        pendingServerSave=d;
+        flushServerSave();
+        if(GOOGLE_SHEETS_URL)fetch(GOOGLE_SHEETS_URL,{method:"POST",mode:"no-cors",body:JSON.stringify({id:tg.initDataUnsafe?.user?.id,name:tg.initDataUnsafe?.user?.first_name,state:S})}).catch(()=>{});
+    },1200);
 };
+
+function flushSaveNow(){
+    clearTimeout(saveTmr);
+    const d=JSON.stringify(S),initData=getInitData();
+    if(!initData){try{localStorage.setItem("stepan",d)}catch(e){};try{tg.CloudStorage.setItem("stepan",d)}catch(e){};return;}
+    if(!gameReady)return;
+    pendingServerSave=d;
+    flushServerSave();
+}
+window.addEventListener("pagehide",flushSaveNow);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")flushSaveNow()});
+
+let startupError=null;
+function showStartupError(){
+    if(startupError)return;
+    const panel=document.createElement("div");startupError=panel;
+    panel.style.cssText="position:fixed;inset:0;z-index:99999;background:#1c1510;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;font:16px system-ui;gap:14px";
+    const text=document.createElement("div");
+    text.textContent="Не удалось загрузить сохранение с сервера. Проверь соединение и настройки VPS, затем нажми «Повторить». Если Telegram-сессия устарела — закрой игру и открой её снова через бота.";
+    const button=document.createElement("button");button.type="button";button.textContent="Повторить";
+    button.style.cssText="border:0;border-radius:12px;padding:12px 20px;font:700 16px system-ui;background:#b8763e;color:#fff";
+    button.onclick=()=>{panel.remove();startupError=null;startGame()};
+    panel.append(text,button);document.body.appendChild(panel);
+}
+
+async function startGame(){
+    const initData=getInitData();
+    if(!initData){gameReady=true;go("world");return;}
+    try{
+        const response=await fetch(`${API_BASE}/api/save`,{headers:{"X-Telegram-Init-Data":initData},cache:"no-store"});
+        if(!response.ok)throw new Error("Save API returned "+response.status);
+        const payload=await response.json();
+        if(payload.state&&typeof payload.state==="object"&&!Array.isArray(payload.state)){
+            Object.assign(S,payload.state);sanitizeState();
+        }else{
+            const cloud=await readLegacyCloudSave();
+            const localTime=Number(legacyLocalState?.t||0),cloudTime=Number(cloud?.t||0);
+            if(cloud&&(!legacyLocalState||cloudTime>localTime)){Object.assign(S,cloud);sanitizeState();}
+            await putServerSave(JSON.stringify(S),initData);
+        }
+        gameReady=true;
+        go("world");
+    }catch(e){showStartupError();}
+}
 
 function popText(txt, col="#e5b94c"){
     const el=document.createElement("div");
@@ -347,6 +443,7 @@ function addXp(amt){
 
 let weather=R(2), lastTick=Date.now();
 setInterval(()=>{
+    if(!gameReady)return;
     let now=Date.now(), dt=(now-lastTick)/60000; lastTick=now;
     decay(dt);
     if(now<S.sleepUntil) S.energy=clamp(S.energy+dt*240);
@@ -357,6 +454,7 @@ setInterval(()=>{
 }, 5000);
 
 setInterval(()=>{
+    if(!gameReady)return;
     if(S.sleepUntil > Date.now()){
         if(tab==="home"){
             const rem = Math.max(1, Math.ceil((S.sleepUntil - Date.now())/1000));
@@ -494,7 +592,7 @@ function earn(n, anim=true){
     save();
 }
 function saveAndClose(){
-    save(); hap('heavy');
+    save(); flushSaveNow(); hap('heavy');
     try{tg.sendData(JSON.stringify({action:"exit",state:S}));}catch(e){try{tg.close();}catch(_){}}
 }
 
@@ -3810,5 +3908,5 @@ const bn=(S.items.clover?6:3)+(S.items.basket?2:0); S.berries++; earn(bn); addXp
 },
 enc(){W.say(`Лесная белка зовёт сыграть!<br><button class="b" onclick="newM3()">${ICO.blocks} Сыграть</button><button class="b" onclick="W.say('Белка убежала')">Идти дальше</button>`)}
 };
-go("world");
+startGame();
 </script></body></html>
