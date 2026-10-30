@@ -4,7 +4,7 @@
 <title>Степан из Зюраткуля</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f2e9d8;--card:#fbf6ec;--ink:#3d2c1e;--acc:#b8763e;--ok:#5e9450;--xp:#8c629c;--en:#d49a35;--stroke:#e0d1b8;--ib:#efe2ca;}
+:root{color-scheme:light dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f2e9d8;--card:#fbf6ec;--ink:#3d2c1e;--acc:#b8763e;--ok:#5e9450;--xp:#8c629c;--en:#d49a35;--stroke:#e0d1b8;--ib:#efe2ca;}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1510;--card:#2a2018;--ink:#ede0cc;--stroke:#423225;--ib:#36291f}}
 :root[data-theme="dark"]{--bg:#1c1510;--card:#2a2018;--ink:#ede0cc;--stroke:#423225;--ib:#36291f}
 *{box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent;}
@@ -39,6 +39,31 @@ svg.scene-svg{width:100%;max-height:330px;display:block;border-radius:14px;margi
 .t{aspect-ratio:1;border:0;border-radius:12px;background:#e6d4b2;padding:7px;transition:transform .12s;box-shadow:0 3px 0 #c4ae87;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .t svg{width:100%;height:100%}
 .t.s{outline:3px solid #c96540;transform:scale(1.07)}.t.x{transform:scale(0);}
+.m3-card{position:relative;overflow:hidden;width:100%;max-width:500px;margin-left:auto;margin-right:auto;background:linear-gradient(180deg,var(--card) 0%,var(--ib) 55%,var(--card) 100%);border-color:var(--stroke);box-shadow:0 5px 16px #7550401a}
+.m3-heading{display:flex;align-items:center;gap:7px;margin:0 auto 8px;max-width:360px;color:var(--ink);font-weight:900;font-size:16px}
+.m3-heading-icon{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(145deg,#ffe7a0,#f6bd55);box-shadow:inset 0 1px 0 #fff9,0 2px 0 #ca8d41}
+.m3-heading-icon svg{width:20px;height:20px}
+.m3-mode{margin-left:auto;padding:4px 9px;border-radius:99px;background:var(--card);border:1px solid var(--stroke);color:var(--acc);font-size:10px;letter-spacing:.08em}
+.m3-card .m3-top{max-width:360px;margin:0 auto 8px!important;background:linear-gradient(180deg,#fff3c8,#ffdf8b);border:1px solid #e9b74f;color:#66431e;box-shadow:0 2px 5px #84582922}
+.m3-landscape{width:100%;max-width:360px;aspect-ratio:360/120;margin:9px auto 11px;overflow:hidden;border-radius:17px;border:3px solid #fffaf0;box-shadow:0 4px 10px #65405533,0 0 0 1px #d8a678}
+.m3-landscape svg{display:block;width:100%;height:100%}
+.m3-board-shell{width:100%;max-width:360px;margin:0 auto 8px;padding:6px;border:2px solid #fff1d6;border-radius:18px;background:linear-gradient(145deg,#bd73a9,#804e91 56%,#a4649c);box-shadow:inset 0 3px 8px #4b2b5a66,0 4px 0 #744c69}
+.grid.m3-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;width:100%;max-width:none;margin:0 auto}
+.m3-grid .t{position:relative;overflow:hidden;min-width:0;min-height:0;padding:5px;border:2px solid #fff8;border-radius:13px;box-shadow:inset 0 2px 3px #fff9,inset 0 -5px 7px #4021432b,0 2px 0 #5c3d68;transition:transform .12s,filter .12s,box-shadow .12s;touch-action:manipulation}
+.m3-grid .t::before{content:"";position:absolute;left:9%;top:7%;width:34%;height:16%;border-radius:50%;background:#ffffff8c;transform:rotate(-25deg);pointer-events:none}
+.m3-grid .t svg{position:relative;z-index:1;filter:drop-shadow(0 1px 1px #61405455)}
+.m3-grid .t.candy-0{background:linear-gradient(145deg,#ffe88d,#f3a932)}
+.m3-grid .t.candy-1{background:linear-gradient(145deg,#a8eaff,#55abd9)}
+.m3-grid .t.candy-2{background:linear-gradient(145deg,#ffe3a2,#e9943d)}
+.m3-grid .t.candy-3{background:linear-gradient(145deg,#c9ef9e,#6eb65e)}
+.m3-grid .t.candy-4{background:linear-gradient(145deg,#ffb9a8,#e76c67)}
+.m3-grid .t.candy-5{background:linear-gradient(145deg,#dfc2ff,#a47bc9)}
+.m3-grid .t.candy-empty{background:linear-gradient(145deg,#e7c6a5,#c9987c);opacity:.55}
+.m3-grid .t.s{outline:3px solid #fff;outline-offset:-3px;transform:scale(1.07);filter:brightness(1.12);box-shadow:0 0 0 3px #ffda61,0 0 13px #fff7,0 3px 0 #5c3d68;z-index:2}
+.m3-grid .t.x{transform:scale(.15) rotate(12deg);opacity:0}
+.m3-grid .t:focus-visible{outline:3px solid #fff;outline-offset:-3px;box-shadow:0 0 0 4px #ffd75e,0 0 12px #fff8}
+.m3-msg{color:#66433b}
+@media (prefers-reduced-motion:reduce){.m3-grid .t{transition:none!important}}
 .row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #0001}
 .row:last-child{border-bottom:0}
 .row small{display:block;font-size:11px;opacity:.72;font-weight:400;margin-top:2px}
@@ -70,15 +95,67 @@ canvas{background:#1c1612;border-radius:14px;width:100%;max-width:440px;margin:0
 .mole-hole{aspect-ratio:1;background:radial-gradient(circle at 50% 65%,#291a0f 45%,#4d341f 65%,#66462c 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;padding:12px;cursor:pointer;box-shadow:inset 0 6px 10px #0009;user-select:none;transition:transform 0.1s}
 .mole-hole:active{transform:scale(0.92)}
 .playing-card{width:105px;height:145px;margin:10px auto;background:#fbf7f0;color:#2c221a;border-radius:14px;border:3px solid #d4c4a8;box-shadow:0 6px 16px #0003;display:flex;flex-direction:column;justify-content:space-between;padding:8px 10px;font-weight:900;transition:transform 0.25s}
-.mine-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:270px;margin:10px auto}
-.mine-cell{aspect-ratio:1;border:0;border-radius:12px;background:linear-gradient(180deg,#523c2b,#3d2b1e);color:#fff;padding:10px;box-shadow:0 4px 0 #241810;cursor:pointer;transition:transform 0.1s;display:flex;align-items:center;justify-content:center}
-.mine-cell:active{transform:translateY(2px);box-shadow:0 2px 0 #241810}
-.mine-cell.open{background:#e6d4b2;color:#222;box-shadow:inset 0 2px 5px #0003;cursor:default}
+.mine-card{width:100%;max-width:500px;margin-left:auto;margin-right:auto;background:linear-gradient(180deg,var(--card),var(--ib));border-color:var(--stroke)}
+.mine-card+.exit-btn{display:block;width:100%;max-width:500px;margin:0 auto}
+
+.slot-card{max-width:500px;margin-left:auto;margin-right:auto;background:linear-gradient(180deg,var(--card),var(--ib));border-color:var(--stroke)}
+.slot-machine{width:100%;max-width:360px;margin:12px auto 10px;padding:8px;border:3px solid #713a2d;border-radius:22px;background:linear-gradient(145deg,#c65d45,#8e3d36 54%,#71332e);box-shadow:inset 0 0 0 2px #f2ca70,0 5px 0 #572c25,0 8px 14px #4b2f2630}
+.slot-brand{display:flex;align-items:center;justify-content:center;gap:9px;margin:0 auto 8px;padding:7px 12px;border:2px solid #794021;border-radius:12px;background:linear-gradient(180deg,#ffe792,#e3a53d);color:#57351d;font-size:15px;font-weight:1000;letter-spacing:.09em;text-shadow:0 1px #fff7;box-shadow:inset 0 2px 0 #fff9,0 2px 0 #713a2d}
+.slot-brand-star{color:#b33c36;font-size:16px;text-shadow:0 1px #ffedaa}
+.slot-housing{position:relative;padding:9px;border:3px solid #713f2e;border-radius:16px;background:linear-gradient(180deg,#f2d27b,#c28a3c);box-shadow:inset 0 2px 5px #4c2a2144,0 2px 0 #5b3026}
+.slot-caption{margin:0 0 6px;color:#71412c;font-size:10px;font-weight:900;letter-spacing:.14em;text-align:center}
+.slot-reels{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;padding:8px;border:3px solid #59382b;border-radius:13px;background:linear-gradient(180deg,#473027,#30231e);box-shadow:inset 0 3px 8px #0008}
+.slot-reel-window{position:relative;display:flex;align-items:center;justify-content:center;min-width:0;height:120px;overflow:hidden;border:2px solid #94724b;border-radius:9px;background:linear-gradient(180deg,#ebd7aa 0%,#fff9e9 48%,#e8d2a0 100%);box-shadow:inset 0 3px 7px #54371f33,0 2px 0 #211814}
+.slot-strip{display:flex;width:100%;flex-direction:column;align-items:center;transform:translateY(0);will-change:transform,filter}
+.slot-symbol{display:flex;width:100%;height:36px;flex:0 0 36px;align-items:center;justify-content:center;opacity:.38;filter:saturate(.75)}
+.slot-symbol-center{height:44px;flex-basis:44px;opacity:1;filter:drop-shadow(0 2px 1px #54331e44)}
+.slot-symbol .ui-ic{width:25px;height:25px;vertical-align:0}
+.slot-symbol-center .ui-ic{width:42px;height:42px;vertical-align:0}
+.slot-reel-window.spinning .slot-strip{animation:slotSpin .12s linear infinite}
+@keyframes slotSpin{0%{transform:translateY(-9px);filter:blur(.5px)}50%{transform:translateY(7px);filter:blur(1.2px)}100%{transform:translateY(-9px);filter:blur(.5px)}}
+.slot-payline{position:absolute;z-index:2;left:2px;right:2px;top:50%;height:2px;background:#d8503f;box-shadow:0 0 0 1px #fff4,0 0 7px #e84e35aa;pointer-events:none}
+.slot-payline:before,.slot-payline:after{position:absolute;top:-5px;width:0;height:0;border-top:6px solid transparent;border-bottom:6px solid transparent;content:""}
+.slot-payline:before{left:-1px;border-left:8px solid #f4c75c}
+.slot-payline:after{right:-1px;border-right:8px solid #f4c75c}
+.slot-lamps{display:flex;justify-content:center;gap:7px;margin:8px auto 0}
+.slot-lamps i{width:8px;height:8px;border-radius:50%;background:#ffd96b;box-shadow:0 0 7px #ffdb6c99,inset 0 1px 1px #fff9}
+.slot-payouts{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:5px;max-width:360px;margin:0 auto 9px}
+.slot-payout{padding:6px 4px;border:1px solid var(--stroke);border-radius:10px;background:var(--ib);color:var(--ink);font-size:10px;line-height:1.2;font-weight:800;text-align:center}
+.slot-payout b{display:block;margin-top:2px;color:var(--acc);font-size:11px}
+.slot-spin-button{width:100%;max-width:360px;background:linear-gradient(180deg,#e87346,#b94031)!important;box-shadow:0 4px 0 #792d27!important;border:1px solid #8a332b!important;font-size:16px!important;font-weight:1000!important;letter-spacing:.04em}
+.slot-spin-button:active{box-shadow:0 1px 0 #792d27!important}
+.slot-spin-button:disabled{filter:grayscale(.25);opacity:.65}
+@media (prefers-reduced-motion:reduce){.slot-reel-window.spinning .slot-strip{animation:none}}
+
+.mine-intro{margin:6px 0 10px;padding:9px 11px;border:1px solid var(--stroke);border-radius:12px;background:var(--card);color:var(--ink);text-align:left;font-size:13px;line-height:1.4}
+.mine-banner{max-width:360px;width:100%;aspect-ratio:360/96;margin:0 auto 8px;overflow:hidden;border:2px solid #6f5038;border-radius:14px;box-shadow:0 4px 10px #36261d30}
+.mine-banner svg{display:block;width:100%;height:100%}
+.mine-status{display:flex;gap:6px;max-width:320px;margin:0 auto 6px}
+.mine-status-item{display:flex;align-items:center;justify-content:space-between;gap:6px;flex:1;min-width:0;padding:6px 8px;border:1px solid var(--stroke);border-radius:11px;background:var(--card);color:var(--ink);text-align:left}
+.mine-status-item small{color:var(--ink);opacity:.7;font-size:9px;line-height:1.1;font-weight:900;letter-spacing:.04em;text-transform:uppercase}
+.mine-status-item b{font-size:13px;line-height:1.1;white-space:nowrap}
+.mine-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;width:100%;max-width:310px;margin:0 auto 6px;padding:6px;border:3px solid #795338;border-radius:17px;background:linear-gradient(145deg,#604633,#392b25);box-shadow:inset 0 3px 8px #21160f88,0 3px 0 #35261c}
+.mine-cell{position:relative;aspect-ratio:1;min-width:0;padding:5px 3px;border:2px solid #c49a65;border-radius:12px;background:linear-gradient(145deg,#bd8951,#815634);color:#fff5df;box-shadow:inset 0 2px 0 #ffffff40,inset 0 -5px 7px #39241655,0 3px 0 #382416;cursor:pointer;transition:transform .12s,filter .12s,border-color .12s;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;touch-action:manipulation}
+.mine-cell.covered::before{content:"";position:absolute;inset:4px;border:1px solid #f3d5a680;border-radius:8px;pointer-events:none}
+.mine-cell:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.12);border-color:#ffe09c}
+.mine-cell:active:not(:disabled){transform:translateY(1px);box-shadow:inset 0 2px 4px #39241655,0 1px 0 #382416}
+.mine-cell:focus-visible{outline:3px solid #ffdc76;outline-offset:2px;z-index:2}
+.mine-cell:disabled{opacity:1;cursor:default}
+.mine-cell.open{cursor:default}
+.mine-cell.revealed-crystal{background:linear-gradient(145deg,#def1b4,#88b95e);border-color:#ecffd0;color:#33552c;box-shadow:inset 0 2px 0 #fff9,0 3px 0 #4e773c}
+.mine-cell.revealed-collapse{background:linear-gradient(145deg,#f3b7a8,#be6755);border-color:#ffe1d7;color:#592c25;box-shadow:inset 0 2px 0 #fff8,0 3px 0 #824338}
+.mine-cell .mine-icon{display:grid;place-items:center;width:42px;height:40px;position:relative;z-index:1}
+.mine-cell .mine-icon .ui-ic{width:38px!important;height:38px!important;vertical-align:0}
+.mine-cell .mine-label{font-size:9px;line-height:1.05;font-weight:900;letter-spacing:.02em;text-align:center;position:relative;z-index:1}
+.mine-cell .mine-number{position:absolute;right:5px;bottom:3px;color:#fff2d6aa;font-size:9px;font-weight:800}
+.mine-action-note{max-width:360px;margin:0 auto 7px;color:#775c42;font-size:12px}
+.mine-cashout{width:100%;max-width:360px;background:linear-gradient(180deg,#6caa57,#4e823e)!important;box-shadow:0 3px 0 #365c2d!important;font-size:16px!important;padding:12px!important}
+@media (prefers-reduced-motion:reduce){.mine-cell{transition:none}}
 .mem-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:280px;margin:10px auto}
 .mem-card{aspect-ratio:3/4;border:0;border-radius:12px;background:linear-gradient(135deg,#7d5a8a,#563b61);color:#fff;padding:8px;box-shadow:0 4px 0 #392442;cursor:pointer;transition:transform 0.15s;display:flex;align-items:center;justify-content:center}
 .mem-card.open{background:#fbf7f0;color:#222;border:2px solid #d4c4a8;box-shadow:0 3px 0 #c4ae87}
 .bj-hand{display:flex;justify-content:center;gap:6px;min-height:74px;margin:8px 0;flex-wrap:wrap}
-.bj-mini{width:52px;height:72px;background:#fbf7f0;color:#2c221a;border-radius:8px;border:2px solid #cbb99d;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:17px;box-shadow:0 3px 6px #0002}
+.bj-mini{width:52px;height:72px;background:#fbf7f0;color:#2c221a;border-radius:8px;border:2px solid #cbb99d;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:17px;box-shadow:0 3px 6px #0002}.bj-mini.bj-back{padding:4px;background:#70472f;border-color:#e2c188}.bj-mini.bj-back svg{width:100%;height:100%;display:block}
 .upg-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:8px}
 .upg-box{background:var(--ib);border:1px solid var(--stroke);border-radius:12px;padding:7px;text-align:center;font-size:12px}
 .upg-box b{display:block;font-size:13px;margin-bottom:2px}
@@ -121,6 +198,55 @@ canvas{background:#1c1612;border-radius:14px;width:100%;max-width:440px;margin:0
 .shopc button.b{padding:5px 10px;font-size:12px;margin:0}
 .shopc .tab-strip{margin-bottom:5px}.shopc .tab-strip button{padding:5px 6px;font-size:11px;min-width:60px}
 .shopc button.exit-btn{padding:7px;font-size:13px}
+
+
+
+.thimble-room{position:relative;overflow:hidden;max-width:360px;margin:12px auto 16px;border:2px solid #6b4a2b;border-radius:14px;background:#46352c;box-shadow:inset 0 3px 10px #0006;aspect-ratio:360/210}
+.thimble-room>svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.thim-cup{position:absolute;width:15%;max-width:58px;min-width:42px;height:31%;max-height:68px;min-height:48px;padding:0;border:0;background:transparent;cursor:pointer;z-index:2;left:var(--cup-x);top:44%;transform:translate(calc(-50% + var(--shake-x,0px)),calc(-50% + var(--shake-y,0px)));transition:transform .12s ease,filter .12s ease;filter:drop-shadow(0 4px 3px #0006)}
+.thim-cup svg{width:100%;height:100%;display:block;overflow:visible}
+.thim-cup:hover,.thim-cup:focus-visible{filter:drop-shadow(0 0 8px #ffe28a);outline:none}
+
+.card-table-scene{overflow:hidden;width:100%;max-width:360px;margin:10px auto 12px;border-radius:14px;border:2px solid #715239;box-shadow:0 4px 12px #0002;background:#514033}
+.card-table-scene svg{display:block;width:100%;height:auto}
+.memory-room{overflow:hidden;width:100%;max-width:360px;margin:10px auto 8px;border-radius:13px;border:1px solid #73553a;box-shadow:0 4px 10px #0002}
+.memory-room svg{display:block;width:100%;height:auto}
+.mem-grid{padding:10px;background:linear-gradient(135deg,#875a35,#684327);border:3px solid #50331f;border-radius:14px;box-shadow:inset 0 2px 8px #0005}
+.mem-card{background:linear-gradient(135deg,#c1874b,#85532f);border:2px solid #e6c38c;box-shadow:0 4px 0 #4b301d,inset 0 1px #f4dbad}
+.mem-card:not(.open):hover{filter:brightness(1.08);transform:translateY(-2px)}
+.mem-card.open{background:linear-gradient(145deg,#fff9e9,#e9d9ba);border:2px solid #d4c4a8}
+.mem-card svg{width:100%;height:100%;max-width:36px;max-height:42px;display:block}
+
+
+.coin-arena,.dart-scene{overflow:hidden;width:100%;max-width:360px;margin:10px auto 14px;border-radius:16px;border:2px solid #765536;box-shadow:0 5px 13px #0002;position:relative;background:#d7e8db}
+.coin-arena{aspect-ratio:360/215}
+.coin-arena>svg,.dart-scene>svg{display:block;width:100%;height:auto}
+.coin-position{position:absolute;left:69%;top:53%;width:64px;height:64px;transform:translate(-50%,-50%);display:grid;place-items:center;perspective:500px;filter:drop-shadow(0 6px 4px #0005)}
+#cf-coin{width:60px;height:60px;display:grid;place-items:center;transform-style:preserve-3d;backface-visibility:visible;will-change:transform}
+#cf-coin.coin-tossing{animation:coinToss .68s cubic-bezier(.2,.72,.25,1) both}
+@keyframes coinToss{0%{transform:translateY(0) rotateY(0) scale(1)}18%{transform:translateY(-12px) rotateY(360deg) scale(1.12)}45%{transform:translateY(-17px) rotateY(900deg) scale(1.16)}75%{transform:translateY(-8px) rotateY(1440deg) scale(1.1)}100%{transform:translateY(0) rotateY(1800deg) scale(1)}}
+#cf-coin svg{display:block;width:100%;height:100%}
+.coin-choice-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.coin-choice{display:flex;align-items:center;justify-content:flex-start;gap:8px;min-width:0;min-height:62px;padding:8px 10px;border:1px solid #d2b26c;border-radius:14px;color:#52351d;font-weight:900;text-align:left;cursor:pointer;box-shadow:0 3px 0 #8c612e;background:linear-gradient(180deg,#ffe59b,#e9bd55)}
+.coin-choice.tails{border-color:#8065a5;color:#38294b;box-shadow:0 3px 0 #594175;background:linear-gradient(180deg,#ded0f5,#a88bcf)}
+.coin-choice:active{transform:translateY(2px);box-shadow:0 1px 0 #8c612e}
+.coin-choice:disabled{opacity:.55;filter:grayscale(.3)}
+.coin-choice .coin-token{width:36px;height:36px;flex:0 0 36px;filter:drop-shadow(0 2px 2px #0003)}
+.coin-choice .coin-token svg{width:100%;height:100%;display:block}
+.coin-choice small{display:block;font-size:10px;font-weight:700;opacity:.75;margin-top:2px}
+.dart-target{cursor:pointer;outline:none;transform-box:fill-box;transform-origin:center;transition:filter .15s,transform .15s}
+.dart-target:hover,.dart-target:focus-visible{filter:drop-shadow(0 0 8px #ffe27a);transform:scale(1.035)}
+.dart-meter{position:relative;width:min(100%,270px);height:46px;margin:12px auto 9px;border-radius:12px;overflow:hidden;border:3px solid #654629;background:#2c241c;box-shadow:inset 0 4px 9px #0008}
+.dart-zone{position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);border-radius:4px}
+.dart-zone.green{width:80px;background:linear-gradient(180deg,#75b969,#3d7840);opacity:.9}
+.dart-zone.yellow{width:38px;background:linear-gradient(180deg,#ffe171,#d49a35)}
+.dart-zone.red{width:13px;background:linear-gradient(180deg,#ff9a76,#c23d35);box-shadow:0 0 9px #ffb174}
+#dart-ind{position:absolute;left:50%;top:4px;bottom:4px;width:4px;margin-left:-2px;border-radius:3px;background:#fff;box-shadow:0 0 8px #fff,0 0 14px #ffe88b;z-index:2}
+.dart-score-key{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;font-size:11px;font-weight:800;margin:2px 0 9px}
+.dart-score-key span{display:inline-flex;align-items:center;gap:4px}
+.dart-score-key i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.dart-msg-card{background:linear-gradient(135deg,#fcf7ed,#f1e1c8);border:1px solid var(--stroke);border-radius:12px;padding:5px 8px}
+
 </style></head><body><div id="app"></div>
 <script>
 const tg=(window.Telegram&&window.Telegram.WebApp)||{expand(){},ready(){},BackButton:{show(){},hide(){},onClick(){}},HapticFeedback:{impactOccurred(){}},CloudStorage:{getItem(){},setItem(){}},sendData(){},close(){},showAlert(m){try{alert(m)}catch(e){}},initDataUnsafe:{}};
@@ -617,6 +743,45 @@ function leaveVenueMenu(){
     go("world");
 }
 
+const THIMBLE_ART=`<svg viewBox="0 0 64 72" aria-hidden="true"><ellipse cx="32" cy="65" rx="24" ry="5" fill="#21150d" opacity=".35"/><path d="M12 28Q12 10 32 8Q52 10 52 28L47 55Q32 64 17 55Z" fill="#cf8c2f" stroke="#684211" stroke-width="3"/><ellipse cx="32" cy="28" rx="20" ry="7" fill="#f4c75e" stroke="#684211" stroke-width="3"/><path d="M17 38q15 8 30 0M19 48q13 7 26 0" fill="none" stroke="#f7dd91" stroke-width="3" opacity=".9"/><path d="M25 12q7-6 14 0" fill="none" stroke="#fff0bb" stroke-width="3" stroke-linecap="round"/></svg>`;
+function thimbleScene(){
+  return `<div class="thimble-room" aria-label="Стол с тремя золотыми цилиндрами">
+    <svg viewBox="0 0 360 210" aria-hidden="true"><defs><linearGradient id="thWall" x2="0" y2="1"><stop stop-color="#73533d"/><stop offset="1" stop-color="#3e3028"/></linearGradient></defs><rect width="360" height="210" fill="url(#thWall)"/><path d="M0 146h360v64H0z" fill="#755339"/><path d="M0 158h360M0 183h360" stroke="#9a714a" stroke-width="3"/><path d="M25 0v126m93-126v126m93-126v126" stroke="#8d694b" stroke-width="5" opacity=".55"/><rect x="26" y="30" width="76" height="58" rx="4" fill="#91b6bf" stroke="#392b22" stroke-width="7"/><path d="M64 34v50M30 59h68" stroke="#e4d1ae" stroke-width="4"/><circle cx="314" cy="37" r="15" fill="#e5b94c" opacity=".9"/><path d="M138 109h207v17H138z" fill="#b07a43" stroke="#51351f" stroke-width="4"/><path d="M150 126v47m183-47v47M142 173h198" stroke="#57381f" stroke-width="7"/><path d="M151 114h180" stroke="#e0b773" stroke-width="3"/>${bear(82,183,.53,false,{})}<g transform="translate(15 10)"><rect width="130" height="22" rx="11" fill="#2d211acc"/><text x="65" y="15" fill="#fff0c9" text-anchor="middle" font-size="9" font-weight="900">ЗОЛОТОЙ СТОЛ</text></g></svg>
+    <button type="button" class="thim-cup" style="--cup-x:54%" aria-label="Выбрать первый цилиндр" onclick="pickThimble(0)">${THIMBLE_ART}</button>
+    <button type="button" class="thim-cup" style="--cup-x:70%" aria-label="Выбрать второй цилиндр" onclick="pickThimble(1)">${THIMBLE_ART}</button>
+    <button type="button" class="thim-cup" style="--cup-x:86%" aria-label="Выбрать третий цилиндр" onclick="pickThimble(2)">${THIMBLE_ART}</button>
+  </div>`;
+}
+function cardTableScene(mode="bj"){
+ const title=mode==="memory"?"ЛЕСНАЯ ПАРТИЯ":"КАРТОЧНЫЙ ПОЕДИНОК";
+ const centerCards=mode==="memory"
+   ? `<g transform="translate(151 133) rotate(-10)"><rect width="27" height="37" rx="3" fill="#fff4d9" stroke="#62462e" stroke-width="2"/><path d="M5 27l8-15 8 15z" fill="#709d60"/></g><g transform="translate(182 132) rotate(9)"><rect width="27" height="37" rx="3" fill="#fff4d9" stroke="#62462e" stroke-width="2"/><circle cx="13" cy="19" r="7" fill="#7795bf"/></g>`
+   : `<g transform="translate(151 133) rotate(-8)"><rect width="29" height="38" rx="3" fill="#fff7e8" stroke="#62462e" stroke-width="2"/><text x="5" y="14" font-size="10" font-weight="900" fill="#bd5148">A</text><text x="9" y="30" font-size="14" fill="#bd5148">♥</text></g><g transform="translate(181 132) rotate(8)"><rect width="29" height="38" rx="3" fill="#fff7e8" stroke="#62462e" stroke-width="2"/><text x="5" y="14" font-size="10" font-weight="900" fill="#334957">K</text><text x="9" y="30" font-size="14" fill="#334957">♠</text></g>`;
+ const opponent={body:'#617985',belly:'#aebdb9',head:'#718b95',hat:4};
+ return `<div class="card-table-scene"><svg viewBox="0 0 360 215" role="img" aria-label="Степан и медведь-соперник сидят напротив за столом с картами"><defs><linearGradient id="cardRoom" x1="0%" y1="0%" x2="0%" y2="100%"><stop stop-color="#9db9b4"/><stop offset=".62" stop-color="#e4cfaa"/><stop offset=".63" stop-color="#98714a"/><stop offset="1" stop-color="#67472e"/></linearGradient></defs><rect width="360" height="215" fill="url(#cardRoom)"/><path d="M0 183h360m0 18H0" stroke="#b78958" stroke-width="3"/><rect x="22" y="27" width="63" height="53" rx="4" fill="#80aeba" stroke="#543b28" stroke-width="6"/><path d="M53 30v47M25 53h57" stroke="#f1dfbd" stroke-width="4"/><circle cx="318" cy="35" r="16" fill="#f2cf72" opacity=".9"/><path d="M131 48v45m98-45v45" stroke="#76553c" stroke-width="5" opacity=".55"/><g transform="translate(11 9)"><rect width="173" height="22" rx="11" fill="#30241bcc"/><text x="86" y="15" fill="#fff0cf" text-anchor="middle" font-size="9" font-weight="900">${title}</text></g>${bear(80,193,.55,false,{})}<g transform="translate(360 0) scale(-1 1)">${bear(80,193,.55,false,opponent)}</g><path d="M25 171h310v18H25z" fill="#c28a4d" stroke="#57381f" stroke-width="4"/><path d="M32 177h296" stroke="#e7bc78" stroke-width="3"/><ellipse cx="119" cy="174" rx="10" ry="5" fill="#7a4e26" stroke="#4c301d" stroke-width="1.5"/><ellipse cx="241" cy="174" rx="10" ry="5" fill="#617985" stroke="#394b55" stroke-width="1.5"/><path d="M35 189h290v25H35z" fill="#82552f" stroke="#4c301d" stroke-width="3"/><path d="M47 213v2m266-2v2" stroke="#38261a" stroke-width="4"/><path d="M59 193h48m146 0h48" stroke="#d3a166" stroke-width="2"/><text x="82" y="207" fill="#fff0d5" text-anchor="middle" font-size="7" font-weight="900">СТЕПАН</text><text x="278" y="207" fill="#fff0d5" text-anchor="middle" font-size="7" font-weight="900">СОПЕРНИК</text>${centerCards}</svg></div>`;
+}
+function memoryScene(){ return cardTableScene("memory"); }
+
+function minesScene(){
+ return `<div class="mine-banner" role="img" aria-label="Шахтный штрек с медведем и вагонеткой для самородков"><svg viewBox="0 0 360 112" preserveAspectRatio="none"><defs><linearGradient id="mineBannerWall" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#59666b"/><stop offset="1" stop-color="#283238"/></linearGradient><radialGradient id="mineBannerLight"><stop stop-color="#ffe078" stop-opacity=".72"/><stop offset="1" stop-color="#edaa3d" stop-opacity="0"/></radialGradient><linearGradient id="mineBannerWood" x2="0" y2="1"><stop stop-color="#c58b4c"/><stop offset="1" stop-color="#704525"/></linearGradient></defs><rect width="360" height="112" fill="url(#mineBannerWall)"/><path d="M0 0h360v17l-28 13-36-20-36 23-38-21-44 24-41-26-40 22L61 13 25 30 0 18z" fill="#3b4649"/><path d="M0 86h360v26H0z" fill="#45372d"/><path d="M0 94h360M0 106h360" stroke="#ad8151" stroke-width="3"/><path d="M18 0v89m10-89v89M9 24h29" stroke="#5a3b26" stroke-width="9"/><path d="M18 0v88m10-88v88M10 24h28" stroke="url(#mineBannerWood)" stroke-width="4"/><ellipse cx="68" cy="47" rx="45" ry="43" fill="url(#mineBannerLight)"/><g transform="translate(68 36)"><path d="M0-13v-10m-12 0h24l-3 13H-9z" fill="#4d3927" stroke="#2d261f" stroke-width="2"/><path d="M-7-9h14l-2 11H-5z" fill="#f1bf50" stroke="#ffe49b" stroke-width="1.5"/><path d="M-6-9h12" stroke="#fff3ba" stroke-width="2"/></g><g transform="translate(234 60)"><path d="M0 18 7 1 16-7 26 1 33 18z" fill="#777c78" stroke="#343b3a" stroke-width="2"/><path d="m7 1 9-8 6 8-8 7z" fill="#bbb39b"/><path d="m18 18 8-11 7 11z" fill="#dfab46" stroke="#8b5e1e" stroke-width="1.5"/><path d="m34 18 7-15 8-5 10 8-2 12z" fill="#6f7470" stroke="#343b3a" stroke-width="2"/><path d="m42 3 7-5 5 7-8 5z" fill="#c4bc9f"/></g><g transform="translate(278 79)"><path d="M0 0h62l-8 19H8z" fill="#9a6237" stroke="#452e1d" stroke-width="3"/><path d="M5 4h54" stroke="#dfb36d" stroke-width="3"/><circle cx="15" cy="22" r="5" fill="#332820" stroke="#d3a05e" stroke-width="2"/><circle cx="48" cy="22" r="5" fill="#332820" stroke="#d3a05e" stroke-width="2"/><circle cx="24" cy="-3" r="4" fill="#f6d069"/><circle cx="34" cy="-7" r="5" fill="#e8ad41"/><circle cx="43" cy="-2" r="4" fill="#ffe17c"/></g><g transform="translate(135 9)"><rect width="193" height="20" rx="10" fill="#20292dcc" stroke="#c28b4e" stroke-width="1"/><text x="96" y="14" text-anchor="middle" fill="#fff1d1" font-size="8.5" font-weight="900" letter-spacing=".5">16 КАМНЕЙ · 3 ОБВАЛА</text></g>${bear(61,109,.31,false,{})}</svg></div>`;
+}
+function coinFaceSvg(side="heads"){
+ const emblem=side==="heads"
+   ? `<path d="M35 17q-7 4-11 13l-12-5 7 13 12-3 4 15 4-15 12 3 7-13-12 5q-4-9-11-13z" fill="#8f6119" stroke="#684813" stroke-width="1.5"/><path d="M35 20v28m-10-17 10 5 10-5" fill="none" stroke="#f6d77b" stroke-width="2"/><text x="35" y="60" text-anchor="middle" font-size="7" font-weight="900" fill="#6c4b17">ОРЁЛ</text>`
+   : `<circle cx="35" cy="33" r="15" fill="none" stroke="#8f6119" stroke-width="2"/><path d="M27 27h15v4H31v5h9v4h-9v6h-4z" fill="#8f6119"/><text x="35" y="60" text-anchor="middle" font-size="7" font-weight="900" fill="#6c4b17">РЕШКА</text>`;
+ return `<svg viewBox="0 0 70 70" aria-hidden="true"><defs><radialGradient id="coinGold"><stop stop-color="#fff0a7"/><stop offset=".68" stop-color="#e8b94b"/><stop offset="1" stop-color="#b77b22"/></radialGradient></defs><circle cx="35" cy="35" r="32" fill="#8d5a19"/><circle cx="35" cy="33" r="30" fill="url(#coinGold)" stroke="#754a16" stroke-width="2.5"/><circle cx="35" cy="33" r="25" fill="none" stroke="#fff1ad" stroke-width="1.8"/><circle cx="35" cy="33" r="21" fill="none" stroke="#a87420" stroke-width="1"/>${emblem}</svg>`;
+}
+function coinFlipScene(){
+ return `<div class="coin-arena"><svg viewBox="0 0 360 215" role="img" aria-label="Степан подбрасывает большую золотую монету"><defs><linearGradient id="coinRoom" x1="0%" y1="0%" x2="0%" y2="100%"><stop stop-color="#8fc2d4"/><stop offset=".58" stop-color="#e4d4ad"/><stop offset=".59" stop-color="#a87648"/><stop offset="1" stop-color="#65442d"/></linearGradient></defs><rect width="360" height="215" fill="url(#coinRoom)"/><circle cx="306" cy="36" r="17" fill="#ffe58a"/><rect x="25" y="27" width="67" height="53" rx="4" fill="#83b7c5" stroke="#5b4029" stroke-width="6"/><path d="M58 30v48M28 53h61" stroke="#f4e3c1" stroke-width="4"/><path d="M0 159h360v56H0z" fill="#765033"/><path d="M0 174h360M0 197h360" stroke="#a97a48" stroke-width="3"/><path d="M19 146h322v17H19z" fill="#c18a4b" stroke="#5a391f" stroke-width="4"/><path d="M29 163v33m302-33v33M19 196h322" stroke="#59391f" stroke-width="7"/><path d="M48 152h263" stroke="#efd096" stroke-width="3"/>${bear(86,195,.55,false,{})}<g transform="translate(13 10)"><rect width="131" height="22" rx="11" fill="#30241bcc"/><text x="65" y="15" fill="#fff0cf" text-anchor="middle" font-size="9" font-weight="900">МЕДВЕЖИЙ БРОСОК</text></g><text x="250" y="140" fill="#fff2c6" stroke="#79531f" stroke-width=".7" text-anchor="middle" font-size="9" font-weight="900">ПОДБРОСЬ МОНЕТУ</text></svg><div class="coin-position"><div id="cf-coin">${coinFaceSvg("heads")}</div></div></div>`;
+}
+function m3Backdrop(){
+ return `<div class="m3-landscape" role="img" aria-label="Сказочная медовая долина с леденцовыми деревьями и ягодными холмами"><svg viewBox="0 0 360 120" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="m3Sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#87d6f5"/><stop offset="1" stop-color="#fff0c8"/></linearGradient><linearGradient id="m3Amber" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ffd968"/><stop offset="1" stop-color="#e9a434"/></linearGradient><linearGradient id="m3PinkHill" x2="0" y2="1"><stop stop-color="#f5a2bb"/><stop offset="1" stop-color="#dc789e"/></linearGradient></defs><rect width="360" height="120" fill="url(#m3Sky)"/><circle cx="316" cy="24" r="13" fill="#fff2a0" opacity=".95"/><g fill="#fff" opacity=".72"><ellipse cx="82" cy="25" rx="27" ry="8"/><ellipse cx="69" cy="23" rx="12" ry="9"/><ellipse cx="96" cy="21" rx="15" ry="10"/><ellipse cx="231" cy="36" rx="22" ry="7"/><ellipse cx="220" cy="34" rx="11" ry="8"/><ellipse cx="241" cy="31" rx="12" ry="9"/></g><path d="M0 76Q48 38 101 70T204 68T360 58V120H0Z" fill="#b9a0dc"/><path d="M0 87Q52 52 112 81T232 76T360 70V120H0Z" fill="url(#m3PinkHill)"/><path d="M0 102Q50 75 105 98T218 92T360 85V120H0Z" fill="#8dca8b"/><path d="M116 120Q153 92 200 96T286 120Z" fill="url(#m3Amber)" opacity=".96"/><path d="M126 120Q164 98 203 101T271 120" fill="none" stroke="#fff2b1" stroke-width="3" opacity=".9"/><g transform="translate(25 62)"><path d="M0 15v37" stroke="#845a47" stroke-width="5"/><circle cy="7" r="17" fill="#df6f9a" stroke="#fff0d9" stroke-width="3"/><path d="M-13-2Q0 4 13-2M-13 6Q0 12 13 6M-13 14Q0 20 13 14" fill="none" stroke="#ffd56f" stroke-width="3"/></g><g transform="translate(329 63)"><path d="M0 15v35" stroke="#805a42" stroke-width="5"/><circle cy="6" r="16" fill="#f2b950" stroke="#fff4d0" stroke-width="3"/><path d="M-12 6h24M0-6v24" stroke="#fff0c0" stroke-width="3"/></g><g transform="translate(278 73)"><path d="M0 11v29" stroke="#73523d" stroke-width="4"/><path d="M-20 14Q-17-7 0-5Q17-7 20 14Q13 24 0 22Q-13 24-20 14Z" fill="#9b6cc0" stroke="#fff1d8" stroke-width="2"/><circle cx="-8" cy="5" r="2" fill="#f6d57c"/><circle cx="6" cy="11" r="2.4" fill="#ffc8e1"/><circle cx="11" cy="3" r="2" fill="#f6d57c"/></g><g fill="#e95d87"><circle cx="207" cy="89" r="4"/><circle cx="215" cy="85" r="4"/><circle cx="223" cy="90" r="4"/></g><g fill="#ffe68b"><path d="M180 45l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/><path d="M347 43l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5z"/></g>${bear(48,108,.30,false,{})}<g transform="translate(147 8)"><rect width="150" height="21" rx="10.5" fill="#493854d9" stroke="#fff4d8" stroke-width="1"/><text x="75" y="14" text-anchor="middle" fill="#fff7df" font-size="8.5" font-weight="900" letter-spacing=".7">МЕДОВАЯ ДОЛИНА</text></g></svg></div>`;
+}
+
+function dartScene(){
+ return `<div class="dart-scene"><svg viewBox="0 0 360 215" role="img" aria-label="Степан целится в яркую мишень на лесной поляне"><defs><linearGradient id="dartSky" x1="0%" y1="0%" x2="0%" y2="100%"><stop stop-color="#7fc2e5"/><stop offset="1" stop-color="#d8efde"/></linearGradient></defs><rect width="360" height="215" fill="url(#dartSky)"/><circle cx="316" cy="34" r="18" fill="#ffe88e"/><path d="M0 106l52-48 43 40 54-64 50 70 47-46 64 58v46H0z" fill="#6c9685"/><path d="M0 139q78-25 153 0t207-2v78H0z" fill="#6da456"/><path d="M0 178q85-21 172 0t188 0v37H0z" fill="#548c45"/><g opacity=".8"><path d="M20 117v-32m0 4-12-14m12 20 12-16M338 128V91m0 5-12-15m12 21 12-16" stroke="#68482a" stroke-width="5"/><path d="M8 90l12-28 12 28zM326 96l12-31 14 31z" fill="#337b47"/></g><path d="M239 174h92v8h-92z" fill="#805630"/><path d="M247 174V88h8v86m59 0V88h8v86" fill="#6d4728"/><g class="dart-target" role="button" tabindex="0" aria-label="Нажми на мишень: начать бросок или бросить дротик" onclick="throwDart()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();throwDart()}"><circle cx="281" cy="83" r="40" fill="#f7ecd8" stroke="#64452b" stroke-width="5"/><circle cx="281" cy="83" r="30" fill="#cf5c52"/><circle cx="281" cy="83" r="21" fill="#f7ecd8"/><circle cx="281" cy="83" r="12" fill="#e5b94c"/><circle cx="281" cy="83" r="4" fill="#fff4bd"/><path d="M257 72l18 10m-18 10 18-10" stroke="#fff" stroke-width="2" opacity=".7"/><path d="M281 83l-16-11m16 11-4-10m4 10-10-1" stroke="#344552" stroke-width="3" stroke-linecap="round"/><path d="M265 72l-5-6 9 2z" fill="#e5b94c"/></g>${bear(104,193,.59,false,{})}<g transform="translate(14 10)"><rect width="125" height="22" rx="11" fill="#24402ccc"/><text x="62" y="15" fill="#f8f0cf" text-anchor="middle" font-size="9" font-weight="900">ЛЕСНАЯ МИШЕНЬ</text></g></svg></div>`;
+}
+
 const V={world(){return W.html()},
 home(){
 const sl=Date.now()<S.sleepUntil;
@@ -676,7 +841,7 @@ return `${fishScene()}
   <button class="b exit-btn" onclick="go('world')">${ICO.tree} В лес</button>
 </div>`},
 
-m3(){return `<div class="card"><div class="top" id="m3top" style="margin-bottom:8px"><span>Ходы: ${mv}</span><span>Собрано: ${cl} ${ICO.coin}</span></div><div class="grid" id="g"></div><div class="msg">${mv<=0?"Игра окончена! Награда: +"+cl:"Меняй соседние фишки местами"}</div>${mv<=0?`<button class="b" style="width:100%;margin-bottom:6px" onclick="newM3()">Сыграть ещё раз</button>`:""}<button class="b exit-btn" onclick="go('world')">${ICO.tree} В лес</button></div>`},
+m3(){return `<div class="card m3-card"><div class="m3-heading"><span class="m3-heading-icon">${ICO.honey}</span><span>Сладкая поляна</span><span class="m3-mode">3 В РЯД</span></div><div class="top m3-top" id="m3top" style="margin-bottom:8px"><span>Ходы: ${mv}</span><span>Собрано: ${cl} ${ICO.coin}</span></div>${m3Backdrop()}<div class="m3-board-shell"><div class="grid m3-grid" id="g"></div></div><div class="msg m3-msg">${mv<=0?"Игра окончена! Награда: +"+cl:"Меняй соседние фишки местами"}</div>${mv<=0?`<button class="b" style="width:100%;margin-bottom:6px" onclick="newM3()">Сыграть ещё раз</button>`:""}<button class="b exit-btn" onclick="go('world')">${ICO.tree} В лес</button></div>`},
 
 quest(){
 const doneCnt = S.claimed.length;
@@ -761,37 +926,35 @@ wheel(){return `<div class="card" style="text-align:center"><b>Колесо Уд
 <div class="row"><span>50 Кристаллов<small>Через Telegram Stars</small></span><button class="b" style="background:linear-gradient(180deg,#4f9c8f,#38756b)" onclick="buyCrys()">Stars</button></div>
 </div><button class="b exit-btn" onclick="go('world')">Назад</button>`},
 
-darts(){return `<div class="card" style="text-align:center;"><b>Лесной Дартс</b>
-<div class="msg" id="dart-msg">Останови бегунок в самом центре мишени!</div>
-<div style="position:relative; width:250px; height:44px; margin:20px auto; background:#26201b; border-radius:22px; overflow:hidden; border:3px solid #635142; box-shadow:inset 0 3px 8px #000">
-    <div style="position:absolute; left:50%; top:0; bottom:0; width:80px; background:#689e5b; transform:translateX(-50%); opacity:0.5;"></div>
-    <div style="position:absolute; left:50%; top:0; bottom:0; width:38px; background:#e5b94c; transform:translateX(-50%); opacity:0.85;"></div>
-    <div style="position:absolute; left:50%; top:0; bottom:0; width:13px; background:#cf6a5f; transform:translateX(-50%);"></div>
-    <div id="dart-ind" style="position:absolute; left:50%; top:4px; width:4px; height:30px; background:#fff; box-shadow:0 0 6px #fff; margin-left:-2px; border-radius:2px"></div>
-</div>
-<div style="font-size:12px;opacity:.75;margin-bottom:10px">Центр: +50 · Жёлтая: +15 · Зелёная: +5</div>
-<button class="b" style="width:100%; background:linear-gradient(180deg,#c96540,#9e4b2b); font-size:16px; padding:12px" id="dart-btn" onclick="throwDart()">Начать бросок (5 ${ICO.coin})</button>
+darts(){return `<div class="card dart-card" style="text-align:center;"><b>Лесной Дартс</b>
+<div class="msg dart-msg-card" id="dart-msg">Останови бегунок в самом центре мишени!</div>
+${dartScene()}
+<div style="font-size:12px;opacity:.78;margin:3px 0 2px">Поймай момент, когда метка пройдёт по центру</div>
+<div class="dart-meter" aria-label="Шкала точности"><div class="dart-zone green"></div><div class="dart-zone yellow"></div><div class="dart-zone red"></div><div id="dart-ind"></div></div>
+<div class="dart-score-key"><span><i style="background:#cf6a57"></i>Центр · +50</span><span><i style="background:#e5b94c"></i>Точно · +15</span><span><i style="background:#689e5b"></i>Рядом · +5</span></div>
+<button class="b dart-launch" id="dart-btn" style="width:100%;background:linear-gradient(180deg,#cc6847,#954330);font-size:16px;padding:12px" onclick="throwDart()">Начать бросок (5 ${ICO.coin})</button>
 </div><button class="b exit-btn" onclick="go('world')">${ICO.tree} В лес</button>`},
 
 thimbles(){return `<div class="card" style="text-align:center;"><b>Золотые Цилиндры</b>
 <div class="msg" id="thim-msg">Угадай, под каким цилиндром спрятан кристалл (3 → 10)</div>
-<div style="display:flex; justify-content:space-around; margin:28px 0;">
-    <div class="thim-cup" style="cursor:pointer; transition:transform 0.15s; transform:scale(1.8)" onclick="pickThimble(0)">${ICO.hat}</div>
-    <div class="thim-cup" style="cursor:pointer; transition:transform 0.15s; transform:scale(1.8)" onclick="pickThimble(1)">${ICO.hat}</div>
-    <div class="thim-cup" style="cursor:pointer; transition:transform 0.15s; transform:scale(1.8)" onclick="pickThimble(2)">${ICO.hat}</div>
-</div>
+${thimbleScene()}
 </div><button class="b exit-btn" onclick="go('world')">В зал</button>`},
 
-slots(){ return `<div class="card" style="text-align:center;"><b>Автомат «Три Ягоды»</b>
-<div class="msg" id="sl-msg">Три одинаковых символа — до +120, пара — +12!</div>
-<div style="display:flex;justify-content:center;gap:16px;margin:18px 0;background:linear-gradient(180deg,#1f1914,#30261e);border-radius:14px;padding:18px;border:3px solid #d4a849;box-shadow:inset 0 4px 12px #0008" id="sl-reels">
-  <span style="transform:scale(1.8)">${ICO.berry}</span><span style="transform:scale(1.8)">${ICO.honey}</span><span style="transform:scale(1.8)">${ICO.crys}</span>
+slots(){ return `<div class="card slot-card" style="text-align:center;"><b style="font-size:18px">Автомат «Три ягоды»</b>
+<div class="msg" id="sl-msg">Три одинаковых символа — до +120, пара — +12. Ставка 10 монет.</div>
+<div class="slot-machine" aria-label="Игровой автомат с тремя барабанами">
+  <div class="slot-brand"><span class="slot-brand-star">✦</span><span>ТРИ ЯГОДЫ</span><span class="slot-brand-star">✦</span></div>
+  <div class="slot-housing"><div class="slot-caption">ЛИНИЯ ВЫИГРЫША</div><div class="slot-reels" id="sl-reels">
+    ${[0,1,2].map((ix,i)=>`<div class="slot-reel-window" id="sl-reel-${i}">${slotReelMarkup(ix)}</div>`).join("")}
+    <div class="slot-payline" aria-hidden="true"></div>
+  </div><div class="slot-lamps" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
 </div>
-<button class="b" id="sl-btn" style="width:100%;background:linear-gradient(180deg,#c96540,#9e4b2b);font-size:16px;padding:12px" onclick="spinSlots()">ЗАПУСТИТЬ (10 ${ICO.coin})</button>
+<div class="slot-payouts"><div class="slot-payout">Пара<b>+12 ${ICO.coin}</b></div><div class="slot-payout">Три одинаковых<b>+60 ${ICO.coin}</b></div><div class="slot-payout">Три кристалла<b>+120 ${ICO.coin}</b></div></div>
+<button class="b slot-spin-button" id="sl-btn" onclick="spinSlots()">КРУТИТЬ БАРАБАНЫ · 10 ${ICO.coin}</button>
 </div><button class="b exit-btn" onclick="go('world')">В зал</button>`},
-
 hilo(){ return `<div class="card" style="text-align:center;"><b>Больше или Меньше</b>
 <div class="msg" id="hl-msg">Сейчас ${hlCard}. Следующая карта будет младше или старше?</div>
+${cardTableScene("hilo")}
 <div class="playing-card" id="hl-card">
   <div style="text-align:left;font-size:18px" id="hl-top">${hlCard}♠</div>
   <div style="font-size:44px;text-align:center" id="hl-mid">${hlCard}</div>
@@ -801,9 +964,9 @@ hilo(){ return `<div class="card" style="text-align:center;"><b>Больше и�
 </div><button class="b exit-btn" onclick="go('world')">В зал</button>`},
 
 coinflip(){ return `<div class="card" style="text-align:center;"><b>Счастливая Монетка</b>
-<div class="msg" id="cf-msg">Орёл или Решка? Взнос 10 — приз 20</div>
-<div style="margin:24px 0;transition:transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);display:inline-block;transform:scale(2.6)" id="cf-coin">${ICO.coin}</div>
-<div style="display:flex;gap:8px;"><button class="b" id="cf-b0" style="flex:1;background:linear-gradient(180deg,#d9963b,#ab7122)" onclick="playCF(0)">Орёл (10 ${ICO.coin})</button><button class="b" id="cf-b1" style="flex:1;background:linear-gradient(180deg,#8c629c,#694578)" onclick="playCF(1)">Решка (10 ${ICO.coin})</button></div>
+<div class="msg" id="cf-msg">Выбери сторону монеты. Ставка 10 монет, приз — 20.</div>
+${coinFlipScene()}
+<div class="coin-choice-row"><button class="coin-choice" id="cf-b0" onclick="playCF(0)"><span class="coin-token">${coinFaceSvg("heads")}</span><span>ОРЁЛ<small>Ставка 10 · выигрыш +20</small></span></button><button class="coin-choice tails" id="cf-b1" onclick="playCF(1)"><span class="coin-token">${coinFaceSvg("tails")}</span><span>РЕШКА<small>Ставка 10 · выигрыш +20</small></span></button></div>
 </div><button class="b exit-btn" onclick="go('world')">В зал</button>` },
 
 catchgame() { return `<div class="card" style="text-align:center;"><b>Поляна Кротов</b>
@@ -814,24 +977,41 @@ catchgame() { return `<div class="card" style="text-align:center;"><b>Полян
 <button class="b" style="width:100%;font-size:16px;padding:11px" onclick="startCatch()" id="cg-btn">Начать охоту (10 ${ICO.coin})</button>
 </div><button class="b exit-btn" onclick="go('world')">${ICO.tree} В лес</button>` },
 
-mines() { return `<div class="card" style="text-align:center;"><b>Прииск Самородков</b>
-<div class="msg" id="mn-msg">${minesAct ? `Найдено: <b>${minesPot}</b>. Ищем дальше или забираем?` : `Под 16 камнями спрятаны кристаллы и 3 обвала`}</div>
-<div class="mine-grid" id="mn-grid">
-  ${Array.from({length:16},(_,i)=>{
-      const rev = minesRev[i];
-      const content = !rev ? ICO.rock : (minesGrid[i]===-1 ? ICO.boom : ICO.crys);
-      return `<button class="mine-cell ${rev?'open':''}" onclick="clickMine(${i})">${content}</button>`;
-  }).join("")}
-</div>
-${minesAct && minesOpened>0 ? `<button class="b" style="width:100%;background:linear-gradient(180deg,#5e9450,#46733b);font-size:16px;padding:12px" onclick="cashoutMines()">Забрать (${minesPot} ${ICO.coin})</button>` : `<button class="b" style="width:100%;font-size:16px;padding:12px" ${minesAct?'disabled':''} onclick="startMines()">Начать поиск (10 ${ICO.coin})</button>`}
-</div><button class="b exit-btn" onclick="go('world')">В зал</button>` },
+mines() {
+ const ended= !minesAct && minesRev.some(Boolean);
+ const intro= minesAct ? (minesOpened ? `Самородок найден! Открой ещё один камень или забери весь банк.` : `Спуск начался. Нажми на один из 16 камней.`) : (minesPot>0 ? `Ты забрал добычу. Можно начинать новый спуск.` : ended ? `Обвал! Раунд окончен, ставка потеряна. Начни новый спуск.` : `Спуск стоит 10 монет. Открой камни по одному: 13 самородков и 3 обвала. После находки можешь забрать банк или рискнуть дальше.`);
+ const stats= minesAct
+   ? `<div class="mine-status-item"><small>НАЙДЕНО</small><b>${minesOpened} из 13</b></div><div class="mine-status-item"><small>БАНК</small><b>${minesPot} ${ICO.coin}</b></div>`
+   : minesPot>0
+   ? `<div class="mine-status-item"><small>НАЙДЕНО</small><b>${minesOpened} из 13</b></div><div class="mine-status-item"><small>ЗАБРАНО</small><b>+${minesPot} ${ICO.coin}</b></div>`
+   : ended
+   ? `<div class="mine-status-item"><small>ИТОГ</small><b>Обвал</b></div><div class="mine-status-item"><small>ПОТЕРЯНО</small><b>−10 ${ICO.coin}</b></div>`
+   : "";
+ const cells=Array.from({length:16},(_,i)=>{
+   const rev=!!minesRev[i],bad=minesGrid[i]===-1,cls=rev?(bad?"revealed-collapse":"revealed-crystal"):"covered";
+   const content=!rev?`<span class="mine-icon">${ICO.rock}</span><span class="mine-number">${i+1}</span>`:bad?`<span class="mine-icon">${ICO.boom}</span><span class="mine-label">ОБВАЛ</span>`:`<span class="mine-icon">${ICO.crys}</span><span class="mine-label">САМОРОДОК</span>`;
+   const label=rev?(bad?`Камень ${i+1}: обвал`:`Камень ${i+1}: самородок`):`Камень ${i+1}${minesAct?", нажми чтобы проверить":", начни спуск чтобы открыть"}`;
+   return `<button type="button" class="mine-cell ${cls} ${rev?"open":""}" onclick="clickMine(${i})" aria-label="${label}" ${!minesAct||rev?"disabled":""}>${content}</button>`;
+ }).join("");
+ const action=minesAct
+   ? minesOpened>0 ? `<button class="b mine-cashout" onclick="cashoutMines()">Забрать ${minesPot} ${ICO.coin}</button>` : `<div class="mine-action-note">Найди хотя бы один кристалл — тогда появится кнопка «Забрать».</div>`
+   : `<button class="b" style="width:100%;max-width:360px;font-size:16px;padding:12px" onclick="startMines()">${ended||minesPot>0?"Новый спуск":"Начать поиск"} (10 ${ICO.coin})</button>`;
+ return `<div class="card mine-card" style="text-align:center;"><b style="font-size:18px">Прииск Самородков</b>
+<div class="mine-intro" id="mn-msg" role="status">${intro}</div>
+${minesScene()}
+<div class="mine-status">${stats}</div>
+<div class="mine-grid" id="mn-grid">${cells}</div>
+${action}
+</div><button class="b exit-btn" onclick="go('world')">В зал</button>`;
+},
 
 memory() { return `<div class="card" style="text-align:center;"><b>Лесное Мемори</b>
 <div class="msg" id="mem-msg">Открой все 6 пар! Осталось ходов: <b>${memMoves}</b></div>
+${memoryScene()}
 <div class="mem-grid">
   ${memDeck.map((v,i)=>{
       const isOp = memOpen.includes(i) || memDone.includes(i);
-      return `<button class="mem-card ${isOp?'open':''}" onclick="flipMem(${i})">${isOp?MEM_ICONS[v]:ICO.paw}</button>`;
+      return `<button class="mem-card ${isOp?'open':''}" onclick="flipMem(${i})">${isOp?MEM_ICONS[v]:MEM_BACK_ART}</button>`;
   }).join("")}
 </div>
 ${memMoves<=0||memDone.length===12?`<button class="b" style="width:100%;margin-top:6px" onclick="initMemory()">Новая партия (8 ${ICO.coin})</button>`:''}
@@ -839,11 +1019,12 @@ ${memMoves<=0||memDone.length===12?`<button class="b" style="width:100%;margin-t
 
 bj() { return `<div class="card" style="text-align:center;"><b>Карточная дуэль «21»</b>
 <div class="msg" id="bj-msg">${bjMsg}</div>
+${cardTableScene("bj")}
 <div style="margin:8px 0">
   <small style="opacity:.75">Соперник (${bjActive ? '?' : bjScore(bjDealer)} очк.):</small>
-  <div class="bj-hand">${bjDealer.map((c,i)=>`<div class="bj-mini">${i===1&&bjActive?'?':c.n+c.s}</div>`).join("")}</div>
+  <div class="bj-hand">${bjDealer.length?bjDealer.map((c,i)=>`<div class="bj-mini ${i===1&&bjActive?'bj-back':''}">${i===1&&bjActive?MEM_BACK_ART:c.n+c.s}</div>`).join(""):`<div class="bj-mini bj-back">${MEM_BACK_ART}</div><div class="bj-mini bj-back">${MEM_BACK_ART}</div>`}</div>
   <small style="opacity:.75">Твоя рука (${bjScore(bjPlayer)} очк.):</small>
-  <div class="bj-hand">${bjPlayer.map(c=>`<div class="bj-mini">${c.n+c.s}</div>`).join("")}</div>
+  <div class="bj-hand">${bjPlayer.length?bjPlayer.map(c=>`<div class="bj-mini">${c.n+c.s}</div>`).join(""):`<div class="bj-mini bj-back">${MEM_BACK_ART}</div><div class="bj-mini bj-back">${MEM_BACK_ART}</div>`}</div>
 </div>
 ${bjActive ? `<div style="display:flex;gap:8px"><button class="b" style="flex:1;background:linear-gradient(180deg,#5e9450,#46733b)" onclick="bjHit()">Ещё карту</button><button class="b" style="flex:1;background:linear-gradient(180deg,#c97a3b,#9e5b24)" onclick="bjStand()">Хватит</button></div>` : `<button class="b" style="width:100%;font-size:16px;padding:11px" onclick="startBJ()">Раздать карты (15 ${ICO.coin})</button>`}
 </div><button class="b exit-btn" onclick="go('world')">В зал</button>` },
@@ -1046,10 +1227,10 @@ function pickThimble(i){
     let ticks = 0;
     thimIv = setInterval(()=>{
         const cups = document.querySelectorAll(".thim-cup");
-        cups.forEach((c,idx) => c.style.transform = `translate(${Math.sin(ticks+idx)*18}px, ${idx%2?-10:10}px) scale(1.8)`);
+        cups.forEach((c,idx) => { c.style.setProperty('--shake-x', `${Math.sin(ticks+idx)*18}px`); c.style.setProperty('--shake-y', `${idx%2?-10:10}px`); });
         if(++ticks > 14) {
             clearInterval(thimIv);
-            cups.forEach(c => c.style.transform = `translate(0, 0) scale(1.8)`);
+            cups.forEach(c => { c.style.setProperty('--shake-x', '0px'); c.style.setProperty('--shake-y', '0px'); });
             const winCup = R(3);
             if(i === winCup) {
                 const rw = 10; S.crys += rw; popText("+10","#a882ba"); save(); hud(); chng(); hap('success');
@@ -1061,7 +1242,7 @@ function pickThimble(i){
             if(cups[winCup]) cups[winCup].innerHTML = ICO.crys;
             thimTmr = setTimeout(()=>{
                 thimState = 0;
-                document.querySelectorAll(".thim-cup").forEach(c => c.innerHTML = ICO.hat);
+                document.querySelectorAll(".thim-cup").forEach(c => c.innerHTML = THIMBLE_ART);
                 if($("#thim-msg")) $("#thim-msg").textContent = "Выбери цилиндр (3 → 10)";
             }, 1800);
         }
@@ -1069,27 +1250,40 @@ function pickThimble(i){
 }
 
 // ===== АВТОМАТ ТРИ ЯГОДЫ =====
-let slotSp = null;
+let slotSp = null, slotBusy = false;
 const SLOT_ICS = [ICO.berry, ICO.honey, ICO.mush, ICO.crys, ICO.crown];
+function slotReelMarkup(center){
+    const n=SLOT_ICS.length, faces=[(center+n-1)%n,center,(center+1)%n];
+    return `<div class="slot-strip">${faces.map((ix,i)=>`<span class="slot-symbol ${i===1?"slot-symbol-center":""}">${SLOT_ICS[ix]}</span>`).join("")}</div>`;
+}
+function setSlotReel(reel,index){ if(reel) reel.innerHTML=slotReelMarkup(index); }
 function initSlots(){ if(!checkState())return; go('slots'); }
 function spinSlots() {
+    if(slotSp || slotBusy) return;
     if(S.coins<10){boop(); hap('error'); return toast("Нужно 10 монет!");}
-    S.coins-=10; S.gamesPlayed++; save(); hud();
-    const btn=$("#sl-btn"); if(btn) btn.disabled=true;
-    let t=0, r=[0,0,0];
+    S.coins-=10; S.gamesPlayed++; save(); hud(); slotBusy=true;
+    const btn=$("#sl-btn"), m=$("#sl-msg"); if(btn) btn.disabled=true;
+    if(m) m.textContent="Барабаны крутятся… выбери удачу!";
+    const result=[R(5),R(5),R(5)], stopAt=[11,16,21];
+    const reels=[0,1,2].map(i=>$("#sl-reel-"+i));
+    reels.forEach(el=>{if(el)el.classList.add("spinning")});
+    let frame=0;
     slotSp=setInterval(()=>{
-        r=[R(5),R(5),R(5)];
-        const rl=$("#sl-reels");
-        if(rl) rl.innerHTML = r.map(ix=>`<span style="transform:scale(1.8)">${SLOT_ICS[ix]}</span>`).join("");
-        if(++t>16){
-            clearInterval(slotSp); if(btn) btn.disabled=false;
-            const m=$("#sl-msg");
-            if(r[0]==r[1]&&r[1]==r[2]){ let win=r[0]==3?120:60; earn(win); chng(); hap('success'); if(m)m.innerHTML=`ТРИ В РЯД! +${win} ${ICO.coin}!`; }
-            else if(r[0]==r[1]||r[1]==r[2]||r[0]==r[2]){ earn(12); beep(); if(m)m.innerHTML=`Пара символов: +12 ${ICO.coin}`; }
-            else { boop(); if(m)m.textContent=`Мимо… Попробуй ещё!`; }
+        for(let i=0;i<3;i++){
+            if(frame<stopAt[i]) setSlotReel(reels[i],R(5));
+            else if(frame===stopAt[i]){setSlotReel(reels[i],result[i]);if(reels[i])reels[i].classList.remove("spinning")}
+        }
+        frame++;
+        if(frame>stopAt[2]){
+            clearInterval(slotSp);slotSp=null;slotBusy=false;
+            if(btn)btn.disabled=false;
+            const r=result;
+            if(r[0]===r[1]&&r[1]===r[2]){const win=r[0]===3?120:60;earn(win);chng();hap('success');if(m)m.innerHTML=`ТРИ В РЯД! +${win} ${ICO.coin}!`;}
+            else if(r[0]===r[1]||r[1]===r[2]||r[0]===r[2]){earn(12);beep();if(m)m.innerHTML=`Пара символов: +12 ${ICO.coin}`;}
+            else{boop();if(m)m.textContent=`Мимо… Попробуй ещё!`;}
             hud();
         }
-    }, 50);
+    },55);
 }
 
 // ===== БОЛЬШЕ / МЕНЬШЕ =====
@@ -1125,13 +1319,13 @@ function playCF(guess) {
     const b0=$("#cf-b0"), b1=$("#cf-b1"), coin=$("#cf-coin"), m=$("#cf-msg");
     if(b0)b0.disabled=true; if(b1)b1.disabled=true;
     if(m)m.textContent="Бросаем…";
-    cfFlips += 720;
-    if(coin) coin.style.transform = `rotateY(${cfFlips}deg) scale(2.6)`;
+    cfFlips += 1800;
+    if(coin){ coin.classList.remove("coin-tossing"); void coin.offsetWidth; coin.classList.add("coin-tossing"); }
     cfTmr = setTimeout(()=>{
         cfBusy=false;
         if(b0)b0.disabled=false; if(b1)b1.disabled=false;
         let res = R(2);
-        if(coin) coin.innerHTML = res===0 ? ICO.crown : ICO.coin;
+        if(coin){ coin.classList.remove("coin-tossing"); coin.innerHTML = coinFaceSvg(res===0 ? "heads" : "tails"); }
         if(res===guess) { earn(20); chng(); hap('success'); if(m)m.innerHTML=`Победа! Выпал ${res===0?'Орёл':'Решка'} (+20 ${ICO.coin})`; }
         else { boop(); if(m)m.textContent=`Выпал ${res===0?'Орёл':'Решка'}. Ещё раз?`; }
         hud();
@@ -1210,13 +1404,13 @@ function clickMine(i){
         for(let k=0;k<16;k++) if(minesGrid[k]===-1) minesRev[k]=true;
         boop(); hap('heavy');
         $("#main").innerHTML = V.mines();
-        $("#mn-msg").innerHTML = `<span style="color:#cf6a5f">Обвал породы! Попробуй снова.</span>`;
+        $("#mn-msg").innerHTML = `<b style="color:#a43f32">Обвал породы!</b> Раунд окончен, ставка 10 монет потеряна. Начни новый спуск.`;
     } else {
         minesOpened++;
         minesPot += Math.round(5 + minesOpened * 2.5);
         beep(); hap('light');
         if(minesOpened >= 13) cashoutMines();
-        else $("#main").innerHTML = V.mines();
+        else { $("#main").innerHTML = V.mines(); const note=$("#mn-msg"); if(note) note.textContent="Самородок найден! Открой следующий камень или забери банк."; }
     }
 }
 function cashoutMines(){
@@ -1225,10 +1419,11 @@ function cashoutMines(){
     minesAct = false;
     earn(win); addXp(8); chng(); hap('success'); hud();
     $("#main").innerHTML = V.mines();
-    $("#mn-msg").innerHTML = `Найдено самородков на <b>+${win}</b> ${ICO.coin}!`;
+    $("#mn-msg").innerHTML = `Добыча забрана: <b>+${win}</b> ${ICO.coin}. Начни новый спуск, когда будешь готов.`;
 }
 
 // ===== ЛЕСНОЕ МЕМОРИ =====
+const MEM_BACK_ART=`<svg viewBox="0 0 48 64" aria-hidden="true"><rect x="3" y="3" width="42" height="58" rx="7" fill="#9b6b3c" stroke="#f0d39b" stroke-width="2"/><rect x="8" y="8" width="32" height="48" rx="4" fill="none" stroke="#ddb97b" stroke-width="1.5"/><path d="M24 15l12 17H12z" fill="#6d9154" stroke="#e7d09b" stroke-width="2"/><path d="M24 21v19m-8-8h16" stroke="#fff0c9" stroke-width="2"/><circle cx="24" cy="47" r="3" fill="#e5b94c"/></svg>`;
 const MEM_ICONS = [ICO.honey, ICO.fish, ICO.berry, ICO.mush, ICO.tree, ICO.crown];
 let memDeck = [], memOpen = [], memDone = [], memMoves = 11, memLock = false, memTmr = null;
 function initMemory(){
@@ -1438,7 +1633,8 @@ function newM3(){
 }
 function canMove(){for(let i=0;i<36;i++)for(const j of[i+1,i+6]){if(j>35||(j==i+1&&j%6==0))continue;[G[i],G[j]]=[G[j],G[i]];const ok=find().size;[G[i],G[j]]=[G[j],G[i]];if(ok)return true}return false}
 function find(){const m=new Set;for(let r=0;r<6;r++)for(let c=0;c<6;c++){const i=r*6+c,v=G[i];if(v<0)continue;if(c<4&&G[i+1]==v&&G[i+2]==v)[i,i+1,i+2].forEach(x=>m.add(x));if(r<4&&G[i+6]==v&&G[i+12]==v)[i,i+6,i+12].forEach(x=>m.add(x))}return m}
-function draw(clear=new Set){if(!$("#g"))return;$("#g").innerHTML=G.map((v,i)=>`<button class="t ${i===sel?"s":""} ${clear.has(i)?"x":""}" onclick="pick(${i})">${v>=0?E_SVG[v]:""}</button>`).join("")}
+const M3_NAMES=["корона","рыбка","мёд","ёлка","гриб","ягоды"];
+function draw(clear=new Set){if(!$("#g"))return;$("#g").innerHTML=G.map((v,i)=>`<button type="button" class="t candy-tile ${v>=0?`candy-${v}`:"candy-empty"} ${i===sel?"s":""} ${clear.has(i)?"x":""}" aria-label="${v>=0?`Фишка: ${M3_NAMES[v]}`:"Пустая клетка"}" onclick="pick(${i})">${v>=0?E_SVG[v]:""}</button>`).join("")}
 function pick(i){if(busy||mv<=0||tab!="m3")return;hap('light');if(sel==null){sel=i;return draw()}
 const a=sel,d=Math.abs(a-i);sel=null;if(!(d==6||(d==1&&(a/6|0)==(i/6|0))))return draw();
 [G[a],G[i]]=[G[i],G[a]];if(!find().size){[G[a],G[i]]=[G[i],G[a]];boop();return draw()}
@@ -2547,11 +2743,14 @@ function initBerry(){
 // =========================================================================
 let raf_cb, cb_act=false;
 const CRANE_PAL = [
-    ['#795338','#4b3323','#d5ad78'],
-    ['#876044','#553a27','#e0bb83'],
-    ['#6e4b32','#453020','#cda574'],
-    ['#81583a','#513725','#d8b07a'],
-    ['#735035','#483221','#e3bf89']
+    ['#42bdc7','#236d79','#b4f1e7'],  // лагуна
+    ['#f16f67','#963d48','#ffd0aa'],  // коралл
+    ['#f4c849','#9c711d','#fff0a8'],  // солнечный
+    ['#a17bdf','#58428d','#e1d0ff'],  // сирень
+    ['#69c875','#35734a','#d0f2a4'],  // мята
+    ['#5a9be8','#315b99','#c6e6ff'],  // небо
+    ['#e981b2','#95436d','#ffd2e4'],  // розовый
+    ['#ed9951','#96552d','#ffe1a6']   // апельсин
 ];
 
 function initCraneBuild(){
@@ -2578,7 +2777,7 @@ function initCraneBuild(){
         roofAnnounced: false,
         hookX: Wpx / 2,
         hookY: 88,
-        curPal: 0,
+        curPal: 1,
         blocks: [
             { x: Wpx / 2, y: 390, w: 92, h: 34, pal: 0, isBase: true }
         ],
@@ -2594,8 +2793,12 @@ function initCraneBuild(){
         const [cMain, cBorder, cTrim] = CRANE_PAL[palIdx % CRANE_PAL.length];
         const x = cx - w * 0.5;
 
-        // Тёплый фасад с фактурой коры: слои древесины, прожилки и сучки.
-        ctx.fillStyle = cMain;
+        // Яркие окрашенные этажи: каждый цвет получает свой тёмный кант и светлую кромку.
+        const face = ctx.createLinearGradient(x, topY, x + w, topY + h);
+        face.addColorStop(0, cTrim);
+        face.addColorStop(.22, cMain);
+        face.addColorStop(1, cBorder);
+        ctx.fillStyle = face;
         ctx.strokeStyle = cBorder;
         ctx.lineWidth = 2;
         rrPath(ctx, x, topY, w, h, 4);
@@ -2603,24 +2806,24 @@ function initCraneBuild(){
         ctx.save();
         rrPath(ctx, x + 1, topY + 1, w - 2, h - 2, 3);
         ctx.clip();
-        ctx.fillStyle = 'rgba(255,225,175,.10)';
+        ctx.fillStyle = 'rgba(255,255,255,.17)';
         ctx.fillRect(x + 2, topY + 2, Math.max(0,w - 4), 2);
-        ctx.fillStyle = 'rgba(28,17,10,.16)';
+        ctx.fillStyle = 'rgba(25,31,48,.14)';
         ctx.fillRect(x + w - 8, topY + 3, 5, Math.max(0,h - 6));
 
         // Неровные волокна коры и горизонтальные стыки брёвен.
         for(let ly = topY + 8; ly < topY + h - 3; ly += 8){
-            ctx.strokeStyle = 'rgba(34,20,11,.30)'; ctx.lineWidth = 1;
+            ctx.strokeStyle = 'rgba(25,31,48,.24)'; ctx.lineWidth = 1;
             ctx.beginPath(); ctx.moveTo(x + 2, ly);
             ctx.bezierCurveTo(x + w*.28, ly - 1.5, x + w*.66, ly + 1.8, x + w - 2, ly - .5);
             ctx.stroke();
-            ctx.strokeStyle = 'rgba(236,199,145,.18)';
+            ctx.strokeStyle = 'rgba(255,255,255,.23)';
             ctx.beginPath(); ctx.moveTo(x + 4, ly + 2); ctx.bezierCurveTo(x + w*.4, ly + 1, x + w*.7, ly + 3, x + w - 4, ly + 1.5); ctx.stroke();
         }
         for(let g=0; g<3; g++){
             const gx=x+12+((palIdx*19+g*31)%(Math.max(18,w-24)));
             const gy=topY+7+((palIdx*5+g*11)%(Math.max(8,h-12)));
-            ctx.strokeStyle='rgba(42,25,14,.34)'; ctx.lineWidth=1;
+            ctx.strokeStyle='rgba(24,31,48,.30)'; ctx.lineWidth=1;
             ctx.beginPath(); ctx.ellipse(gx,gy,3.4,1.35,0,0,Math.PI*2); ctx.stroke();
             ctx.beginPath(); ctx.ellipse(gx,gy,1.4,.65,0,0,Math.PI*2); ctx.stroke();
         }
@@ -2633,19 +2836,21 @@ function initCraneBuild(){
         ctx.fillRect(x - 2, topY - 1, w + 4, 1);
 
         if(isBase){
-            // Входная деревянная дверь на 1-м этаже и 2 окошка по бокам (как на картинке)
-            ctx.fillStyle = '#8c4927';
-            ctx.strokeStyle = '#472412';
+            // Контрастная дверь и светлые окна выделяются на первом этаже.
+            ctx.fillStyle = '#634593';
+            ctx.strokeStyle = '#34264f';
             ctx.lineWidth = 1.5;
             ctx.fillRect(cx - 8, topY + 10, 16, h - 10);
             ctx.strokeRect(cx - 8, topY + 10, 16, h - 10);
-            ctx.fillStyle = '#e5b94c';
+            ctx.fillStyle = '#fff0a8';
             ctx.beginPath(); ctx.arc(cx + 4, topY + 22, 1.5, 0, 7); ctx.fill();
 
             for(const wx of [cx - 28, cx + 18]){
-                ctx.fillStyle = '#fce592';
+                ctx.fillStyle = '#bceeff';
                 ctx.fillRect(wx, topY + 11, 10, 12);
                 ctx.strokeRect(wx, topY + 11, 10, 12);
+                ctx.fillStyle = 'rgba(255,255,255,.65)';
+                ctx.fillRect(wx + 2, topY + 13, 3, 4);
             }
         } else {
             // 3 уютных светящихся окошка с рамами и подоконниками
@@ -2653,11 +2858,13 @@ function initCraneBuild(){
             const step = w / (winCount + 1);
             for(let i=1; i<=winCount; i++){
                 const wx = x + step * i - 6, wy = topY + 9;
-                ctx.fillStyle = '#fce592';
-                ctx.strokeStyle = '#5c3818';
+                ctx.fillStyle = '#bceeff';
+                ctx.strokeStyle = cBorder;
                 ctx.lineWidth = 1.5;
                 ctx.fillRect(wx, wy, 12, 14);
                 ctx.strokeRect(wx, wy, 12, 14);
+                ctx.fillStyle = 'rgba(255,255,255,.65)';
+                ctx.fillRect(wx + 2, wy + 2, 3, 4);
                 // Переплёт окна
                 ctx.beginPath();
                 ctx.moveTo(wx + 6, wy); ctx.lineTo(wx + 6, wy + 14);
@@ -2776,7 +2983,7 @@ function initCraneBuild(){
                             vx: (Math.random() - 0.5) * 4,
                             vy: -1 - Math.random() * 2,
                             r: 2 + Math.random() * 2,
-                            col: isPerfect ? '#fce592' : '#d4a36a',
+                            col: isPerfect ? '#fff0a8' : CRANE_PAL[f.pal % CRANE_PAL.length][0],
                             a: 1
                         });
                     }
@@ -2877,7 +3084,7 @@ function initCraneBuild(){
         if(st.score >= 150){
             const top=st.blocks[st.blocks.length-1];
             const roofSway=Math.sin(st.swingT*.7)*st.towerSway*((st.blocks.length-1)/Math.max(1,st.blocks.length));
-            drawRoof(top.x+roofSway, top.y+st.camY, top.w);
+            drawRoof(top.x+roofSway, top.y+st.camY, top.w, top.pal);
         }
 
         // Падающий этаж
@@ -3391,7 +3598,7 @@ function go(t){
     if(t!="fish"){clearTimeout(ft);fs="idle"}
     r_act=false; b_act=false; y_act=false; cb_act=false; bb_act=false; RKEYS={}; dartAct=false; wheelBusy=false; cfBusy=false; catchTime=0; memLock=false;
     cancelAnimationFrame(raf_r); cancelAnimationFrame(raf_b); cancelAnimationFrame(raf_y); cancelAnimationFrame(raf_cb); cancelAnimationFrame(raf_bb); cancelAnimationFrame(dartRaf);
-    clearInterval(catchInt); clearInterval(slotSp); clearInterval(thimIv);
+    clearInterval(catchInt); clearInterval(slotSp); slotSp=null; slotBusy=false; clearInterval(thimIv);
     clearTimeout(wheelTmr); clearTimeout(cfTmr); clearTimeout(thimTmr); clearTimeout(memTmr);
     wake(false);chk();tab=t;save();
     try{if(t=="world")tg.BackButton.hide();else tg.BackButton.show();}catch(e){}
