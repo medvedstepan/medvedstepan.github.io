@@ -247,6 +247,29 @@ canvas{background:#1c1612;border-radius:14px;width:100%;max-width:440px;margin:0
 .dart-score-key i{width:9px;height:9px;border-radius:50%;display:inline-block}
 .dart-msg-card{background:linear-gradient(135deg,#fcf7ed,#f1e1c8);border:1px solid var(--stroke);border-radius:12px;padding:5px 8px}
 
+/* === ЖИВОЙ ТАКТИЛЬНЫЙ UI И ДЕТАЛИ === */
+.sound-toggle-btn{width:28px;height:28px;border-radius:9px;background:var(--ib);border:1px solid var(--stroke);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;font-size:14px;box-shadow:0 1px 3px #0001;transition:transform .12s,background .15s}
+.sound-toggle-btn:active{transform:scale(0.92)}
+.sound-toggle-btn:hover{background:var(--card)}
+
+.home-scene-wrap{position:relative;width:100%;max-width:360px;margin:0 auto;cursor:pointer}
+.pet-hint-badge{position:absolute;right:10px;bottom:10px;background:rgba(30,20,12,0.68);color:#fffaf0;font-size:10px;font-weight:800;padding:3px 9px;border-radius:12px;pointer-events:none;backdrop-filter:blur(6px);box-shadow:0 2px 6px #0004;letter-spacing:.02em;transition:opacity .2s}
+.pet-bounce{animation:petWiggle .42s cubic-bezier(0.34,1.56,0.64,1)!important}
+@keyframes petWiggle{0%{transform:scale(1)}25%{transform:scale(1.08,0.92) rotate(-3deg)}50%{transform:scale(0.94,1.06) rotate(3deg)}75%{transform:scale(1.03,0.98) rotate(-1deg)}100%{transform:scale(1)}}
+
+.pop-heart{position:fixed;pointer-events:none;font-size:26px;z-index:9999;animation:popHeart .85s cubic-bezier(0.2,0.8,0.25,1) forwards;filter:drop-shadow(0 2px 6px rgba(220,50,50,0.45));will-change:transform,opacity}
+@keyframes popHeart{0%{opacity:0;transform:translateY(0) scale(0.5)}25%{opacity:1;transform:translateY(-18px) scale(1.3)}80%{opacity:1;transform:translateY(-48px) scale(1)}100%{opacity:0;transform:translateY(-72px) scale(0.7)}}
+
+.sparkle-particle{position:fixed;width:8px;height:8px;border-radius:50%;pointer-events:none;z-index:9999;box-shadow:0 0 10px currentColor,0 0 4px #fff;animation:sparkleFly .65s cubic-bezier(0.12,0.8,0.32,1) forwards;will-change:transform,opacity}
+@keyframes sparkleFly{0%{transform:translate(-50%,-50%) scale(1.4);opacity:1}100%{transform:translate(calc(-50% + var(--tx)),calc(-50% + var(--ty))) scale(0.2);opacity:0}}
+
+.desktop-kbd-hint{font-size:11px;color:var(--ink);opacity:.68;text-align:center;margin:4px auto 0;font-weight:600}
+@media (max-width:680px){.desktop-kbd-hint{display:none}}
+button.b{transition:transform 0.08s,filter 0.15s,box-shadow 0.08s}
+button.b:active{transform:translateY(2px) scale(0.98)!important}
+.toast{backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+@keyframes popUp{0%{opacity:0;transform:translateY(6px) scale(0.8)}25%{opacity:1;transform:translateY(-8px) scale(1.15)}80%{opacity:1;transform:translateY(-22px) scale(1)}100%{opacity:0;transform:translateY(-38px) scale(0.85)}}
+
 </style></head><body><div id="app"></div>
 <script>
 const tg=(window.Telegram&&window.Telegram.WebApp)||{expand(){},ready(){},BackButton:{show(){},hide(){},onClick(){}},HapticFeedback:{impactOccurred(){}},CloudStorage:{getItem(){},setItem(){}},sendData(){},close(){},showAlert(m){try{alert(m)}catch(e){}},initDataUnsafe:{}};
@@ -397,10 +420,395 @@ const CPU = (() => {
     return { run };
 })();
 
-let actx;
-const snd=(t,f,d)=>{try{if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)();if(actx.state==='suspended')actx.resume();const o=actx.createOscillator(),g=actx.createGain();o.type=t;o.frequency.setValueAtTime(f,actx.currentTime);if(t=='sine')o.frequency.exponentialRampToValueAtTime(f*1.5,actx.currentTime+d);g.gain.setValueAtTime(0.07,actx.currentTime);g.gain.exponentialRampToValueAtTime(0.01,actx.currentTime+d);o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+d)}catch(e){}};
-const hap=(style='light')=>{try{tg.HapticFeedback.impactOccurred(style)}catch(e){}};
-const beep=()=>snd('sine',760,0.1), boop=()=>snd('square',260,0.12), chng=()=>snd('triangle',1150,0.2), lvlup=()=>{snd('sine',400,0.1);setTimeout(()=>snd('sine',600,0.2),100);};
+let actx = null, masterGain = null;
+let soundMuted = false;
+try { soundMuted = localStorage.getItem("stepan_muted") === "1"; } catch(e){}
+
+function initAudio(){
+    if(!actx){
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if(AudioCtx){
+            actx = new AudioCtx();
+            masterGain = actx.createGain();
+            masterGain.gain.setValueAtTime(soundMuted ? 0 : 0.22, actx.currentTime);
+            masterGain.connect(actx.destination);
+        }
+    }
+    if(actx && actx.state === 'suspended') {
+        actx.resume().catch(()=>{});
+    }
+}
+window.addEventListener('pointerdown', () => initAudio(), {once:true});
+window.addEventListener('keydown', () => initAudio(), {once:true});
+
+function toggleSound(){
+    soundMuted = !soundMuted;
+    try { localStorage.setItem("stepan_muted", soundMuted ? "1" : "0"); } catch(e){}
+    initAudio();
+    if(masterGain && actx){
+        masterGain.gain.setValueAtTime(soundMuted ? 0 : 0.22, actx.currentTime);
+    }
+    hap('selection');
+    const sEl = $("#snd-ic");
+    if(sEl) sEl.textContent = soundMuted ? "🔇" : "🔊";
+    toast(soundMuted ? "Звук выключен 🔇" : "Звук включен 🔊");
+}
+
+const sfx = {
+    tap(pitch=1){
+        if(soundMuted) return; initAudio(); if(!actx || !masterGain) return;
+        try{
+            const now = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+            o.type = 'triangle';
+            o.frequency.setValueAtTime(140 * pitch, now);
+            o.frequency.exponentialRampToValueAtTime(50 * pitch, now + 0.04);
+            g.gain.setValueAtTime(0.18, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+            o.connect(g); g.connect(masterGain);
+            o.start(now); o.stop(now + 0.045);
+        }catch(_){}
+    },
+    coin(){
+        if(soundMuted) return; initAudio(); if(!actx || !masterGain) return;
+        try{
+            const now = actx.currentTime;
+            [987.77, 1318.51].forEach((f, idx) => {
+                const o = actx.createOscillator(), g = actx.createGain();
+                o.type = 'sine';
+                const st = now + idx * 0.04;
+                o.frequency.setValueAtTime(f, st);
+                o.frequency.exponentialRampToValueAtTime(f * 1.05, st + 0.18);
+                g.gain.setValueAtTime(0, now);
+                g.gain.setValueAtTime(0.14, st);
+                g.gain.exponentialRampToValueAtTime(0.001, st + 0.22);
+                o.connect(g); g.connect(masterGain);
+                o.start(st); o.stop(st + 0.23);
+            });
+        }catch(_){}
+    },
+    win(){
+        if(soundMuted) return; initAudio(); if(!actx || !masterGain) return;
+        try{
+            const now = actx.currentTime;
+            [523.25, 659.25, 783.99].forEach((f, idx) => {
+                const o = actx.createOscillator(), g = actx.createGain();
+                o.type = 'triangle';
+                const st = now + idx * 0.07;
+                o.frequency.setValueAtTime(f, st);
+                g.gain.setValueAtTime(0, now);
+                g.gain.setValueAtTime(0.15, st);
+                g.gain.exponentialRampToValueAtTime(0.001, st + 0.35);
+                o.connect(g); g.connect(masterGain);
+                o.start(st); o.stop(st + 0.36);
+            });
+        }catch(_){}
+    },
+    jackpot(){
+        if(soundMuted) return; initAudio(); if(!actx || !masterGain) return;
+        try{
+            const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+            notes.forEach((f, i) => {
+                setTimeout(() => {
+                    if(soundMuted || !actx || !masterGain) return;
+                    const now = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+                    o.type = 'sine';
+                    o.frequency.setValueAtTime(f, now);
+                    g.gain.setValueAtTime(0.16, now);
+                    g.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                    o.connect(g); g.connect(masterGain);
+                    o.start(now); o.stop(now + 0.26);
+                }, i * 75);
+            });
+        }catch(_){}
+    },
+    boop(){
+        if(soundMuted) return; initAudio(); if(!actx || !masterGain) return;
+        try{
+            const now = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+            o.type = 'sine';
+            o.frequency.setValueAtTime(140, now);
+            o.frequency.exponentialRampToValueAtTime(70, now + 0.12);
+            g.gain.setValueAtTime(0.16, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+            o.connect(g); g.connect(masterGain);
+            o.start(now); o.stop(now + 0.14);
+        }catch(_){}
+    },
+    merge(pitch=1){
+        if(soundMuted) return; initAudio(); if(!actx || !masterGain) return;
+        try{
+            const now = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+            o.type = 'sine';
+            o.frequency.setValueAtTime(260 * pitch, now);
+            o.frequency.exponentialRampToValueAtTime(540 * pitch, now + 0.08);
+            o.frequency.exponentialRampToValueAtTime(380 * pitch, now + 0.18);
+            g.gain.setValueAtTime(0.2, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+            o.connect(g); g.connect(masterGain);
+            o.start(now); o.stop(now + 0.21);
+        }catch(_){}
+    },
+    splash(){
+        if(soundMuted) return; initAudio(); if(!actx || !masterGain) return;
+        try{
+            const now = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+            o.type = 'triangle';
+            o.frequency.setValueAtTime(320, now);
+            o.frequency.exponentialRampToValueAtTime(120, now + 0.16);
+            g.gain.setValueAtTime(0.18, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+            o.connect(g); g.connect(masterGain);
+            o.start(now); o.stop(now + 0.19);
+        }catch(_){}
+    },
+    reel(){
+        if(soundMuted) return; initAudio(); if(!actx || !masterGain) return;
+        try{
+            const now = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+            o.type = 'triangle';
+            o.frequency.setValueAtTime(220 + Math.random()*80, now);
+            g.gain.setValueAtTime(0.08, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+            o.connect(g); g.connect(masterGain);
+            o.start(now); o.stop(now + 0.04);
+        }catch(_){}
+    },
+        card(pitch=1){
+        if(soundMuted) return; initAudio(); if(!actx || !masterGain) return;
+        try{
+            const now = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+            o.type = 'triangle';
+            o.frequency.setValueAtTime(320 * pitch, now);
+            o.frequency.exponentialRampToValueAtTime(150 * pitch, now + 0.045);
+            g.gain.setValueAtTime(0.13, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.045);
+            o.connect(g); g.connect(masterGain);
+            o.start(now); o.stop(now + 0.05);
+        }catch(_){}
+    },
+    whoosh(){
+        if(soundMuted) return; initAudio(); if(!actx || !masterGain) return;
+        try{
+            const now = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+            o.type = 'sine';
+            o.frequency.setValueAtTime(130, now);
+            o.frequency.exponentialRampToValueAtTime(360, now + 0.08);
+            o.frequency.exponentialRampToValueAtTime(110, now + 0.16);
+            g.gain.setValueAtTime(0.01, now);
+            g.gain.linearRampToValueAtTime(0.12, now + 0.08);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.17);
+            o.connect(g); g.connect(masterGain);
+            o.start(now); o.stop(now + 0.18);
+        }catch(_){}
+    },
+    dartHit(isBullseye=false){
+        if(soundMuted) return; initAudio(); if(!actx || !masterGain) return;
+        try{
+            const now = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+            o.type = 'triangle';
+            o.frequency.setValueAtTime(190, now);
+            o.frequency.exponentialRampToValueAtTime(65, now + 0.06);
+            g.gain.setValueAtTime(0.24, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+            o.connect(g); g.connect(masterGain);
+            o.start(now); o.stop(now + 0.065);
+            if(isBullseye){
+                setTimeout(() => {
+                    if(soundMuted || !actx || !masterGain) return;
+                    const o2 = actx.createOscillator(), g2 = actx.createGain(), t2 = actx.currentTime;
+                    o2.type = 'sine';
+                    o2.frequency.setValueAtTime(1568, t2);
+                    g2.gain.setValueAtTime(0.18, t2);
+                    g2.gain.exponentialRampToValueAtTime(0.001, t2 + 0.4);
+                    o2.connect(g2); g2.connect(masterGain);
+                    o2.start(t2); o2.stop(t2 + 0.42);
+                }, 40);
+            }
+        }catch(_){}
+    },
+    bonk(isKing=false){
+        if(soundMuted) return; initAudio(); if(!actx || !masterGain) return;
+        try{
+            const now = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+            o.type = 'sine';
+            o.frequency.setValueAtTime(isKing ? 380 : 290, now);
+            o.frequency.exponentialRampToValueAtTime(isKing ? 150 : 95, now + 0.08);
+            g.gain.setValueAtTime(0.22, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.085);
+            o.connect(g); g.connect(masterGain);
+            o.start(now); o.stop(now + 0.09);
+            if(isKing) sfx.coin();
+        }catch(_){}
+    },
+    pick(){
+        if(soundMuted) return; initAudio(); if(!actx || !masterGain) return;
+        try{
+            const now = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+            o.type = 'sine';
+            o.frequency.setValueAtTime(620, now);
+            o.frequency.exponentialRampToValueAtTime(420, now + 0.04);
+            g.gain.setValueAtTime(0.12, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+            o.connect(g); g.connect(masterGain);
+            o.start(now); o.stop(now + 0.045);
+        }catch(_){}
+    },
+    explosion(){
+        if(soundMuted) return; initAudio(); if(!actx || !masterGain) return;
+        try{
+            const now = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+            o.type = 'sine';
+            o.frequency.setValueAtTime(95, now);
+            o.frequency.exponentialRampToValueAtTime(32, now + 0.28);
+            g.gain.setValueAtTime(0.28, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.29);
+            o.connect(g); g.connect(masterGain);
+            o.start(now); o.stop(now + 0.3);
+        }catch(_){}
+    },
+    cupSlide(){
+        if(soundMuted) return; initAudio(); if(!actx || !masterGain) return;
+        try{
+            const now = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+            o.type = 'triangle';
+            o.frequency.setValueAtTime(170 + Math.random()*50, now);
+            o.frequency.exponentialRampToValueAtTime(85, now + 0.05);
+            g.gain.setValueAtTime(0.08, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+            o.connect(g); g.connect(masterGain);
+            o.start(now); o.stop(now + 0.055);
+        }catch(_){}
+    },
+    match(combo=1){
+        if(soundMuted) return; initAudio(); if(!actx || !masterGain) return;
+        try{
+            const mult = Math.pow(1.12, Math.min(6, combo));
+            sfx.merge(mult);
+        }catch(_){}
+    },
+    coinToss(){
+        if(soundMuted) return; initAudio(); if(!actx || !masterGain) return;
+        try{
+            sfx.whoosh();
+            [1200, 1500, 1800].forEach((f, i) => {
+                setTimeout(() => {
+                    if(soundMuted || !actx || !masterGain) return;
+                    const now = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+                    o.type = 'sine';
+                    o.frequency.setValueAtTime(f, now);
+                    g.gain.setValueAtTime(0.05, now);
+                    g.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+                    o.connect(g); g.connect(masterGain);
+                    o.start(now); o.stop(now + 0.045);
+                }, i * 65);
+            });
+        }catch(_){}
+    },
+    pet(){
+        if(soundMuted) return; initAudio(); if(!actx || !masterGain) return;
+        try{
+            const now = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+            o.type = 'sine';
+            o.frequency.setValueAtTime(330, now);
+            o.frequency.exponentialRampToValueAtTime(440, now + 0.07);
+            o.frequency.exponentialRampToValueAtTime(520, now + 0.15);
+            g.gain.setValueAtTime(0.14, now);
+            g.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+            o.connect(g); g.connect(masterGain);
+            o.start(now); o.stop(now + 0.23);
+        }catch(_){}
+    },
+    eat(){
+        if(soundMuted) return; initAudio(); if(!actx || !masterGain) return;
+        try{
+            const now = actx.currentTime;
+            [260, 340].forEach((f, i) => {
+                const o = actx.createOscillator(), g = actx.createGain();
+                o.type = 'triangle';
+                const st = now + i * 0.08;
+                o.frequency.setValueAtTime(f, st);
+                o.frequency.exponentialRampToValueAtTime(f * 0.7, st + 0.07);
+                g.gain.setValueAtTime(0.15, st);
+                g.gain.exponentialRampToValueAtTime(0.001, st + 0.07);
+                o.connect(g); g.connect(masterGain);
+                o.start(st); o.stop(st + 0.075);
+            });
+        }catch(_){}
+    },
+    lvlup(){
+        if(soundMuted) return; initAudio(); if(!actx || !masterGain) return;
+        try{
+            const notes = [440, 554.37, 659.25, 880];
+            notes.forEach((f, i) => {
+                setTimeout(() => {
+                    if(soundMuted || !actx || !masterGain) return;
+                    const now = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+                    o.type = 'triangle';
+                    o.frequency.setValueAtTime(f, now);
+                    g.gain.setValueAtTime(0.18, now);
+                    g.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                    o.connect(g); g.connect(masterGain);
+                    o.start(now); o.stop(now + 0.32);
+                }, i * 85);
+            });
+        }catch(_){}
+    }
+};
+
+const beep = () => sfx.tap(), boop = () => sfx.boop(), chng = () => sfx.coin(), lvlup = () => sfx.lvlup();
+const snd = (t, f, d) => {
+    if(soundMuted) return;
+    if(t === 'square') sfx.boop();
+    else if(f > 900) sfx.coin();
+    else sfx.tap();
+};
+
+const hap = (style = 'light') => {
+    try {
+        if(tg && tg.HapticFeedback && tg.HapticFeedback.impactOccurred){
+            if(['light','medium','heavy','rigid','soft'].includes(style)){
+                tg.HapticFeedback.impactOccurred(style);
+            } else if(['error','success','warning'].includes(style)){
+                tg.HapticFeedback.notificationOccurred(style);
+            } else if(style === 'selection'){
+                tg.HapticFeedback.selectionChanged();
+            } else {
+                tg.HapticFeedback.impactOccurred('light');
+            }
+        } else if(navigator.vibrate){
+            if(style==='heavy'||style==='error') navigator.vibrate(35);
+            else if(style==='medium'||style==='warning') navigator.vibrate(22);
+            else navigator.vibrate(12);
+        }
+    } catch(e){}
+};
+
+function sparkleBurst(x, y, count=16, color="#f6c343"){
+    try{
+        for(let i=0; i<count; i++){
+            const p = document.createElement("div");
+            p.className = "sparkle-particle";
+            const angle = (i / count) * 2 * Math.PI + (Math.random() - 0.5) * 0.4;
+            const dist = 32 + Math.random() * 56;
+            const tx = Math.cos(angle) * dist, ty = Math.sin(angle) * dist;
+            p.style.setProperty("--tx", `${tx}px`);
+            p.style.setProperty("--ty", `${ty}px`);
+            p.style.left = `${x || (window.innerWidth / 2)}px`;
+            p.style.top = `${y || (window.innerHeight * 0.4)}px`;
+            p.style.background = color;
+            p.style.color = color;
+            document.body.appendChild(p);
+            setTimeout(() => p.remove(), 700);
+        }
+    }catch(e){}
+}
+
+const STAT_FALLBACK = {
+    xp: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><polygon points='12,2 15,9 22,9.8 17,14.7 18.5,22 12,18 5.5,22 7,14.7 2,9.8 9,9' fill='%23a97ab8' stroke='%23633870' stroke-width='1.5'/></svg>",
+    hu: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect x='5' y='7' width='14' height='13' rx='4' fill='%23e59a35' stroke='%237a4e13' stroke-width='1.5'/><path d='M7 11q5 3 10 0' fill='none' stroke='%23fff' stroke-width='2' opacity='.6'/><rect x='7' y='4' width='10' height='3' rx='1.5' fill='%23a86820'/></svg>",
+    mo: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='9.5' fill='%23ffb940' stroke='%239e6211' stroke-width='1.5'/><ellipse cx='8.5' cy='9.5' rx='1.2' ry='2.2' fill='%23543108'/><ellipse cx='15.5' cy='9.5' rx='1.2' ry='2.2' fill='%23543108'/><path d='M7.5 14.5q4.5 4 9 0' fill='none' stroke='%23543108' stroke-width='1.8' stroke-linecap='round'/></svg>",
+    en: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><polygon points='13,2 4,14 11,14 9,22 20,10 13,10' fill='%23ff9e24' stroke='%238a4908' stroke-width='1.5' stroke-linejoin='round'/></svg>"
+};
 
 const $=s=>document.querySelector(s),R=n=>Math.random()*n|0;
 
@@ -534,6 +942,7 @@ async function startGame(){
         }
         gameReady=true;
         go("world");
+        setTimeout(()=>{ try{getBerrySprites();}catch(_){} }, 600);
     }catch(e){showStartupError();}
 }
 
@@ -563,6 +972,8 @@ function addXp(amt){
     if(S.xp>=req){
         S.lvl++; S.xp-=req; S.hunger=100; S.mood=100; S.energy=100; S.sick=false;
         S.crys+=2; lvlup(); hap('heavy');
+        sparkleBurst(window.innerWidth / 2, window.innerHeight * 0.35, 24, '#f6c343');
+        popText("НОВЫЙ УРОВЕНЬ! ✨", "#f6c343");
         toast(`Уровень ${S.lvl}: ${getTitle()}!\nСилы восстановлены + 2 кристалла!`);
     }
 }
@@ -686,8 +1097,8 @@ function int_scene(inner, h=290) {
 function hud(){
     const el=$("#hud");if(!el)return;
     if(!$("#hud-c")){
-        const b=(id,n,ic,c="")=>`<div class="bar ${c}"><div class="ic-box"><img src="${ic}" class="stat-ic" alt=""></div><div class="bar-info"><div class="bar-head"><span>${n}</span><span id="ht-${id}">0%</span></div><i><b id="hb-${id}" style="width:0%"></b></i></div></div>`;
-        el.innerHTML=`<div class="top"><span id="hud-t"></span><span><span class="badge">${ICO.coin} <span id="hud-c">0</span></span> <span class="badge">${ICO.crys} <span id="hud-d">0</span></span> <span class="badge">${ICO.fish} <span id="hud-f">0</span></span></span></div><div class="bars">${
+        const b=(id,n,ic,c="")=>`<div class="bar ${c}"><div class="ic-box"><img src="${ic}" class="stat-ic" alt="${n}" onerror="if(this.src!==STAT_FALLBACK['${id}']){this.src=STAT_FALLBACK['${id}']}"></div><div class="bar-info"><div class="bar-head"><span>${n}</span><span id="ht-${id}">0%</span></div><i><b id="hb-${id}" style="width:0%"></b></i></div></div>`;
+        el.innerHTML=`<div class="top"><div style="display:inline-flex;align-items:center;gap:6px"><button class="sound-toggle-btn" onclick="toggleSound()" title="Вкл/Выкл звук" aria-label="Звук"><span id="snd-ic">${soundMuted?"🔇":"🔊"}</span></button><span id="hud-t"></span></div><span><span class="badge">${ICO.coin} <span id="hud-c">0</span></span> <span class="badge">${ICO.crys} <span id="hud-d">0</span></span> <span class="badge">${ICO.fish} <span id="hud-f">0</span></span></span></div><div class="bars">${
             b("xp","Опыт","Frame 34.svg","xp-bar")+
             b("hu","Сытость","Frame 33.svg","ok-bar")+
             b("mo","Радость","Frame 36.svg")+
@@ -696,10 +1107,12 @@ function hud(){
     }
     const tEl=$("#hud-t");
     const tHtml=`${ICO.toy} Ур.${S.lvl} <small style="font-weight:600;opacity:.75">${getTitle()}</small> ${S.sick?ICO.pill:''}`;
-    if(tEl._last!==tHtml){tEl.innerHTML=tHtml;tEl._last=tHtml;}
-    $("#hud-c").textContent=S.coins;
-    $("#hud-d").textContent=S.crys;
-    $("#hud-f").textContent=S.fish;
+    if(tEl && tEl._last!==tHtml){tEl.innerHTML=tHtml;tEl._last=tHtml;}
+    const sEl=$("#snd-ic"); if(sEl) sEl.textContent = soundMuted ? "🔇" : "🔊";
+    const hc=$("#hud-c"), hd=$("#hud-d"), hf=$("#hud-f");
+    if(hc) hc.textContent=S.coins;
+    if(hd) hd.textContent=S.crys;
+    if(hf) hf.textContent=S.fish;
     const setB=(id,v)=>{
         const p=Math.max(0,Math.min(100,Math.round(v)))+"%";
         const bt=$("#ht-"+id), bb=$("#hb-"+id);
@@ -743,13 +1156,13 @@ function leaveVenueMenu(){
     go("world");
 }
 
-const THIMBLE_ART=`<svg viewBox="0 0 64 72" aria-hidden="true"><ellipse cx="32" cy="65" rx="24" ry="5" fill="#21150d" opacity=".35"/><path d="M12 28Q12 10 32 8Q52 10 52 28L47 55Q32 64 17 55Z" fill="#cf8c2f" stroke="#684211" stroke-width="3"/><ellipse cx="32" cy="28" rx="20" ry="7" fill="#f4c75e" stroke="#684211" stroke-width="3"/><path d="M17 38q15 8 30 0M19 48q13 7 26 0" fill="none" stroke="#f7dd91" stroke-width="3" opacity=".9"/><path d="M25 12q7-6 14 0" fill="none" stroke="#fff0bb" stroke-width="3" stroke-linecap="round"/></svg>`;
+const THIMBLE_ART=`<svg viewBox="0 0 648 1033" aria-hidden="true"><path d="M646.303 925.78C673.303 1062.78 -16.5388 1072.28 0.303502 925.78C17.1458 779.28 109.704 372.985 179.804 18.7799C179.804 -4.22025 467.803 -8.21993 467.803 18.7799C537.512 372.985 619.304 788.78 646.303 925.78Z" fill="#3C627D"/><path d="M467.803 20C537.512 374.206 31 751.5 31 751.5C31 751.5 109.705 374.206 179.804 20C179.804 43.0001 467.803 46.9998 467.803 20Z" fill="#6CA0C5"/><path d="M180 19.7799C180 42.78 468 46.7797 468 19.7799C468 -7.21993 180 -3.22025 180 19.7799Z" fill="#B2D3EB"/></svg>`;
 function thimbleScene(){
-  return `<div class="thimble-room" aria-label="Стол с тремя золотыми цилиндрами">
-    <svg viewBox="0 0 360 210" aria-hidden="true"><defs><linearGradient id="thWall" x2="0" y2="1"><stop stop-color="#73533d"/><stop offset="1" stop-color="#3e3028"/></linearGradient></defs><rect width="360" height="210" fill="url(#thWall)"/><path d="M0 146h360v64H0z" fill="#755339"/><path d="M0 158h360M0 183h360" stroke="#9a714a" stroke-width="3"/><path d="M25 0v126m93-126v126m93-126v126" stroke="#8d694b" stroke-width="5" opacity=".55"/><rect x="26" y="30" width="76" height="58" rx="4" fill="#91b6bf" stroke="#392b22" stroke-width="7"/><path d="M64 34v50M30 59h68" stroke="#e4d1ae" stroke-width="4"/><circle cx="314" cy="37" r="15" fill="#e5b94c" opacity=".9"/><path d="M138 109h207v17H138z" fill="#b07a43" stroke="#51351f" stroke-width="4"/><path d="M150 126v47m183-47v47M142 173h198" stroke="#57381f" stroke-width="7"/><path d="M151 114h180" stroke="#e0b773" stroke-width="3"/>${bear(82,183,.53,false,{})}<g transform="translate(15 10)"><rect width="130" height="22" rx="11" fill="#2d211acc"/><text x="65" y="15" fill="#fff0c9" text-anchor="middle" font-size="9" font-weight="900">ЗОЛОТОЙ СТОЛ</text></g></svg>
-    <button type="button" class="thim-cup" style="--cup-x:54%" aria-label="Выбрать первый цилиндр" onclick="pickThimble(0)">${THIMBLE_ART}</button>
-    <button type="button" class="thim-cup" style="--cup-x:70%" aria-label="Выбрать второй цилиндр" onclick="pickThimble(1)">${THIMBLE_ART}</button>
-    <button type="button" class="thim-cup" style="--cup-x:86%" aria-label="Выбрать третий цилиндр" onclick="pickThimble(2)">${THIMBLE_ART}</button>
+  return `<div class="thimble-room" aria-label="Стол с тремя стаканами — угадай где алмаз">
+    <svg viewBox="0 0 360 210" aria-hidden="true"><defs><linearGradient id="thWall" x2="0" y2="1"><stop stop-color="#73533d"/><stop offset="1" stop-color="#3e3028"/></linearGradient></defs><rect width="360" height="210" fill="url(#thWall)"/><path d="M0 146h360v64H0z" fill="#755339"/><path d="M0 158h360M0 183h360" stroke="#9a714a" stroke-width="3"/><path d="M25 0v126m93-126v126m93-126v126" stroke="#8d694b" stroke-width="5" opacity=".55"/><rect x="26" y="30" width="76" height="58" rx="4" fill="#91b6bf" stroke="#392b22" stroke-width="7"/><path d="M64 34v50M30 59h68" stroke="#e4d1ae" stroke-width="4"/><circle cx="314" cy="37" r="15" fill="#e5b94c" opacity=".9"/><path d="M138 109h207v17H138z" fill="#b07a43" stroke="#51351f" stroke-width="4"/><path d="M150 126v47m183-47v47M142 173h198" stroke="#57381f" stroke-width="7"/><path d="M151 114h180" stroke="#e0b773" stroke-width="3"/>${bear(82,183,.53,false,{})}<g transform="translate(15 10)"><rect width="130" height="22" rx="11" fill="#2d211acc"/><text x="65" y="15" fill="#fff0c9" text-anchor="middle" font-size="9" font-weight="900">СТАКАНЫ</text></g></svg>
+    <button type="button" class="thim-cup" style="--cup-x:54%" aria-label="Выбрать первый стакан" onclick="pickThimble(0)">${THIMBLE_ART}</button>
+    <button type="button" class="thim-cup" style="--cup-x:70%" aria-label="Выбрать второй стакан" onclick="pickThimble(1)">${THIMBLE_ART}</button>
+    <button type="button" class="thim-cup" style="--cup-x:86%" aria-label="Выбрать третий стакан" onclick="pickThimble(2)">${THIMBLE_ART}</button>
   </div>`;
 }
 function cardTableScene(mode="bj"){
@@ -818,7 +1231,7 @@ if(!sl){
     }
 }
 const rem = Math.max(1, Math.ceil((S.sleepUntil - Date.now())/1000));
-return `${int_scene(bearsSvg,290)}
+return `<div class="home-scene-wrap" onclick="petBear(event)" title="Погладить Степана">${int_scene(bearsSvg,290)}${!sl?`<div class="pet-hint-badge">🐾 Погладь Степана</div>`:""}</div>
 <div class="msg" id="sleep-msg">${sl ? `${ICO.sleep} ${S.twin ? "Медведи спят" : "Степан спит"}… Осталось ${rem} сек` : (msg || HOUSES[w])}</div>
 ${sl ? `<div class="card"><button class="b exit-btn" style="background:linear-gradient(180deg,#5e9450,#46733b)" onclick="wake(true)">Разбудить сейчас</button></div>` :
 `<div class="dual-grid"><div class="card" style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:0">
@@ -935,8 +1348,8 @@ ${dartScene()}
 <button class="b dart-launch" id="dart-btn" style="width:100%;background:linear-gradient(180deg,#cc6847,#954330);font-size:16px;padding:12px" onclick="throwDart()">Начать бросок (5 ${ICO.coin})</button>
 </div><button class="b exit-btn" onclick="go('world')">${ICO.tree} В лес</button>`},
 
-thimbles(){return `<div class="card" style="text-align:center;"><b>Золотые Цилиндры</b>
-<div class="msg" id="thim-msg">Угадай, под каким цилиндром спрятан кристалл (3 → 10)</div>
+thimbles(){return `<div class="card" style="text-align:center;"><b>Стаканы</b>
+<div class="msg" id="thim-msg">Угадай, под каким стаканом спрятан алмаз (3 → 10)</div>
 ${thimbleScene()}
 </div><button class="b exit-btn" onclick="go('world')">В зал</button>`},
 
@@ -1078,6 +1491,54 @@ function claimAch(i){
     lvlup(); hap('heavy'); toast(`Достижение «${ACH[i].t}»!\n+${ACH[i].crys} кристаллов и +${ACH[i].coins} монет!`); go("quest");
 }
 
+const BEAR_PET_QUOTES = [
+    "Мррр, щекотно! Степан довольно урчит 🐻",
+    "Кто лучший мишка на Зюраткуле? Степан!",
+    "Тёплые таёжные обнимашки — лучше мёда!",
+    "Почесал за ушком — и на душе сразу весна ✨",
+    "Урр-мяу... ой, то есть просто УРРР!",
+    "Степан прижал ушки от удовольствия 🐾",
+    "Эх, хорошо! Ради этого стоило проснуться!"
+];
+let lastPetTime = 0;
+function petBear(e){
+    const now = Date.now();
+    if(now - lastPetTime < 320) return;
+    lastPetTime = now;
+    if(S.sleepUntil && Date.now() < S.sleepUntil){
+        toast("Степан спит... Тссс 💤");
+        boop(); return;
+    }
+    sfx.pet(); hap('light');
+    S.mood = clamp(S.mood + 3);
+    addXp(1);
+    hud();
+    const x = e ? e.clientX : (window.innerWidth / 2);
+    const y = e ? e.clientY : (window.innerHeight * 0.4);
+    popHeart(x, y);
+    const bearEl = document.querySelector(".bear");
+    if(bearEl){
+        bearEl.classList.remove("pet-bounce");
+        void bearEl.offsetWidth;
+        bearEl.classList.add("pet-bounce");
+    }
+    const q = BEAR_PET_QUOTES[R(BEAR_PET_QUOTES.length)];
+    const msgEl = $("#sleep-msg");
+    if(msgEl) msgEl.innerHTML = `<span style="color:#d47a3e">${ICO.toy}</span> ${q}`;
+    save();
+}
+function popHeart(x, y){
+    try{
+        const el = document.createElement("div");
+        el.className = "pop-heart";
+        el.innerHTML = "❤️";
+        el.style.left = `${(x || window.innerWidth/2) - 13}px`;
+        el.style.top = `${(y || window.innerHeight*0.35) - 20}px`;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 850);
+    }catch(_){}
+}
+
 function say(m){msg=m;go(tab)}
 function feed(e,c,h,m){
     if(e==='pill'&&!S.sick){boop();return say("Степан полностью здоров!");}
@@ -1160,6 +1621,15 @@ function spinWheel(){
     if(m)m.innerHTML=`Колесо крутится…`;
     wheelDeg += 1080 + R(360);
     if(w) w.style.transform = `rotate(${wheelDeg}deg)`;
+    let wTicks = 0;
+    const playWheelTicks = () => {
+        if(wheelBusy && wTicks < 18){
+            sfx.reel(); wTicks++;
+            const dly = 45 + Math.pow(wTicks / 18, 2.2) * 220;
+            setTimeout(playWheelTicks, dly);
+        }
+    };
+    playWheelTicks();
     wheelTmr = setTimeout(()=>{
         wheelBusy = false;
         if(btn)btn.disabled=false;
@@ -1173,7 +1643,8 @@ function spinWheel(){
             else{ const c=200; earn(c); prize=`СУПЕРПРИЗ: +${c} монет!`; }
         }
         if(m)m.innerHTML=`<b>${prize}</b>`;
-        chng(); hap('success'); hud();
+        if(r>=0.72){sfx.jackpot();sparkleBurst();}else{sfx.win();}
+        hap('success'); hud();
     }, 2450);
 }
 function buyCrys(){
@@ -1202,39 +1673,40 @@ function throwDart(){
         dartAct = true; dartPos = -100 + R(200); dartDir = R(2)?1:-1;
         if(btn) btn.innerHTML = "БРОСИТЬ!";
         if(msgEl) msgEl.textContent = "Лови момент в центре!";
-        loopDarts();
+        sfx.whoosh(); loopDarts();
         return;
     }
     dartAct = false; cancelAnimationFrame(dartRaf); hap('heavy');
     const dist = Math.abs(dartPos); let win = 0, txt = "";
-    if(dist <= 7) { win = 50; txt = "В ЯБЛОЧКО! +50 монет!"; chng(); }
-    else if(dist <= 19) { win = 15; txt = "Отличный бросок! +15 монет"; beep(); }
-    else if(dist <= 40) { win = 5; txt = "Зелёная зона: +5 монет"; beep(); }
-    else { txt = "Промах… Попробуй ещё!"; boop(); }
+    if(dist <= 7) { win = 50; txt = "В ЯБЛОЧКО! +50 монет!"; sfx.dartHit(true); sparkleBurst(); }
+    else if(dist <= 19) { win = 15; txt = "Отличный бросок! +15 монет"; sfx.dartHit(false); sfx.win(); }
+    else if(dist <= 40) { win = 5; txt = "Зелёная зона: +5 монет"; sfx.dartHit(false); }
+    else { txt = "Промах… Попробуй ещё!"; sfx.boop(); }
     if(win>0) earn(win); addXp(4); hud();
     if(btn) btn.innerHTML = `Ещё бросок (5 ${ICO.coin})`;
     if(msgEl) msgEl.textContent = txt;
 }
 
-// ===== ЦИЛИНДРЫ =====
+// ===== СТАКАНЫ =====
 let thimState = 0, thimIv = null, thimTmr = null; 
 function initThimbles(){ if(!checkState())return; thimState = 0; go('thimbles'); }
 function pickThimble(i){
     if(thimState !== 0) return;
     if(S.crys < 3) {boop(); hap('error'); return toast("Нужно 3 кристалла!");}
     S.crys -= 3; S.gamesPlayed++; save(); hud(); thimState = 1;
-    const msgEl = $("#thim-msg"); if(msgEl) msgEl.textContent = "Перемешиваем…";
+    const msgEl = $("#thim-msg"); if(msgEl) msgEl.textContent = "Перемешиваем стаканы…";
     let ticks = 0;
     thimIv = setInterval(()=>{
         const cups = document.querySelectorAll(".thim-cup");
         cups.forEach((c,idx) => { c.style.setProperty('--shake-x', `${Math.sin(ticks+idx)*18}px`); c.style.setProperty('--shake-y', `${idx%2?-10:10}px`); });
+        if(ticks % 3 === 0) sfx.cupSlide();
         if(++ticks > 14) {
             clearInterval(thimIv);
             cups.forEach(c => { c.style.setProperty('--shake-x', '0px'); c.style.setProperty('--shake-y', '0px'); });
             const winCup = R(3);
             if(i === winCup) {
-                const rw = 10; S.crys += rw; popText("+10","#a882ba"); save(); hud(); chng(); hap('success');
-                if(msgEl) msgEl.innerHTML = `Угадал! Кристалл под №${i+1}! <b>+${rw}</b> ${ICO.crys}`;
+                const rw = 10; S.crys += rw; popText("+10 кристаллов","#a882ba"); save(); hud(); sfx.win(); sparkleBurst(); hap('success');
+                if(msgEl) msgEl.innerHTML = `Угадал! Алмаз под №${i+1}! <b>+${rw}</b> ${ICO.crys}`;
             } else {
                 boop(); hap('error');
                 if(msgEl) msgEl.innerHTML = `Пусто! Он был под №${winCup+1}.`;
@@ -1243,7 +1715,7 @@ function pickThimble(i){
             thimTmr = setTimeout(()=>{
                 thimState = 0;
                 document.querySelectorAll(".thim-cup").forEach(c => c.innerHTML = THIMBLE_ART);
-                if($("#thim-msg")) $("#thim-msg").textContent = "Выбери цилиндр (3 → 10)";
+                if($("#thim-msg")) $("#thim-msg").textContent = "Выбери стакан (3 → 10)";
             }, 1800);
         }
     }, 55);
@@ -1267,18 +1739,19 @@ function spinSlots() {
     const result=[R(5),R(5),R(5)], stopAt=[11,16,21];
     const reels=[0,1,2].map(i=>$("#sl-reel-"+i));
     reels.forEach(el=>{if(el)el.classList.add("spinning")});
-    let frame=0;
+    sfx.reel(); let frame=0;
     slotSp=setInterval(()=>{
+        if(frame%3===0) sfx.reel();
         for(let i=0;i<3;i++){
             if(frame<stopAt[i]) setSlotReel(reels[i],R(5));
-            else if(frame===stopAt[i]){setSlotReel(reels[i],result[i]);if(reels[i])reels[i].classList.remove("spinning")}
+            else if(frame===stopAt[i]){setSlotReel(reels[i],result[i]);sfx.tap(1.3);if(reels[i])reels[i].classList.remove("spinning")}
         }
         frame++;
         if(frame>stopAt[2]){
             clearInterval(slotSp);slotSp=null;slotBusy=false;
             if(btn)btn.disabled=false;
             const r=result;
-            if(r[0]===r[1]&&r[1]===r[2]){const win=r[0]===3?120:60;earn(win);chng();hap('success');if(m)m.innerHTML=`ТРИ В РЯД! +${win} ${ICO.coin}!`;}
+            if(r[0]===r[1]&&r[1]===r[2]){const win=r[0]===3?120:60;earn(win);sfx.jackpot();sparkleBurst();hap('heavy');if(m)m.innerHTML=`🎉 ДЖЕКПОТ! ТРИ В РЯД! +${win} ${ICO.coin}!`;}
             else if(r[0]===r[1]||r[1]===r[2]||r[0]===r[2]){earn(12);beep();if(m)m.innerHTML=`Пара символов: +12 ${ICO.coin}`;}
             else{boop();if(m)m.textContent=`Мимо… Попробуй ещё!`;}
             hud();
@@ -1297,6 +1770,7 @@ function playHiLo(dir) {
     let realDir = nextCard > hlCard ? 1 : (nextCard < hlCard ? -1 : 0);
     const cardEl=$("#hl-card"), m=$("#hl-msg");
     if(cardEl){
+        sfx.card();
         cardEl.style.transform="scale(0.85)";
         setTimeout(()=>cardEl.style.transform="scale(1)",140);
         $("#hl-top").textContent=nextCard+suit;
@@ -1320,7 +1794,7 @@ function playCF(guess) {
     if(b0)b0.disabled=true; if(b1)b1.disabled=true;
     if(m)m.textContent="Бросаем…";
     cfFlips += 1800;
-    if(coin){ coin.classList.remove("coin-tossing"); void coin.offsetWidth; coin.classList.add("coin-tossing"); }
+    if(coin){ sfx.coinToss(); coin.classList.remove("coin-tossing"); void coin.offsetWidth; coin.classList.add("coin-tossing"); }
     cfTmr = setTimeout(()=>{
         cfBusy=false;
         if(b0)b0.disabled=false; if(b1)b1.disabled=false;
@@ -1373,9 +1847,9 @@ function hitMole(i){
     const t = moleTypes[i]; moleTypes[i] = 0;
     const h = $("#mh-"+i); if(h) h.innerHTML = ICO.toy;
     setTimeout(()=>{if(h&&moleTypes[i]===0)h.innerHTML="";},160);
-    if(t===1){ catchScore+=3; S.molesHit++; save(); beep(); hap('light'); }
-    else if(t===2){ catchScore+=8; S.molesHit++; save(); chng(); hap('medium'); }
-    else if(t===-1){ catchScore=Math.max(0,catchScore-5); boop(); hap('heavy'); }
+    if(t===1){ catchScore+=3; S.molesHit++; save(); sfx.bonk(false); hap('light'); }
+    else if(t===2){ catchScore+=8; S.molesHit++; save(); sfx.bonk(true); sparkleBurst(); hap('medium'); }
+    else if(t===-1){ catchScore=Math.max(0,catchScore-5); sfx.explosion(); hap('heavy'); }
     $("#cg-msg").innerHTML=`Осталось ${catchTime}с | Улов: ${catchScore} ${ICO.coin}`;
 }
 
@@ -1402,13 +1876,13 @@ function clickMine(i){
     if(minesGrid[i] === -1){
         minesAct = false; minesPot = 0;
         for(let k=0;k<16;k++) if(minesGrid[k]===-1) minesRev[k]=true;
-        boop(); hap('heavy');
+        sfx.explosion(); hap('heavy');
         $("#main").innerHTML = V.mines();
         $("#mn-msg").innerHTML = `<b style="color:#a43f32">Обвал породы!</b> Раунд окончен, ставка 10 монет потеряна. Начни новый спуск.`;
     } else {
         minesOpened++;
         minesPot += Math.round(5 + minesOpened * 2.5);
-        beep(); hap('light');
+        sfx.pick(); sfx.coin(); hap('light');
         if(minesOpened >= 13) cashoutMines();
         else { $("#main").innerHTML = V.mines(); const note=$("#mn-msg"); if(note) note.textContent="Самородок найден! Открой следующий камень или забери банк."; }
     }
@@ -1417,7 +1891,7 @@ function cashoutMines(){
     if(!minesAct || minesOpened<=0) return;
     const win = minesPot;
     minesAct = false;
-    earn(win); addXp(8); chng(); hap('success'); hud();
+    earn(win); addXp(8); sfx.win(); sparkleBurst(); hap('success'); hud();
     $("#main").innerHTML = V.mines();
     $("#mn-msg").innerHTML = `Добыча забрана: <b>+${win}</b> ${ICO.coin}. Начни новый спуск, когда будешь готов.`;
 }
@@ -1437,17 +1911,17 @@ function initMemory(){
 }
 function flipMem(i){
     if(memLock || memOpen.includes(i) || memDone.includes(i) || memMoves<=0) return;
-    memOpen.push(i); beep(); hap('light');
+    memOpen.push(i); sfx.card(); hap('light');
     $("#main").innerHTML = V.memory();
     if(memOpen.length === 2){
         memLock = true; memMoves--;
         const [a, b] = memOpen;
         if(memDeck[a] === memDeck[b]){
             memDone.push(a, b); memOpen = []; memLock = false;
-            chng();
+            sfx.merge();
             if(memDone.length === 12){
                 const win = 24 + memMoves * 4;
-                earn(win); addXp(12); hap('success'); hud();
+                earn(win); addXp(12); sfx.jackpot(); sparkleBurst(); hap('success'); hud();
                 $("#main").innerHTML = V.memory();
                 $("#mem-msg").innerHTML = `Все пары открыты! <b>+${win}</b> ${ICO.coin}`;
             } else if(memMoves <= 0){
@@ -1495,13 +1969,13 @@ function startBJ(){
     bjPlayer = [bjCard(), bjCard()];
     bjDealer = [bjCard(), bjCard()];
     bjActive = true; bjMsg = "Добрать карту или хватит?";
-    beep();
+    sfx.card();
     if(bjScore(bjPlayer) === 21){ bjStand(); return; }
     $("#main").innerHTML = V.bj();
 }
 function bjHit(){
     if(!bjActive) return;
-    bjPlayer.push(bjCard()); beep(); hap('light');
+    bjPlayer.push(bjCard()); sfx.card(1.1); hap('light');
     if(bjScore(bjPlayer) > 21){
         bjActive = false; boop(); hap('error');
         bjMsg = `Перебор (${bjScore(bjPlayer)} очк.)!`;
@@ -1516,7 +1990,7 @@ function bjStand(){
     while(bjScore(bjDealer) < 17) bjDealer.push(bjCard());
     const ps = bjScore(bjPlayer), ds = bjScore(bjDealer);
     if(ds > 21 || ps > ds){
-        earn(30); addXp(10); chng(); hap('success');
+        earn(30); addXp(10); sfx.win(); sparkleBurst(); hap('success');
         bjMsg = `Победа (${ps} против ${ds})! +30 монет!`;
     } else if(ps === ds){
         earn(15, false); beep();
@@ -1600,17 +2074,17 @@ function cast(){
     if(!checkState()) return;
     if(fs=="idle"){
         fs="wait";msg="";fcatch=null;
-        fwait=S.items.rod?650+R(950):1200+R(1800);
+        sfx.whoosh(); fwait=S.items.rod?650+R(950):1200+R(1800);
         fgold=R(10)<(S.items.rod?3:1);
         go("fish");hap();
-        ft=setTimeout(()=>{fs="bite";msg="Клюёт! Подсекай!";go("fish");hap('heavy');
+        ft=setTimeout(()=>{fs="bite";msg="Клюёт! Подсекай!";sfx.splash();go("fish");hap('heavy');
             ft=setTimeout(()=>{fs="idle";say("Уплыла… Слишком долго ждал!")},S.items.rod?1750:1400)},fwait)}
     else if(fs=="wait"){clearTimeout(ft);fs="idle";boop();hap('error');say("Слишком рано! Подожди поклёвки")}
     else if(fs=="bite"){
         clearTimeout(ft);fs="idle";
         const isGold=fgold;
-        S.fishCaught++;chng();hap('success');
-        if(isGold){earn(12);msg=`${ICO.toy} Золотая рыбка! +12 монет`;}else{S.fish++;msg=`${ICO.fish} Поймал! (+1 рыба в запас)`;}
+        S.fishCaught++;hap('success');
+        if(isGold){earn(12);sfx.win();sparkleBurst();msg=`${ICO.toy} Золотая рыбка! +12 монет`;}else{S.fish++;sfx.coin();msg=`${ICO.fish} Поймал! (+1 рыба в запас)`;}
         addXp(6); S.mood=clamp(S.mood+4);hud();
         fcatch=isGold?"gold":"fish"; go("fish");
         clearTimeout(fcT); fcT=setTimeout(()=>{fcatch=null},1000);
@@ -1641,7 +2115,7 @@ const a=sel,d=Math.abs(a-i);sel=null;if(!(d==6||(d==1&&(a/6|0)==(i/6|0))))return
 mv--;busy=true;draw();cascade(mid)}
 function cascade(k){if(k!==mid)return;const m=find();if(!m.size){busy=false;if(!canMove()){let tries=0;do{G=Array.from({length:36},()=>R(6))}while((find().size||!canMove())&&++tries<300)}
     if(mv<=0){addXp(cl);go("m3")}else{const t=$("#m3top");if(t)t.innerHTML=`<span>Ходы: ${mv}</span><span>Собрано: ${cl} ${ICO.coin}</span>`;draw()}return}
-draw(m);const gain = m.size + (m.size>=4 ? 2 : 0); cl+=gain; S.tiles+=m.size; earn(gain,false); hud(); beep(); hap('success');
+draw(m);const gain = m.size + (m.size>=4 ? 2 : 0); cl+=gain; S.tiles+=m.size; earn(gain,false); hud(); sfx.match(Math.floor(m.size/3)); if(m.size>=5) sparkleBurst(); hap('success');
 setTimeout(()=>{if(k!==mid)return;m.forEach(i=>G[i]=-1);for(let c=0;c<6;c++){let col=[];for(let r=5;r>=0;r--)if(G[r*6+c]>=0)col.push(G[r*6+c]);while(col.length<6)col.push(R(6));for(let r=5;r>=0;r--)G[r*6+c]=col[5-r]}draw();setTimeout(()=>cascade(k),180)},190)}
 
 // ===== CANVAS И СПРАЙТЫ (ПОДДЕРЖКА ВЫЗОВА С # И БЕЗ #) =====
@@ -1673,6 +2147,54 @@ function rrPath(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y
 
 // ===== НАСТОЯЩИЙ ГАРАЖ И ПЛАВНЫЙ HILL CLIMB =====
 let raf_r, r_act=false, RKEYS={}, HC_SPR=null;
+// ===== УДОБНОЕ УПРАВЛЕНИЕ С КЛАВИАТУРЫ (WASD / СТРЕЛОЧКИ / ПРОБЕЛ / ESC) =====
+window.addEventListener('keydown', e => {
+    if(e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+    if(e.key === 'Escape'){
+        if(typeof tab !== 'undefined' && tab !== 'world'){
+            e.preventDefault();
+            leaveVenueMenu();
+            return;
+        }
+    }
+    if(typeof tab !== 'undefined' && tab === 'world'){
+        let dc = 0, dr = 0;
+        if(e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === 'ц' || e.key === 'Ц') dr = -1;
+        else if(e.key === 'ArrowDown' || e.key === 's' || e.key === 'S' || e.key === 'ы' || e.key === 'Ы') dr = 1;
+        else if(e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A' || e.key === 'ф' || e.key === 'Ф') dc = -1;
+        else if(e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D' || e.key === 'в' || e.key === 'В') dc = 1;
+        else if(e.key === ' ' || e.key === 'Enter'){
+            e.preventDefault();
+            const curTile = (W._at || ((c,r)=>' '))(W.pc, W.pr);
+            if(W.act) W.act(curTile);
+            return;
+        }
+        if(dc !== 0 || dr !== 0){
+            e.preventDefault();
+            const tc = W.pc + dc, tr = W.pr + dr;
+            if(W.go) W.go(tc, tr);
+            return;
+        }
+    }
+    if(typeof tab !== 'undefined' && tab === 'cranebuild' && (e.key === ' ' || e.key === 'ArrowDown')){
+        e.preventDefault();
+        const c = $('#cbcanvas');
+        if(c && c.onpointerdown) c.onpointerdown();
+        return;
+    }
+    if(typeof tab !== 'undefined' && tab === 'berry' && (e.key === ' ' || e.key === 'ArrowDown' || e.key === 'Enter')){
+        e.preventDefault();
+        const c = $('#ycanvas');
+        if(c && c.onpointerup) c.onpointerup();
+        return;
+    }
+    if(typeof tab !== 'undefined' && tab === 'fish' && (e.key === ' ' || e.key === 'Enter')){
+        e.preventDefault();
+        if(typeof cast === 'function') cast();
+        return;
+    }
+});
+
 addEventListener('keydown',e=>RKEYS[e.key]=true);
 addEventListener('keyup',e=>RKEYS[e.key]=false);
 
@@ -2047,7 +2569,7 @@ function startRace(){
         if(isRecord) S.bestHill = distM;
         if(distBonus > 0) earn(distBonus);
         addXp(Math.min(45, 8 + Math.floor(distM / 30)));
-        if(isRecord){ chng(); hap('success'); } else { boop(); hap('heavy'); }
+        if(isRecord){ chng(); hap('success'); } else { sfx.explosion(); hap('heavy'); }
         save(); hud();
 
         drawGaragePreview();
@@ -2233,7 +2755,7 @@ function startRace(){
                 const oy = getH(o.x) - 18;
                 if(Math.abs(o.x - car.x) < 28 && Math.hypot(o.x - car.x, oy - car.y) < 28){
                     o.got = true; car.got += o.val; earn(o.val, false);
-                    beep(); hap('light'); hud();
+                    sfx.coin(); hap('light'); hud();
                     floatTxt.push({x: o.x, y: oy - 12, t: `+${o.val}`, col: o.val>1?'#e59856':'#f0cb6e', a: 1});
                 }
             }
@@ -2242,7 +2764,7 @@ function startRace(){
                 const fy = getH(f.x) - 20;
                 if(Math.abs(f.x - car.x) < 32 && Math.hypot(f.x - car.x, fy - car.y) < 32){
                     f.got = true; car.fuel = 100;
-                    chng(); hap('medium');
+                    sfx.win(); sfx.whoosh(); hap('medium');
                     floatTxt.push({x: f.x, y: fy - 16, t: `БАК ПОЛОН!`, col:'#76b065', a: 1.2});
                 }
             }
@@ -2438,56 +2960,32 @@ function startRace(){
 // ===== ЯГОДНЫЙ БОЧОНОК (SUIKA) =====
 let raf_y, y_act=false, BERRY_SPR=null;
 const BERRIES = [
-    {n:"Черника", r:14, c1:"#6c84bf", c2:"#41558c", pts:2},
-    {n:"Вишня", r:19, c1:"#d46a6a", c2:"#9e3b3b", pts:4},
-    {n:"Земляника", r:25, c1:"#de7e73", c2:"#b5473b", pts:8},
-    {n:"Грибок", r:32, c1:"#d9964a", c2:"#9c6122", pts:14},
-    {n:"Яблоко", r:40, c1:"#cf5f5f", c2:"#8f2c3b", pts:22},
-    {n:"Груша", r:49, c1:"#99bf52", c2:"#618524", pts:34},
-    {n:"Арбуз", r:59, c1:"#62ab6c", c2:"#366e40", pts:50},
-    {n:"Мёд", r:70, c1:"#e5b94c", c2:"#b07820", pts:80},
-    {n:"Царь-Ягода", r:82, c1:"#e8c458", c2:"#8c499e", pts:140}
-];
+    {n:"Черника", r:14, c1:"#343C6B", c2:"#222642", pts:2, svg: "<svg width=\"674\" height=\"726\" viewBox=\"0 0 674 726\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M229.906 257.813C271.433 295.606 340.415 294.6 421.073 242.512C374.569 149.107 341.4 111.168 270.44 67.5315C208.117 56.7756 173.362 57.9357 112.503 104.302C180.444 208.223 188.378 220.021 229.906 257.813Z\" fill=\"#94A920\"/>\n<path d=\"M193.484 170.916C248.138 183.146 286.323 237.733 288.984 328.916C185.652 342.669 135.604 337.067 59.4839 304.916C15.3654 261.866 -3.33456 234.012 0.483862 161.416C124.612 158.809 138.829 158.686 193.484 170.916Z\" fill=\"#B1CA24\"/>\n<circle cx=\"180\" cy=\"448\" r=\"159\" fill=\"#343C6B\"/>\n<circle cx=\"454.5\" cy=\"265.5\" r=\"190.5\" fill=\"#4E599D\"/>\n<circle cx=\"479\" cy=\"531\" r=\"195\" fill=\"#626DAD\"/>\n<path d=\"M198.351 364.316C199.274 361.461 202.896 360.601 205.004 362.736L225.46 383.459C226.31 384.32 227.503 384.75 228.707 384.629L260.385 381.441C263.842 381.094 266.068 385.014 263.998 387.804L247.147 410.523C246.288 411.682 246.119 413.214 246.705 414.532L257.461 438.704C258.761 441.625 256.278 444.815 253.127 444.272L221.157 438.757C220.081 438.571 218.976 438.833 218.098 439.483L192.02 458.782C189.45 460.684 185.798 458.951 185.645 455.757L184.387 429.33C184.318 427.889 183.479 426.597 182.19 425.948L156.924 413.23C153.821 411.668 154.047 407.165 157.291 405.922L187.02 394.528C188.15 394.095 189.023 393.174 189.395 392.023L198.351 364.316Z\" fill=\"#1E213A\"/>\n<path d=\"M509.499 117.488C512.028 115.882 515.36 117.523 515.628 120.507L518.363 150.982C518.471 152.185 519.117 153.275 520.121 153.948L548.016 172.631C550.906 174.566 550.12 179.012 546.742 179.839L517.766 186.936C516.361 187.28 515.252 188.355 514.864 189.748L507.398 216.559C506.541 219.638 502.597 220.517 500.512 218.094L478.249 192.207C477.539 191.381 476.523 190.881 475.436 190.821L441.343 188.948C438.152 188.772 436.445 185.109 438.364 182.553L455.069 160.294C455.937 159.137 456.114 157.602 455.53 156.279L443.497 128.982C442.094 125.799 445.14 122.467 448.435 123.578L480.249 134.307C481.393 134.693 482.652 134.541 483.671 133.893L509.499 117.488Z\" fill=\"#323861\"/>\n<path d=\"M582.437 472.437C585.485 469.135 590.948 470.233 592.484 474.456L603.336 504.287C603.956 505.99 605.312 507.322 607.026 507.91L639.393 519.023C644.327 520.717 644.898 527.466 640.319 529.965L614.154 544.245C612.25 545.284 611.055 547.27 611.029 549.439L610.687 577.544C610.628 582.339 605.248 585.131 601.294 582.42L571.999 562.33C570.652 561.407 568.987 561.072 567.387 561.404L532.606 568.617C527.911 569.591 524.028 564.937 525.826 560.492L536.367 534.436C537.18 532.425 536.845 530.132 535.49 528.438L516.872 505.159C513.614 501.086 516.748 495.082 521.953 495.425L556.1 497.677C557.909 497.797 559.674 497.092 560.904 495.76L582.437 472.437Z\" fill=\"#40477B\"/>\n<path d=\"M576.119 505.173C579.167 501.871 584.629 502.969 586.166 507.192L589.755 517.059C590.375 518.763 591.731 520.094 593.445 520.683L602.899 523.929C607.833 525.623 608.404 532.371 603.825 534.87L597.345 538.407C595.441 539.446 594.246 541.432 594.22 543.6L594.127 551.235C594.068 556.03 588.688 558.822 584.734 556.11L574.868 549.345C573.521 548.421 571.856 548.086 570.256 548.418L558.543 550.848C553.848 551.821 549.964 547.167 551.762 542.722L554.626 535.644C555.439 533.634 555.104 531.34 553.749 529.647L549.139 523.882C545.88 519.808 549.014 513.804 554.219 514.147L564.193 514.805C566.001 514.924 567.767 514.22 568.996 512.888L576.119 505.173Z\" fill=\"#222642\"/>\n<path d=\"M206.871 404.737C207.083 404.066 207.904 403.818 208.452 404.26L217.466 411.516C217.691 411.697 217.983 411.772 218.267 411.722L231.757 409.335C232.646 409.178 233.272 410.187 232.736 410.914L225.829 420.275C225.598 420.588 225.569 421.007 225.757 421.349L230.637 430.25C231.018 430.944 230.48 431.784 229.691 431.729L215.967 430.772C215.723 430.755 215.481 430.828 215.288 430.977L204.388 439.37C203.761 439.853 202.848 439.451 202.781 438.663L201.919 428.548C201.886 428.16 201.63 427.826 201.264 427.693L190.33 423.72C189.481 423.412 189.444 422.225 190.272 421.864L202.827 416.385C203.092 416.27 203.294 416.046 203.381 415.77L206.871 404.737Z\" fill=\"#0E101F\"/>\n<path d=\"M501.856 152.791C502.999 152.394 504.23 153.096 504.47 154.282L506.805 165.783C506.907 166.285 507.198 166.729 507.618 167.023L519.3 175.205C520.893 176.321 520.117 178.823 518.173 178.843L508.368 178.942C507.465 178.951 506.68 179.565 506.452 180.439L504.515 187.891C504.121 189.406 502.218 189.901 501.135 188.771L490.218 177.374C489.95 177.094 489.607 176.898 489.23 176.81L473.863 173.211C472.339 172.855 471.797 170.964 472.901 169.854L478.33 164.394C478.967 163.754 479.096 162.766 478.644 161.984L473.74 153.492C472.768 151.808 474.527 149.867 476.299 150.671L489.286 156.564C489.753 156.776 490.283 156.8 490.767 156.632L501.856 152.791Z\" fill=\"#181B31\"/>\n</svg>"},
+    {n:"Клубника", r:19, c1:"#EB4455", c2:"#b22233", pts:4, svg: "<svg width=\"580\" height=\"612\" viewBox=\"0 0 580 612\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M137.987 610.43C313.889 610.43 480.5 639.93 567.5 378.93C567.5 212.969 446.903 44.9302 271 44.9302C95.0974 44.9302 4.48673 114.469 4.48673 280.43C4.48673 446.392 -37.9159 610.43 137.987 610.43Z\" fill=\"#EB4455\"/>\n<path d=\"M106.5 50.4297C201.481 3.68377 291.467 -9.84813 400 62.5788C400 62.5788 432.966 -4.00267 479.993 0.190015C528.371 4.50307 545.184 16.1668 540.5 62.5786C536.379 103.412 479.993 120.388 479.993 120.388C582.421 198.345 592.174 258.295 568.856 357.93C491.22 289.807 488.527 295.803 477.012 312.133C482.825 337.195 478.083 357.456 454.945 405.43C424.312 345.136 416.573 305.203 375.5 283.43C355.492 296.982 330.597 306.514 253.239 328.075C233.159 284.017 242.985 263.142 262.5 201.93C197.279 203.398 160.276 194.123 133.488 169.04C162.874 140.111 194.979 130.971 223 120.388C207.084 70.1959 158.985 88.9228 106.5 50.4297Z\" fill=\"#73A86F\"/>\n<ellipse cx=\"171.62\" cy=\"542.116\" rx=\"41\" ry=\"21.5\" transform=\"rotate(-12.2123 171.62 542.116)\" fill=\"#F5E9C1\"/>\n<ellipse cx=\"323.103\" cy=\"386.01\" rx=\"41\" ry=\"21.5\" transform=\"rotate(-52.2441 323.103 386.01)\" fill=\"#F5E9C1\"/>\n<ellipse cx=\"180.103\" cy=\"287.011\" rx=\"41\" ry=\"21.5\" transform=\"rotate(-70.7573 180.103 287.011)\" fill=\"#F5E9C1\"/>\n<ellipse cx=\"62.8122\" cy=\"336.103\" rx=\"41\" ry=\"21.5\" transform=\"rotate(-87.8265 62.8122 336.103)\" fill=\"#F5E9C1\"/>\n<ellipse cx=\"85.0425\" cy=\"195.035\" rx=\"41\" ry=\"21.5\" transform=\"rotate(-52.4226 85.0425 195.035)\" fill=\"#F5E9C1\"/>\n<ellipse cx=\"450.313\" cy=\"464.863\" rx=\"41\" ry=\"21.5\" transform=\"rotate(-73.4065 450.313 464.863)\" fill=\"#F5E9C1\"/>\n<ellipse cx=\"67.6921\" cy=\"475.306\" rx=\"41\" ry=\"21.5\" transform=\"rotate(-99.0663 67.6921 475.306)\" fill=\"#F5E9C1\"/>\n<ellipse cx=\"172.836\" cy=\"422.651\" rx=\"41\" ry=\"21.5\" transform=\"rotate(-49.9601 172.836 422.651)\" fill=\"#F5E9C1\"/>\n<ellipse cx=\"322.768\" cy=\"519.041\" rx=\"41\" ry=\"21.5\" transform=\"rotate(-36.3302 322.768 519.041)\" fill=\"#F5E9C1\"/>\n</svg>"},
+    {n:"Банан", r:25, c1:"#FFDF5D", c2:"#CE9333", pts:8, svg: "<svg width=\"1394\" height=\"1622\" viewBox=\"0 0 1394 1622\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M943.03 1006C1271.53 610.5 1167.03 173 984.03 199.5C801.03 226 888.402 517.773 637.03 800.5C385.658 1083.23 -29.041 1233.31 51.0306 1304.5C267.53 1450.5 657.981 1349.19 943.03 1006Z\" fill=\"#FFDF5D\"/>\n<path d=\"M1028.5 215.999C1108.03 177.999 1305.99 544.106 989.499 961.21C698.924 1344.16 281.536 1455.44 64.1438 1312.57C58.7975 1311.39 57.5923 1310.5 61.0297 1310.5C62.0631 1311.2 63.1012 1311.89 64.1438 1312.57C114.835 1323.81 537.812 1361.87 905.53 924.5C1120.03 598.5 948.969 253.998 1028.5 215.999Z\" fill=\"#CE9333\"/>\n<path d=\"M929.306 75.6894L982.265 242.633L1062.01 234.314L1040.04 23.9747L929.306 75.6894Z\" fill=\"#FFDF5D\"/>\n<path d=\"M962.529 59.9999L1012.03 239.5L1062.01 234.313L1040.04 23.974L962.529 59.9999Z\" fill=\"#CE9333\"/>\n<path d=\"M78.5297 1230.5C53.0654 1252.03 39.3104 1267.05 41.0297 1286C44.1918 1306.64 56.7511 1312.81 102.53 1334C113.373 1323.55 133.355 1315.43 143.03 1307.5C152.704 1299.57 82.2076 1222.35 78.5297 1230.5Z\" fill=\"#3A251A\"/>\n<path d=\"M1040.03 24L928.53 74.5L957.53 165L1055.53 170.5L1040.03 24Z\" fill=\"#3A251A\"/>\n</svg>"},
+    {n:"Малина", r:32, c1:"#E83F4E", c2:"#B11137", pts:14, svg: "<svg width=\"470\" height=\"548\" viewBox=\"0 0 470 548\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<path d=\"M148 1.35449L222.043 144.863L311.156 193.354L454 85.2316L348.505 102.924V16.4262L285.602 85.2316L148 1.35449Z\" fill=\"#3F5628\" stroke=\"#3F5628\"/>\n<circle cx=\"89.5\" cy=\"262.854\" r=\"89.5\" fill=\"#E83F4E\"/>\n<circle cx=\"380.5\" cy=\"248.854\" r=\"89.5\" fill=\"#B11137\"/>\n<circle cx=\"346.5\" cy=\"402.854\" r=\"89.5\" fill=\"#B11137\"/>\n<circle cx=\"220.5\" cy=\"457.854\" r=\"89.5\" fill=\"#B11137\"/>\n<circle cx=\"105.5\" cy=\"406.854\" r=\"89.5\" fill=\"#DB2A39\"/>\n<circle cx=\"142.5\" cy=\"157.854\" r=\"89.5\" fill=\"#F05A5A\"/>\n<circle cx=\"244.5\" cy=\"201.854\" r=\"89.5\" fill=\"#F02A3B\"/>\n<circle cx=\"233.5\" cy=\"334.854\" r=\"89.5\" fill=\"#FF3849\"/>\n<ellipse cx=\"380.961\" cy=\"418.64\" rx=\"65.0831\" ry=\"48.8291\" transform=\"rotate(-68.9324 380.961 418.64)\" fill=\"#D71A38\"/>\n<ellipse cx=\"226.903\" cy=\"494.137\" rx=\"65.7515\" ry=\"51.2987\" transform=\"rotate(-1.30473 226.903 494.137)\" fill=\"#D71A38\"/>\n<ellipse cx=\"380.675\" cy=\"226.09\" rx=\"56.7939\" ry=\"41\" transform=\"rotate(-68.9324 380.675 226.09)\" fill=\"#D71A38\"/>\n<ellipse cx=\"205.675\" cy=\"306.054\" rx=\"35.2153\" ry=\"47.3176\" transform=\"rotate(65.4341 205.675 306.054)\" fill=\"#F05A5A\"/>\n<ellipse cx=\"112.188\" cy=\"116.449\" rx=\"34.1721\" ry=\"26.4356\" transform=\"rotate(-39.265 112.188 116.449)\" fill=\"#E39696\"/>\n<ellipse cx=\"53.1883\" cy=\"254.449\" rx=\"34.1721\" ry=\"26.4356\" transform=\"rotate(-39.265 53.1883 254.449)\" fill=\"#E39696\"/>\n<ellipse cx=\"218\" cy=\"167.171\" rx=\"44.986\" ry=\"36.6098\" transform=\"rotate(-39.265 218 167.171)\" fill=\"#EE6161\"/>\n<ellipse cx=\"74\" cy=\"380.171\" rx=\"44.986\" ry=\"36.6098\" transform=\"rotate(-39.265 74 380.171)\" fill=\"#EE6161\"/>\n</svg>"},
+    {n:"Яблоко", r:40, c1:"#9D0202", c2:"#6b0101", pts:22, svg: "<svg width=\"567\" height=\"657\" viewBox=\"0 0 567 657\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<ellipse cx=\"243.966\" cy=\"102.226\" rx=\"21.8159\" ry=\"85\" transform=\"rotate(-49.0045 243.966 102.226)\" fill=\"#7BA750\"/>\n<path d=\"M90.0341 185.638C234.033 127.952 234.035 185.638 284.034 185.638C331.577 185.638 345.61 127.952 482.533 185.638C619.457 243.325 592.834 580.638 371.758 655.138C371.758 655.138 340.163 655.873 323.033 653.14C305.904 650.406 284.034 641.139 284.034 641.139C284.034 641.139 263.802 650.19 250.033 653.14C231.956 657.012 202.736 655.139 202.736 655.139C-29.7648 580.639 -53.9652 243.325 90.0341 185.638Z\" fill=\"#9D0202\" stroke=\"#9D0202\"/>\n<ellipse cx=\"111.471\" cy=\"256.419\" rx=\"30.5\" ry=\"47\" transform=\"rotate(41.4416 111.471 256.419)\" fill=\"#F39895\"/>\n<path d=\"M333.237 15.4113L283.092 207.312L416.779 39.6984C416.779 39.6984 398.233 19.9605 382.557 14.5327C364.353 8.22967 333.237 15.4113 333.237 15.4113Z\" fill=\"#624036\"/>\n</svg>"},
+    {n:"Апельсин", r:49, c1:"#FB822B", c2:"#c55e15", pts:34, svg: "<svg width=\"657\" height=\"729\" viewBox=\"0 0 657 729\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<ellipse cx=\"328.5\" cy=\"430.5\" rx=\"328.5\" ry=\"298.5\" fill=\"#FB822B\"/>\n<ellipse cx=\"341.63\" cy=\"84.7386\" rx=\"17.5029\" ry=\"85\" transform=\"rotate(36.5006 341.63 84.7386)\" fill=\"#9ED468\"/>\n<path d=\"M174.689 75.0325L328.459 200.312L231.464 9.10943C231.464 9.10943 205.808 17.7891 194.363 29.7976C181.072 43.7422 174.689 75.0325 174.689 75.0325Z\" fill=\"#624036\"/>\n<circle cx=\"176\" cy=\"246\" r=\"21\" fill=\"#F6A86F\"/>\n<ellipse cx=\"218.5\" cy=\"282.5\" rx=\"14.5\" ry=\"15.5\" fill=\"#F6A86F\"/>\n<circle cx=\"234.5\" cy=\"220.5\" r=\"16.5\" fill=\"#F6A86F\"/>\n</svg>"},
+    {n:"Дыня", r:59, c1:"#F6DD96", c2:"#CE9333", pts:50, svg: "<svg width=\"595\" height=\"693\" viewBox=\"0 0 595 693\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<circle cx=\"297.5\" cy=\"395.502\" r=\"297.5\" fill=\"#F6DD96\"/>\n<path d=\"M245 27.1643L293.206 38.4838M293.206 38.4838L298.227 98.0024M293.206 38.4838L362 10.0024\" stroke-width=\"20\" stroke-linecap=\"round\" stroke=\"#B3C47C\"/>\n<mask id=\"mask0_18_90\" style=\"mask-type:alpha\" maskUnits=\"userSpaceOnUse\" x=\"0\" y=\"98\" width=\"595\" height=\"596\">\n<circle cx=\"297.5\" cy=\"395.502\" r=\"297.5\" fill=\"#F6DD96\"/>\n</mask>\n<g mask=\"url(#mask0_18_90)\">\n<mask id=\"stroke0_18_90\" fill=\"white\">\n<path d=\"M467.636 264.096C467.636 379.576 375.962 473.19 262.876 473.19C149.79 473.19 58.1157 379.576 58.1157 264.096C58.1157 148.617 149.79 55.0024 262.876 55.0024C375.962 55.0024 467.636 148.617 467.636 264.096Z\"/>\n</mask>\n<path d=\"M467.636 264.096C467.636 379.576 375.962 473.19 262.876 473.19C149.79 473.19 58.1157 379.576 58.1157 264.096C58.1157 148.617 149.79 55.0024 262.876 55.0024C375.962 55.0024 467.636 148.617 467.636 264.096Z\" stroke-width=\"10\" stroke=\"#F9F0D9\" mask=\"url(#stroke0_18_90)\"/>\n<mask id=\"stroke1_18_90\" fill=\"white\">\n<path d=\"M467.636 430.546C467.636 546.025 375.962 639.64 262.876 639.64C149.79 639.64 58.1157 546.025 58.1157 430.546C58.1157 315.067 149.79 221.452 262.876 221.452C375.962 221.452 467.636 315.067 467.636 430.546Z\"/>\n</mask>\n<path d=\"M467.636 430.546C467.636 546.025 375.962 639.64 262.876 639.64C149.79 639.64 58.1157 546.025 58.1157 430.546C58.1157 315.067 149.79 221.452 262.876 221.452C375.962 221.452 467.636 315.067 467.636 430.546Z\" stroke-width=\"10\" stroke=\"#F9F0D9\" mask=\"url(#stroke1_18_90)\"/>\n<mask id=\"stroke2_18_90\" fill=\"white\">\n<path d=\"M381.421 332.877C381.421 448.356 289.747 541.971 176.661 541.971C63.5751 541.971 -28.0991 448.356 -28.0991 332.877C-28.0991 217.398 63.5751 123.783 176.661 123.783C289.747 123.783 381.421 217.398 381.421 332.877Z\"/>\n</mask>\n<path d=\"M381.421 332.877C381.421 448.356 289.747 541.971 176.661 541.971C63.5751 541.971 -28.0991 448.356 -28.0991 332.877C-28.0991 217.398 63.5751 123.783 176.661 123.783C289.747 123.783 381.421 217.398 381.421 332.877Z\" stroke-width=\"10\" stroke=\"#F9F0D9\" mask=\"url(#stroke2_18_90)\"/>\n<mask id=\"stroke3_18_90\" fill=\"white\">\n<path d=\"M140.921 569.337C133.685 454.094 219.305 354.681 332.159 347.292C445.013 339.902 542.366 427.335 549.602 542.577C556.838 657.82 471.218 757.233 358.364 764.623C245.51 772.012 148.158 684.58 140.921 569.337Z\"/>\n</mask>\n<path d=\"M140.921 569.337L145.911 569.01C138.841 456.426 222.471 359.485 332.472 352.282L332.159 347.292L331.846 342.302C216.139 349.878 128.529 451.763 135.932 569.664L140.921 569.337ZM332.159 347.292L332.472 352.282C442.474 345.079 537.543 430.319 544.613 542.904L549.602 542.577L554.591 542.251C547.188 424.35 447.553 334.725 331.846 342.302L332.159 347.292ZM549.602 542.577L544.613 542.904C551.682 655.489 468.052 752.43 358.051 759.632L358.364 764.623L358.678 769.613C474.384 762.036 561.995 660.151 554.591 542.251L549.602 542.577ZM358.364 764.623L358.051 759.632C248.049 766.835 152.98 681.595 145.911 569.01L140.921 569.337L135.932 569.664C143.335 687.564 242.971 777.189 358.678 769.613L358.364 764.623Z\" fill=\"#F9F0D9\" mask=\"url(#stroke3_18_90)\"/>\n<mask id=\"stroke4_18_90\" fill=\"white\">\n<path d=\"M130.491 403.228C123.254 287.986 208.875 188.573 321.729 181.183C434.583 173.794 531.935 261.226 539.172 376.468C546.408 491.711 460.788 591.124 347.934 598.514C235.08 605.903 137.727 518.471 130.491 403.228Z\"/>\n</mask>\n<path d=\"M130.491 403.228L135.48 402.902C128.411 290.317 212.041 193.376 322.042 186.173L321.729 181.183L321.415 176.193C205.708 183.769 118.098 285.654 125.501 403.555L130.491 403.228ZM321.729 181.183L322.042 186.173C432.043 178.97 527.113 264.21 534.182 376.795L539.172 376.468L544.161 376.142C536.758 258.241 437.122 168.617 321.415 176.193L321.729 181.183ZM539.172 376.468L534.182 376.795C541.252 489.38 457.622 586.321 347.62 593.524L347.934 598.514L348.247 603.504C463.954 595.928 551.564 494.042 544.161 376.142L539.172 376.468ZM347.934 598.514L347.62 593.524C237.619 600.726 142.55 515.486 135.48 402.902L130.491 403.228L125.501 403.555C132.905 521.455 232.54 611.08 348.247 603.504L347.934 598.514Z\" fill=\"#F9F0D9\" mask=\"url(#stroke4_18_90)\"/>\n<mask id=\"stroke5_18_90\" fill=\"white\">\n<path d=\"M222.649 495.064C215.413 379.821 301.033 280.408 413.887 273.018C526.741 265.629 624.094 353.061 631.33 468.304C638.566 583.547 552.946 682.96 440.092 690.349C327.238 697.739 229.886 610.306 222.649 495.064Z\"/>\n</mask>\n<path d=\"M222.649 495.064L227.639 494.737C220.569 382.152 304.199 285.211 414.2 278.009L413.887 273.018L413.574 268.028C297.867 275.605 210.257 377.49 217.66 495.39L222.649 495.064ZM413.887 273.018L414.2 278.009C524.202 270.806 619.271 356.046 626.341 468.631L631.33 468.304L636.319 467.977C628.916 350.077 529.281 260.452 413.574 268.028L413.887 273.018ZM631.33 468.304L626.341 468.631C633.41 581.216 549.78 678.156 439.779 685.359L440.092 690.349L440.406 695.339C556.112 687.763 643.723 585.878 636.319 467.977L631.33 468.304ZM440.092 690.349L439.779 685.359C329.778 692.562 234.708 607.322 227.639 494.737L222.649 495.064L217.66 495.39C225.063 613.291 324.699 702.916 440.406 695.339L440.092 690.349Z\" fill=\"#F9F0D9\" mask=\"url(#stroke5_18_90)\"/>\n<mask id=\"stroke6_18_90\" fill=\"white\">\n<path d=\"M377.841 409.999C264.921 408.127 170.443 351.206 166.819 282.864C163.195 214.521 251.796 160.637 364.716 162.509C477.636 164.382 572.114 221.302 575.738 289.645C579.363 357.987 490.761 411.872 377.841 409.999Z\"/>\n</mask>\n<path d=\"M377.841 409.999L377.576 405.006C321.875 404.082 270.963 389.576 233.708 367.131C196.359 344.628 173.502 314.7 171.818 282.947L166.819 282.864L161.819 282.781C163.76 319.37 189.954 352.073 228.979 375.585C268.099 399.154 320.886 414.043 378.105 414.992L377.841 409.999ZM166.819 282.864L171.818 282.947C170.134 251.194 189.854 221.971 224.881 200.669C259.819 179.421 309.28 166.579 364.981 167.502L364.716 162.509L364.452 157.516C307.233 156.568 255.933 169.731 219.246 192.043C182.648 214.301 159.879 246.191 161.819 282.781L166.819 282.864ZM364.716 162.509L364.981 167.502C420.682 168.426 471.594 182.933 508.849 205.378C546.199 227.88 569.055 257.809 570.739 289.562L575.738 289.645L580.738 289.728C578.797 253.138 552.603 220.435 513.578 196.924C474.458 173.355 421.671 158.465 364.452 157.516L364.716 162.509ZM575.738 289.645L570.739 289.562C572.423 321.315 552.703 350.537 517.676 371.839C482.738 393.087 433.277 405.93 377.576 405.006L377.841 409.999L378.105 414.992C435.325 415.941 486.624 402.777 523.311 380.466C559.909 358.208 582.678 326.317 580.738 289.728L575.738 289.645Z\" fill=\"#F9F0D9\" mask=\"url(#stroke6_18_90)\"/>\n<mask id=\"stroke7_18_90\" fill=\"white\">\n<path d=\"M215.08 407.3C102.16 405.427 7.68213 348.507 4.05796 280.165C0.433789 211.822 89.0356 157.938 201.956 159.81C314.876 161.683 409.353 218.603 412.978 286.946C416.602 355.288 328 409.172 215.08 407.3Z\"/>\n</mask>\n<path d=\"M215.08 407.3L214.815 402.307C159.114 401.383 108.202 386.876 70.9475 364.431C33.5978 341.929 10.7411 312 9.05727 280.247L4.05796 280.165L-0.941353 280.082C0.998973 316.671 27.1933 349.374 66.2185 372.886C105.339 396.454 158.126 411.344 215.345 412.293L215.08 407.3ZM4.05796 280.165L9.05727 280.247C7.37343 248.495 27.0933 219.272 62.1201 197.97C97.0579 176.722 146.52 163.88 202.22 164.803L201.956 159.81L201.691 154.817C144.472 153.868 93.1724 167.032 56.4853 189.344C19.8873 211.601 -2.88168 243.492 -0.941353 280.082L4.05796 280.165ZM201.956 159.81L202.22 164.803C257.921 165.727 308.833 180.234 346.088 202.679C383.438 225.181 406.295 255.11 407.978 286.863L412.978 286.946L417.977 287.028C416.037 250.439 389.842 217.736 350.817 194.225C311.697 170.656 258.91 155.766 201.691 154.817L201.956 159.81ZM412.978 286.946L407.978 286.863C409.662 318.616 389.942 347.838 354.916 369.14C319.978 390.388 270.516 403.231 214.815 402.307L215.08 407.3L215.345 412.293C272.564 413.242 323.863 400.078 360.55 377.766C397.148 355.509 419.917 323.618 417.977 287.028L412.978 286.946Z\" fill=\"#F9F0D9\" mask=\"url(#stroke7_18_90)\"/>\n<mask id=\"stroke8_18_90\" fill=\"white\">\n<path d=\"M307.821 356.78C194.901 354.907 100.424 297.987 96.7994 229.645C93.1752 161.302 181.777 107.418 294.697 109.29C407.617 111.163 502.095 168.083 505.719 236.425C509.343 304.768 420.741 358.652 307.821 356.78Z\"/>\n</mask>\n<path d=\"M307.821 356.78L307.557 351.787C251.856 350.863 200.944 336.356 163.689 313.911C126.339 291.409 103.483 261.48 101.799 229.727L96.7994 229.645L91.8001 229.562C93.7404 266.151 119.935 298.854 158.96 322.366C198.08 345.934 250.867 360.824 308.086 361.773L307.821 356.78ZM96.7994 229.645L101.799 229.727C100.115 197.975 119.835 168.752 154.862 147.45C189.799 126.202 239.261 113.36 294.962 114.283L294.697 109.29L294.432 104.297C237.213 103.348 185.914 116.512 149.227 138.824C112.629 161.081 89.8598 192.972 91.8001 229.562L96.7994 229.645ZM294.697 109.29L294.962 114.283C350.663 115.207 401.575 129.714 438.83 152.159C476.179 174.661 499.036 204.59 500.72 236.343L505.719 236.425L510.718 236.508C508.778 199.919 482.584 167.216 443.559 143.704C404.438 120.136 351.651 105.246 294.432 104.297L294.697 109.29ZM505.719 236.425L500.72 236.343C502.404 268.095 482.684 297.318 447.657 318.62C412.719 339.868 363.258 352.711 307.557 351.787L307.821 356.78L308.086 361.773C365.305 362.722 416.605 349.558 453.292 327.246C489.89 304.989 512.659 273.098 510.718 236.508L505.719 236.425Z\" fill=\"#F9F0D9\" mask=\"url(#stroke8_18_90)\"/>\n<mask id=\"stroke9_18_90\" fill=\"white\">\n<path d=\"M344.096 569.337C349.774 454.094 282.589 354.681 194.035 347.292C105.481 339.902 29.0899 427.335 23.4117 542.577C17.7335 657.82 84.9179 757.233 173.472 764.623C262.027 772.012 338.417 684.58 344.096 569.337Z\"/>\n</mask>\n<path d=\"M344.096 569.337L339.113 568.921C344.719 455.146 278.46 359.351 193.789 352.286L194.035 347.292L194.281 342.298C286.719 350.012 354.829 453.043 349.078 569.753L344.096 569.337ZM194.035 347.292L193.789 352.286C109.118 345.22 34.0003 429.218 28.3944 542.993L23.4117 542.577L18.429 542.162C24.1795 425.452 101.843 334.584 194.281 342.298L194.035 347.292ZM23.4117 542.577L28.3944 542.993C22.7885 656.769 89.0474 752.563 173.718 759.629L173.472 764.623L173.226 769.616C80.7884 761.903 12.6785 658.871 18.429 542.162L23.4117 542.577ZM173.472 764.623L173.718 759.629C258.389 766.694 333.507 682.697 339.113 568.921L344.096 569.337L349.078 569.753C343.328 686.463 265.664 777.33 173.226 769.616L173.472 764.623Z\" fill=\"#F9F0D9\" mask=\"url(#stroke9_18_90)\"/>\n<mask id=\"stroke10_18_90\" fill=\"white\">\n<path d=\"M352.28 403.228C357.958 287.986 290.774 188.573 202.22 181.183C113.665 173.794 37.2745 261.226 31.5963 376.468C25.918 491.711 93.1025 591.124 181.657 598.514C270.211 605.903 346.602 518.471 352.28 403.228Z\"/>\n</mask>\n<path d=\"M352.28 403.228L347.298 402.812C352.903 289.037 286.644 193.242 201.974 186.177L202.22 181.183L202.466 176.189C294.903 183.903 363.013 286.934 357.263 403.644L352.28 403.228ZM202.22 181.183L201.974 186.177C117.303 179.112 42.1849 263.109 36.579 376.884L31.5963 376.468L26.6136 376.053C32.3641 259.343 110.028 168.476 202.466 176.189L202.22 181.183ZM31.5963 376.468L36.579 376.884C30.973 490.66 97.232 586.454 181.903 593.52L181.657 598.514L181.411 603.508C88.973 595.794 20.8631 492.763 26.6136 376.053L31.5963 376.468ZM181.657 598.514L181.903 593.52C266.574 600.585 341.692 516.588 347.298 402.812L352.28 403.228L357.263 403.644C351.512 520.354 273.849 611.221 181.411 603.508L181.657 598.514Z\" fill=\"#F9F0D9\" mask=\"url(#stroke10_18_90)\"/>\n<mask id=\"stroke11_18_90\" fill=\"white\">\n<path d=\"M456.965 527.427C462.643 412.185 395.459 312.772 306.905 305.382C218.35 297.993 141.96 385.425 136.281 500.668C130.603 615.91 197.788 715.323 286.342 722.713C374.896 730.102 451.287 642.67 456.965 527.427Z\"/>\n</mask>\n<path d=\"M456.965 527.427L451.983 527.012C457.589 413.236 391.33 317.442 306.659 310.376L306.905 305.382L307.151 300.388C399.589 308.102 467.698 411.133 461.948 527.843L456.965 527.427ZM306.905 305.382L306.659 310.376C221.988 303.311 146.87 387.308 141.264 501.083L136.281 500.668L131.299 500.252C137.049 383.542 214.713 292.675 307.151 300.388L306.905 305.382ZM136.281 500.668L141.264 501.083C135.658 614.859 201.917 710.654 286.588 717.719L286.342 722.713L286.096 727.707C193.658 719.993 125.548 616.962 131.299 500.252L136.281 500.668ZM286.342 722.713L286.588 717.719C371.259 724.784 446.377 640.787 451.983 527.012L456.965 527.427L461.948 527.843C456.197 644.553 378.534 735.42 286.096 727.707L286.342 722.713Z\" fill=\"#F9F0D9\" mask=\"url(#stroke11_18_90)\"/>\n<mask id=\"stroke12_18_90\" fill=\"white\">\n<path d=\"M519.476 545.322C522.675 480.396 453.481 421.772 364.927 414.382C276.372 406.993 201.991 453.636 198.792 518.562C195.593 583.489 264.788 642.112 353.342 649.502C441.896 656.891 516.277 610.249 519.476 545.322Z\"/>\n</mask>\n<path d=\"M519.476 545.322L514.494 544.906C515.996 514.422 500.534 484.991 473.469 462.061C446.407 439.133 408.013 422.992 364.681 419.376L364.927 414.382L365.173 409.388C410.395 413.162 450.875 430.028 479.75 454.491C508.62 478.951 526.156 511.296 524.459 545.738L519.476 545.322ZM364.927 414.382L364.681 419.376C321.349 415.761 281.685 425.388 252.595 443.63C223.501 461.874 205.277 488.493 203.775 518.978L198.792 518.562L193.81 518.147C195.507 483.705 216.073 454.539 247.108 435.078C278.147 415.614 319.95 405.615 365.173 409.388L364.927 414.382ZM198.792 518.562L203.775 518.978C202.273 549.463 217.735 578.893 244.8 601.823C271.862 624.751 310.256 640.892 353.588 644.508L353.342 649.502L353.096 654.496C307.873 650.722 267.393 633.857 238.519 609.394C209.648 584.933 192.113 552.588 193.81 518.147L198.792 518.562ZM353.342 649.502L353.588 644.508C396.92 648.124 436.584 638.496 465.674 620.254C494.768 602.01 512.992 575.391 514.494 544.906L519.476 545.322L524.459 545.738C522.762 580.18 502.196 609.345 471.161 628.807C440.122 648.27 398.318 658.27 353.096 654.496L353.342 649.502Z\" fill=\"#F9F0D9\" mask=\"url(#stroke12_18_90)\"/>\n<mask id=\"stroke13_18_90\" fill=\"white\">\n<path d=\"M279.965 495.064C285.643 379.821 218.459 280.408 129.905 273.018C41.3502 265.629 -35.0405 353.061 -40.7187 468.304C-46.3969 583.547 20.7875 682.96 109.342 690.349C197.896 697.739 274.287 610.306 279.965 495.064Z\"/>\n</mask>\n<path d=\"M279.965 495.064L274.983 494.648C280.589 380.872 214.33 285.078 129.659 278.012L129.905 273.018L130.151 268.025C222.589 275.738 290.698 378.77 284.948 495.479L279.965 495.064ZM129.905 273.018L129.659 278.012C44.9876 270.947 -30.1301 354.944 -35.736 468.72L-40.7187 468.304L-45.7014 467.888C-39.9508 351.178 37.7128 260.311 130.151 268.025L129.905 273.018ZM-40.7187 468.304L-35.736 468.72C-41.3419 582.495 24.9171 678.29 109.588 685.355L109.342 690.349L109.096 695.343C16.658 687.629 -51.4519 584.598 -45.7014 467.888L-40.7187 468.304ZM109.342 690.349L109.588 685.355C194.259 692.421 269.377 608.423 274.983 494.648L279.965 495.064L284.948 495.479C279.197 612.189 201.534 703.057 109.096 695.343L109.342 690.349Z\" fill=\"#F9F0D9\" mask=\"url(#stroke13_18_90)\"/>\n<mask id=\"stroke14_18_90\" fill=\"white\">\n<path d=\"M425.756 568.146C312.707 565.204 223.398 469.234 226.279 353.792C229.16 238.351 323.141 147.152 436.19 150.094C549.239 153.036 638.548 249.005 635.666 364.447C632.785 479.889 538.805 571.088 425.756 568.146Z\"/>\n</mask>\n<path d=\"M425.756 568.146L425.881 563.147C315.69 560.279 228.463 466.703 231.278 353.923L226.279 353.792L221.281 353.662C218.333 471.766 309.724 570.128 425.631 573.144L425.756 568.146ZM226.279 353.792L231.278 353.923C234.092 241.142 325.874 152.224 436.065 155.092L436.19 150.094L436.314 145.095C320.407 142.079 224.229 235.559 221.281 353.662L226.279 353.792ZM436.19 150.094L436.065 155.092C546.256 157.96 633.483 251.536 630.668 364.317L635.666 364.447L640.665 364.577C643.612 246.474 552.222 148.112 436.314 145.095L436.19 150.094ZM635.666 364.447L630.668 364.317C627.853 477.097 536.071 566.015 425.881 563.147L425.756 568.146L425.631 573.144C541.539 576.161 637.717 482.68 640.665 364.577L635.666 364.447Z\" fill=\"#F9F0D9\" mask=\"url(#stroke14_18_90)\"/>\n<mask id=\"stroke15_18_90\" fill=\"white\">\n<path d=\"M262.809 563.904C149.76 560.962 60.4511 464.993 63.3323 349.551C66.2134 234.109 160.194 142.91 273.243 145.852C386.292 148.795 475.601 244.764 472.719 360.206C469.838 475.648 375.858 566.847 262.809 563.904Z\"/>\n</mask>\n<path d=\"M262.809 563.904L262.934 558.906C152.743 556.038 65.5158 462.462 68.3306 349.681L63.3323 349.551L58.334 349.421C55.3864 467.525 146.777 565.886 262.684 568.903L262.809 563.904ZM63.3323 349.551L68.3306 349.681C71.1453 236.901 162.927 147.983 273.118 150.851L273.243 145.852L273.367 140.854C157.46 137.837 61.2816 231.318 58.334 349.421L63.3323 349.551ZM273.243 145.852L273.118 150.851C383.309 153.719 470.536 247.295 467.721 360.076L472.719 360.206L477.718 360.336C480.665 242.232 389.275 143.871 273.367 140.854L273.243 145.852ZM472.719 360.206L467.721 360.076C464.906 472.856 373.124 561.774 262.934 558.906L262.809 563.904L262.684 568.903C378.592 571.919 474.77 478.439 477.718 360.336L472.719 360.206Z\" fill=\"#F9F0D9\" mask=\"url(#stroke15_18_90)\"/>\n<mask id=\"stroke16_18_90\" fill=\"white\">\n<path d=\"M360.619 478.382C247.57 475.439 158.261 379.47 161.143 264.028C164.024 148.586 258.004 57.3874 371.053 60.3295C484.102 63.2717 573.411 159.241 570.53 274.683C567.649 390.125 473.669 481.324 360.619 478.382Z\"/>\n</mask>\n<path d=\"M360.619 478.382L360.744 473.383C250.553 470.515 163.326 376.939 166.141 264.158L161.143 264.028L156.144 263.898C153.197 382.002 244.587 480.363 360.495 483.38L360.619 478.382ZM161.143 264.028L166.141 264.158C168.956 151.378 260.738 62.4602 370.928 65.328L371.053 60.3295L371.178 55.3311C255.27 52.3145 159.092 145.795 156.144 263.898L161.143 264.028ZM371.053 60.3295L370.928 65.328C481.119 68.1957 568.346 161.772 565.531 274.553L570.53 274.683L575.528 274.813C578.476 156.709 487.085 58.3476 371.178 55.3311L371.053 60.3295ZM570.53 274.683L565.531 274.553C562.717 387.333 470.935 476.251 360.744 473.383L360.619 478.382L360.495 483.38C476.402 486.396 572.58 392.916 575.528 274.813L570.53 274.683Z\" fill=\"#F9F0D9\" mask=\"url(#stroke16_18_90)\"/>\n</g>\n</svg>"},
+    {n:"Арбуз", r:70, c1:"#8EAA31", c2:"#375E4C", pts:80, svg: "<svg width=\"751\" height=\"592\" viewBox=\"0 0 751 592\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<ellipse cx=\"406\" cy=\"295.588\" rx=\"319.5\" ry=\"265.5\" transform=\"rotate(-174.365 406 295.588)\" fill=\"#8EAA31\"/>\n<ellipse cx=\"403.416\" cy=\"321.785\" rx=\"319.5\" ry=\"239.175\" transform=\"rotate(-174.365 403.416 321.785)\" fill=\"#375E4C\"/>\n<ellipse cx=\"402.908\" cy=\"326.936\" rx=\"319.5\" ry=\"164\" transform=\"rotate(-174.365 402.908 326.936)\" fill=\"#8EAA31\"/>\n<ellipse cx=\"402.445\" cy=\"331.625\" rx=\"319.5\" ry=\"71.2875\" transform=\"rotate(-174.365 402.445 331.625)\" fill=\"#375E4C\"/>\n<path d=\"M90.9995 266.939L12.3967 250.276C6.63607 249.054 1.07265 253.05 0.390287 258.899L0.0678334 261.663C-0.465447 266.235 2.18985 270.579 6.50092 272.19L79.1323 299.323C83.9926 301.139 89.4344 298.936 91.6626 294.25L97.9565 281.016C100.733 275.178 97.3236 268.279 90.9995 266.939Z\" fill=\"#2A3B1A\"/>\n</svg>"},
+    {n:"Банка варенья", r:82, c1:"#A54141", c2:"#672525", pts:150, src:"Frame 50.svg", svg: "<svg width=\"1225\" height=\"1237\" viewBox=\"0 0 1225 1237\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"> <rect x=\"65.082\" y=\"195.246\" width=\"1096.38\" height=\"993.754\" rx=\"123\" fill=\"#A54141\"/> <rect x=\"147\" y=\"1141\" width=\"931.175\" height=\"95.12\" rx=\"47.56\" fill=\"#672525\"/> <path d=\"M638.305 591.997C423.387 592.189 66.3335 510.645 66.3335 493.123V414.5L638.305 220.278L1162.21 377C1162.21 377 1162.57 474.349 1161.21 490.619C1159.86 506.89 851.769 591.807 638.305 591.997Z\" fill=\"white\"/> <path d=\"M1221.97 321.352C1211.61 284.889 1097.65 201.327 1097.65 201.327C1097.65 201.327 132.32 181.651 109 220C85.6801 258.348 24.5696 285.747 9.80198 321.352C-4.91386 356.833 -4.55187 357.576 21.1852 410.431L21.4576 410.991C47.4644 464.401 143.982 397.596 204.06 391.24C266.977 384.583 282.57 474.415 345.221 483.917C427.371 496.377 465.661 391.24 542.069 391.24C618.477 391.24 635.27 500.16 710.427 500.63C791.87 501.139 815.326 374.528 889.144 374.528C962.962 374.528 991.454 483.917 1063.98 483.917C1136.5 483.917 1119.66 407.952 1161.11 391.24C1202.55 374.528 1232.33 357.815 1221.97 321.352Z\" fill=\"#FFC8CD\"/> <rect x=\"117.648\" y=\"167.712\" width=\"991.251\" height=\"52.5663\" rx=\"26.2832\" fill=\"#C69A9E\"/> <rect x=\"92.6167\" width=\"1038.81\" height=\"185.234\" rx=\"37\" fill=\"#FFE3E6\"/> <path d=\"M529.725 1026.99C626.257 1026.99 717.69 1043.18 765.434 899.95C765.434 808.874 699.252 716.657 602.72 716.657C506.188 716.657 456.462 754.819 456.462 845.895C456.462 936.972 433.192 1026.99 529.725 1026.99Z\" fill=\"#EB4455\"/> <path d=\"M512.445 719.675C564.569 694.022 613.952 686.596 673.513 726.342C673.513 726.342 691.604 689.803 717.412 692.104C743.961 694.471 753.187 700.872 750.617 726.342C748.355 748.751 717.412 758.067 717.412 758.067C773.622 800.848 778.974 833.747 766.178 888.425C723.573 851.041 722.095 854.331 715.775 863.293C718.966 877.047 716.363 888.165 703.666 914.492C686.855 881.404 682.608 859.49 660.068 847.541C649.088 854.978 635.425 860.209 592.973 872.042C581.953 847.863 587.346 836.408 598.055 802.816C562.263 803.621 541.956 798.531 527.256 784.766C543.382 768.891 561.001 763.874 576.378 758.067C567.644 730.522 541.248 740.799 512.445 719.675Z\" fill=\"#73A86F\"/> <ellipse cx=\"550.647\" cy=\"997.288\" rx=\"23.0888\" ry=\"12.1076\" transform=\"rotate(-12.2123 550.647 997.288)\" fill=\"#F5E9C1\"/> <ellipse cx=\"635.953\" cy=\"909.379\" rx=\"23.0888\" ry=\"12.1076\" transform=\"rotate(-52.2441 635.953 909.379)\" fill=\"#F5E9C1\"/> <ellipse cx=\"555.423\" cy=\"853.628\" rx=\"23.0888\" ry=\"12.1076\" transform=\"rotate(-70.7573 555.423 853.628)\" fill=\"#F5E9C1\"/> <ellipse cx=\"489.372\" cy=\"881.274\" rx=\"23.0888\" ry=\"12.1076\" transform=\"rotate(-87.8265 489.372 881.274)\" fill=\"#F5E9C1\"/> <ellipse cx=\"501.891\" cy=\"801.833\" rx=\"23.0888\" ry=\"12.1076\" transform=\"rotate(-52.4226 501.891 801.833)\" fill=\"#F5E9C1\"/> <ellipse cx=\"707.591\" cy=\"953.784\" rx=\"23.0888\" ry=\"12.1076\" transform=\"rotate(-73.4065 707.591 953.784)\" fill=\"#F5E9C1\"/> <ellipse cx=\"492.12\" cy=\"959.665\" rx=\"23.0888\" ry=\"12.1076\" transform=\"rotate(-99.0663 492.12 959.665)\" fill=\"#F5E9C1\"/> <ellipse cx=\"551.332\" cy=\"930.013\" rx=\"23.0888\" ry=\"12.1076\" transform=\"rotate(-49.9601 551.332 930.013)\" fill=\"#F5E9C1\"/> <ellipse cx=\"635.764\" cy=\"984.293\" rx=\"23.0888\" ry=\"12.1076\" transform=\"rotate(-36.3302 635.764 984.293)\" fill=\"#F5E9C1\"/> <ellipse cx=\"1066\" cy=\"976.5\" rx=\"12\" ry=\"21.5\" fill=\"#F7BFBF\"/> <ellipse cx=\"159\" cy=\"618.5\" rx=\"12\" ry=\"21.5\" fill=\"#F7BFBF\"/> <ellipse cx=\"250\" cy=\"780.5\" rx=\"12\" ry=\"21.5\" fill=\"#F7BFBF\"/> <ellipse cx=\"330\" cy=\"639.5\" rx=\"12\" ry=\"21.5\" fill=\"#F7BFBF\"/> <ellipse cx=\"318\" cy=\"1073.5\" rx=\"12\" ry=\"21.5\" fill=\"#F7BFBF\"/> <ellipse cx=\"159\" cy=\"978.5\" rx=\"12\" ry=\"21.5\" fill=\"#F7BFBF\"/> <ellipse cx=\"378\" cy=\"892.5\" rx=\"12\" ry=\"21.5\" fill=\"#F7BFBF\"/> <ellipse cx=\"1097\" cy=\"596.5\" rx=\"12\" ry=\"21.5\" fill=\"#F7BFBF\"/> <ellipse cx=\"889\" cy=\"639.5\" rx=\"12\" ry=\"21.5\" fill=\"#F7BFBF\"/> <ellipse cx=\"841\" cy=\"883.5\" rx=\"12\" ry=\"21.5\" fill=\"#F7BFBF\"/> <ellipse cx=\"1003\" cy=\"781.5\" rx=\"12\" ry=\"21.5\" fill=\"#F7BFBF\"/> <ellipse cx=\"889\" cy=\"1073.5\" rx=\"12\" ry=\"21.5\" fill=\"#F7BFBF\"/> </svg>"}];
 
 function getBerrySprites(){
     if(BERRY_SPR) return BERRY_SPR;
-    BERRY_SPR = BERRIES.map((b, lv) => {
-        const r = b.r, sz = r * 2 + 4, cx = sz / 2;
-        return mkSprite(sz, sz, ctx => {
-            const g = ctx.createRadialGradient(cx - r*0.3, cx - r*0.35, r*0.15, cx, cx, r);
-            g.addColorStop(0, b.c1); g.addColorStop(1, b.c2);
-            ctx.fillStyle = g; ctx.strokeStyle = '#ffffff55'; ctx.lineWidth = 2;
-            ctx.beginPath(); ctx.arc(cx, cx, r, 0, 7); ctx.fill(); ctx.stroke();
-
-            if(lv===6){
-                ctx.strokeStyle = '#234a2a'; ctx.lineWidth = 3;
-                for(let dx=-r*0.5; dx<=r*0.5; dx+=r*0.5){
-                    ctx.beginPath(); ctx.moveTo(cx+dx, cx-r*0.8); ctx.quadraticCurveTo(cx+dx*1.3, cx, cx+dx, cx+r*0.8); ctx.stroke();
-                }
-            } else if(lv===2){
-                ctx.fillStyle = '#f2dca0';
-                for(const [ox,oy] of [[-0.3,-0.2],[0.3,-0.2],[0,0.2],[-0.25,0.35],[0.25,0.35]]){
-                    ctx.beginPath(); ctx.arc(cx+ox*r, cx+oy*r, 1.5, 0, 7); ctx.fill();
-                }
-            } else if(lv===3){
-                ctx.fillStyle = '#fff6';
-                ctx.beginPath(); ctx.arc(cx-r*0.3, cx-r*0.2, r*0.18, 0, 7); ctx.arc(cx+r*0.3, cx-r*0.1, r*0.14, 0, 7); ctx.fill();
-            } else if(lv===7){
-                ctx.strokeStyle = '#6e4719'; ctx.lineWidth = 3;
-                ctx.beginPath(); ctx.moveTo(cx-r*0.7, cx); ctx.lineTo(cx+r*0.7, cx); ctx.stroke();
-            } else if(lv===8){
-                ctx.fillStyle = '#f5de8a'; ctx.strokeStyle = '#6e4719'; ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(cx-r*0.45, cx+r*0.25); ctx.lineTo(cx-r*0.35, cx-r*0.25); ctx.lineTo(cx, cx);
-                ctx.lineTo(cx+r*0.35, cx-r*0.25); ctx.lineTo(cx+r*0.45, cx+r*0.25); ctx.closePath();
-                ctx.fill(); ctx.stroke();
+    BERRY_SPR = BERRIES.map(b => {
+        const img = new Image();
+        if(b.src){
+            img.src = b.src;
+            if(b.svg){
+                img.onerror = () => {
+                    img.onerror = null;
+                    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(b.svg);
+                };
             }
-
-            ctx.fillStyle = '#ffffff38';
-            ctx.beginPath(); ctx.arc(cx - r*0.32, cx - r*0.32, r*0.24, 0, 7); ctx.fill();
-            ctx.fillStyle = '#689e5b';
-            ctx.beginPath(); ctx.ellipse(cx + 2, cx - r + 3, Math.max(4, r*0.22), Math.max(2.5, r*0.12), -0.4, 0, 7); ctx.fill();
-        });
+        } else if(b.svg){
+            img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(b.svg);
+        }
+        return img;
     });
     return BERRY_SPR;
 }
@@ -2549,7 +3047,26 @@ function initBerry(){
 
     function drawBerryBall(x, y, lv, customR=null, sc=1){
         const r = ((customR || BERRIES[lv].r) + 2) * sc;
-        ctx.drawImage(bSpr[lv], x - r, y - r, r * 2, r * 2);
+        const img = bSpr[lv];
+        if(img && img.complete && img.naturalWidth > 0){
+            ctx.drawImage(img, x - r, y - r, r * 2, r * 2);
+        } else {
+            const b = BERRIES[lv];
+            ctx.fillStyle = b.c1;
+            ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+        }
+
+        // Прозрачная окантовка и блик
+        ctx.strokeStyle = '#ffffff55';
+        ctx.lineWidth = Math.max(1.5, r * 0.05);
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, 7);
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff38';
+        ctx.beginPath();
+        ctx.arc(x - r * 0.32, y - r * 0.32, r * 0.24, 0, 7);
+        ctx.fill();
     }
 
     function drawBearDropper(x, curLv, ready){
@@ -2648,10 +3165,21 @@ function initBerry(){
             S.berryMerges++;
             if(st.score > (S.bestBerry || 0)) S.bestBerry = st.score;
 
-            let coinGain = newLv >= 7 ? 6 : (newLv >= 5 ? 3 : (newLv >= 3 ? 1 : 0));
+            let coinGain = newLv >= 8 ? 15 : (newLv >= 7 ? 6 : (newLv >= 5 ? 3 : (newLv >= 3 ? 1 : 0)));
             if(coinGain > 0){ st.coinsGot += coinGain; earn(coinGain, false); }
             addXp(2); save(); hud();
-            chng(); hap(newLv >= 4 ? 'medium' : 'light');
+            sfx.merge(1 + newLv * 0.08);
+            hap(newLv >= 4 ? 'medium' : 'light');
+            if(newLv >= 7){
+                const rct = c.getBoundingClientRect();
+                sparkleBurst(rct.left + mx, rct.top + my, 18, '#f8be43');
+                if(newLv >= 8){
+                    sfx.jackpot();
+                    toast("🍓 БАНКА ВАРЕНЬЯ СОБРАНА!\nСтепан в полном восторге!");
+                } else {
+                    sfx.win();
+                }
+            }
 
             st.pops.push({ x: mx, y: my, r: BERRIES[newLv].r * 1.35, a: 1, txt: coinGain > 0 ? `+${coinGain} монет` : `+${pts}` });
         }
@@ -2966,7 +3494,9 @@ function initCraneBuild(){
                         const bonus = 2;
                         st.coinsGot += bonus;
                         earn(bonus, false);
-                        chng(); hap('medium');
+                        sfx.win();
+                        sparkleBurst(topB.x, topB.y, 16, '#ffd56b');
+                        hap('medium');
                         st.pops.push({ x: landedX, y: topB.y - f.h - 10, t: `ИДЕАЛЬНО! +${bonus}`, col: '#fce592', a: 1.2 });
                     } else {
                         st.combo = 0;
@@ -3473,7 +4003,14 @@ function initBlockBlast(){
             const coins=L+(L>1?L:0)+(st.combo>2?1:0);
             st.coinsGot+=coins; earn(coins,false);
             S.bbLines=(S.bbLines||0)+L; addXp(L*2);
-            chng(); hap(L>1?'medium':'light');
+            hap(L>1?'medium':'light');
+            if(L>1){
+                sfx.win();
+                const rct = c.getBoundingClientRect();
+                sparkleBurst(rct.left + px, rct.top + py, 16, '#f0cb6e');
+            } else {
+                sfx.merge();
+            }
             st.pops.push({x:px,y:py,t:L>1?`Комбо ×${L}! +${coins}`:`+${coins}`,col:'#f0cb6e',a:1.3});
             save(); hud();
         } else {
@@ -3696,7 +4233,7 @@ function svgShopkeeper(x,y){
 
 function svgClubIcon(k, cx, cy){
     if(k=="D") return `<g transform="translate(${cx} ${cy})"><circle r="10" fill="#c96557" stroke="#e5b94c" stroke-width="1.8"/><path d="M-10 0h20M0-10v20" stroke="#e5b94c" stroke-width="1.5"/><circle r="3" fill="#e5b94c"/></g>`;
-    if(k=="O") return `<g transform="translate(${cx} ${cy})"><rect x="-6" y="-8" width="12" height="11" rx="2" fill="#34495e" stroke="#fff" stroke-width="1.2"/><rect x="-6" y="0" width="12" height="2.5" fill="#c96557"/><rect x="-9" y="2.5" width="18" height="3" rx="1.5" fill="#2c3e50"/></g>`;
+    if(k=="O") return `<g transform="translate(${cx} ${cy})"><path d="M-7 -9L-5 7H5L7 -9Z" fill="#3C627D" stroke="#6CA0C5" stroke-width="1.2"/><path d="M-7 -9C-7 -7 7 -7 7 -9C7 -11 -7 -11 -7 -9Z" fill="#B2D3EB"/><polygon points="0,-3 2,-1 1,2 -1,2 -2,-1" fill="#a882ba" stroke="#5e3d6e" stroke-width="0.8"/></g>`;
     if(k=="1") return `<g transform="translate(${cx} ${cy})"><rect x="-7" y="-9" width="14" height="18" rx="2.5" fill="#fff" stroke="#ccc"/><polygon points="0,-5 5,0 0,5 -5,0" fill="#c96557"/></g>`;
     if(k=="2") return `<g transform="translate(${cx} ${cy})"><rect x="-9" y="-6" width="18" height="12" rx="2" fill="#e5b94c"/><circle cx="-4" cy="0" r="2.5" fill="#c96557"/><circle cx="4" cy="0" r="2.5" fill="#588bae"/></g>`;
     if(k=="3") return `<g transform="translate(${cx} ${cy})"><circle r="9" fill="#e5b94c" stroke="#9e7322" stroke-width="1.8"/><circle r="5" fill="none" stroke="#6e4b12" stroke-width="1.2"/></g>`;
@@ -3978,7 +4515,7 @@ buildStatic(mapId){
                 objs+=`<ellipse cx="${cx}" cy="${y+41}" rx="18" ry="5" fill="#0004"/><rect x="${x+6}" y="${y+6}" width="36" height="34" rx="7" fill="#8c5830" stroke="#f1c40f" stroke-width="1.8"/><rect x="${x+10}" y="${y+9}" width="28" height="24" rx="5" fill="#24160e"/>` + svgClubIcon(k, cx, y+21);
             }
             if(k=="D") L+=svgPill(x,y-4,"Колесо");
-            if(k=="O") L+=svgPill(x,y-4,"Цилиндры");
+            if(k=="O") L+=svgPill(x,y-4,"Стаканы");
             if(k=="1") L+=svgPill(x,y-4,"Карты");
             if(k=="2") L+=svgPill(x,y-4,"Три ягоды");
             if(k=="3") L+=svgPill(x,y-4,"Монетка");
@@ -4025,7 +4562,7 @@ html(){
     const rn=(!isClub && !isShop && weather===1)?`<div class="rain"></div>`:"";
     const amb=(!isClub && !isShop && nt)?Array.from({length:8},()=>`<i class="ff" style="left:${R(100)}%;top:${R(100)}%;animation-delay:${R(40)/10}s"></i>`).join(""):"";
     const twinEl=S.twin?`<div id="pl2"><svg viewBox="30 20 140 170">${bear(100,130,1,false,TWINOPT)}</svg></div>`:"";
-    return `<div id="wv" style="background:${isClub?'#28150b':(isShop?'#34393c':'#558c42')}${isShop?';width:min(100%,372px);height:min(70vh,300px)':''}"><div id="wm"><svg width="${st.Wpx}" height="${st.Hpx}">${st.base}${dynObjs}${st.L}${dynL}</svg><div id="pl"><svg viewBox="30 20 140 170">${bear(100,130,1)}</svg></div>${twinEl}</div>${amb}${rn}<div id="ov" style="background:${tint}"></div></div><div class="msg" id="dk">${isClub?"Игровой Клуб — выбери автомат или зайди в бар!":(isShop?"Потапыч Маркет — выбери отдел или товар":"Тапни по карте — Степан пойдёт")}</div>`;
+    return `<div id="wv" style="background:${isClub?'#28150b':(isShop?'#34393c':'#558c42')}${isShop?';width:min(100%,372px);height:min(70vh,300px)':''}"><div id="wm"><svg width="${st.Wpx}" height="${st.Hpx}">${st.base}${dynObjs}${st.L}${dynL}</svg><div id="pl"><svg viewBox="30 20 140 170">${bear(100,130,1)}</svg></div>${twinEl}</div>${amb}${rn}<div id="ov" style="background:${tint}"></div></div><div class="msg" id="dk">${isClub?"Игровой Клуб — выбери автомат или зайди в бар!":(isShop?"Потапыч Маркет — выбери отдел или товар":"Тапни по карте — Степан пойдёт")}</div><div class="desktop-kbd-hint">⌨️ Управление: WASD или стрелочки, Пробел — действие, Esc — назад</div>`;
 },
 init(){
 const p=Array.isArray(S.pos)?S.pos:[3,3];W.pc=p[0];W.pr=p[1];
