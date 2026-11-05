@@ -812,7 +812,25 @@ const STAT_FALLBACK = {
 
 const $=s=>document.querySelector(s),R=n=>Math.random()*n|0;
 
-let S={coins:35,crys:5,total:0,hunger:85,mood:85,energy:85,house:1,hat:0,owned:[0],items:{},twin:false,fish:0,fishCaught:0,tiles:0,fed:0,berries:0,berryMerges:0,bestBerry:0,bbLines:0,bestBB:0,craneFloors:0,bestCrane:0,gamesPlayed:0,molesHit:0,racesDone:0,bestHill:0,hcUpg:{eng:1,susp:1,tires:1,fuel:1},barDrinks:0,steps:0,claimed:[],achClaimed:[],dailyBonus:false,t:Date.now(),sleepUntil:0,sleepStart:0,day:"",streak:0,lvl:1,xp:0,sick:false,qb:null,hiveA:0,mapId:0};
+let gameReady=false;
+let rawS={coins:35,crys:5,total:0,hunger:85,mood:85,energy:85,house:1,hat:0,owned:[0],items:{},twin:false,fish:0,fishCaught:0,tiles:0,fed:0,berries:0,berryMerges:0,bestBerry:0,bbLines:0,bestBB:0,craneFloors:0,bestCrane:0,gamesPlayed:0,molesHit:0,racesDone:0,bestHill:0,hcUpg:{eng:1,susp:1,tires:1,fuel:1},barDrinks:0,steps:0,claimed:[],achClaimed:[],dailyBonus:false,t:Date.now(),sleepUntil:0,sleepStart:0,day:"",streak:0,lvl:1,xp:0,sick:false,qb:null,hiveA:0,mapId:0};
+let S=new Proxy(rawS,{
+    set(target,prop,val){
+        if(typeof gameReady!=="undefined"&&gameReady){
+            if(prop==="coins"&&typeof val==="number"&&(val-(target.coins||0))>350){
+                console.warn("AntiCheat: currency jump blocked");return true;
+            }
+            if(prop==="crys"&&typeof val==="number"&&(val-(target.crys||0))>45){
+                console.warn("AntiCheat: crystal jump blocked");return true;
+            }
+            if(prop==="lvl"&&typeof val==="number"&&(val-(target.lvl||1))>2){
+                console.warn("AntiCheat: level jump blocked");return true;
+            }
+        }
+        target[prop]=val;
+        return true;
+    }
+});
 
 function sanitizeState(){
     if(!Array.isArray(S.owned))S.owned=[0];
@@ -841,7 +859,7 @@ try{
 }catch(e){}
 sanitizeState();
 
-let gameReady=false, saveTmr, saveRetryTmr=null, serverSaveInFlight=false, pendingServerSave=null;
+let saveTmr, saveRetryTmr=null, serverSaveInFlight=false, pendingServerSave=null;
 const getInitData=()=>window.Telegram?.WebApp?.initData||"";
 
 function readLegacyCloudSave(){
