@@ -203,7 +203,11 @@ canvas{background:#1c1612;border-radius:14px;width:100%;max-width:440px;margin:0
 
 .thimble-room{position:relative;overflow:hidden;max-width:360px;margin:12px auto 16px;border:2px solid #6b4a2b;border-radius:14px;background:#46352c;box-shadow:inset 0 3px 10px #0006;aspect-ratio:360/210}
 .thimble-room>svg{position:absolute;inset:0;width:100%;height:100%;display:block}
-.thim-cup{position:absolute;width:15%;max-width:58px;min-width:42px;height:31%;max-height:68px;min-height:48px;padding:0;border:0;background:transparent;cursor:pointer;z-index:2;left:var(--cup-x);top:44%;transform:translate(calc(-50% + var(--shake-x,0px)),calc(-50% + var(--shake-y,0px)));transition:transform .12s ease,filter .12s ease;filter:drop-shadow(0 4px 3px #0006)}
+.thim-cup{position:absolute;width:15%;max-width:58px;min-width:42px;height:31%;max-height:68px;min-height:48px;padding:0;border:0;background:transparent;cursor:pointer;z-index:2;left:var(--cup-x);top:44%;transform:translate(calc(-50% + var(--shake-x,0px)),calc(-50% + var(--shake-y,0px) + var(--lift,0px)));transition:left var(--dur,.3s) ease-in-out,transform var(--dur,.3s) ease-in-out,filter .12s ease;filter:drop-shadow(0 4px 3px #0006)}
+.thim-cup:disabled{cursor:default}
+.thim-gem{position:absolute;left:var(--cup-x,54%);top:55%;width:9%;max-width:30px;min-width:22px;aspect-ratio:1;transform:translate(-50%,-50%) scale(.6);opacity:0;z-index:1;transition:left var(--dur,.3s) ease-in-out,opacity .25s,transform .25s;pointer-events:none;filter:drop-shadow(0 0 6px #b99be0)}
+.thim-gem.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.thim-gem svg{width:100%;height:100%;display:block}
 .thim-cup svg{width:100%;height:100%;display:block;overflow:visible}
 .thim-cup:hover,.thim-cup:focus-visible{filter:drop-shadow(0 0 8px #ffe28a);outline:none}
 
@@ -1174,10 +1178,11 @@ function leaveVenueMenu(){
     go("world");
 }
 
-const THIMBLE_ART=`<svg viewBox="0 0 648 1033" aria-hidden="true"><path d="M646.303 925.78C673.303 1062.78 -16.5388 1072.28 0.303502 925.78C17.1458 779.28 109.704 372.985 179.804 18.7799C179.804 -4.22025 467.803 -8.21993 467.803 18.7799C537.512 372.985 619.304 788.78 646.303 925.78Z" fill="#3C627D"/><path d="M467.803 20C537.512 374.206 31 751.5 31 751.5C31 751.5 109.705 374.206 179.804 20C179.804 43.0001 467.803 46.9998 467.803 20Z" fill="#6CA0C5"/><path d="M180 19.7799C180 42.78 468 46.7797 468 19.7799C468 -7.21993 180 -3.22025 180 19.7799Z" fill="#B2D3EB"/></svg>`;
+const THIMBLE_ART=`<svg viewBox="0 0 60 84" aria-hidden="true"><path d="M12 5L48 5L56.5 70Q30 83 3.5 70Z" fill="#9fd0ea" stroke="#3c627d" stroke-width="2.4" stroke-linejoin="round"/><path d="M38 5L48 5L56.5 70Q47 75 40 77Z" fill="#5f9bbd" opacity=".55"/><path d="M15 9L21 9L13 66Q10 65 8.5 64Z" fill="#fff" opacity=".6"/><path d="M26 10L28.5 10L24 70L21.5 69Z" fill="#fff" opacity=".28"/><ellipse cx="30" cy="5" rx="18" ry="3.6" fill="#d9eefa" stroke="#3c627d" stroke-width="2"/><path d="M5 70Q30 82 55 70" fill="none" stroke="#e6f5fc" stroke-width="2.2" stroke-linecap="round" opacity=".85"/></svg>`;
 function thimbleScene(){
   return `<div class="thimble-room" aria-label="Стол с тремя стаканами — угадай где алмаз">
     <svg viewBox="0 0 360 210" aria-hidden="true"><defs><linearGradient id="thWall" x2="0" y2="1"><stop stop-color="#73533d"/><stop offset="1" stop-color="#3e3028"/></linearGradient></defs><rect width="360" height="210" fill="url(#thWall)"/><path d="M0 146h360v64H0z" fill="#755339"/><path d="M0 158h360M0 183h360" stroke="#9a714a" stroke-width="3"/><path d="M25 0v126m93-126v126m93-126v126" stroke="#8d694b" stroke-width="5" opacity=".55"/><rect x="26" y="30" width="76" height="58" rx="4" fill="#91b6bf" stroke="#392b22" stroke-width="7"/><path d="M64 34v50M30 59h68" stroke="#e4d1ae" stroke-width="4"/><circle cx="314" cy="37" r="15" fill="#e5b94c" opacity=".9"/><path d="M138 109h207v17H138z" fill="#b07a43" stroke="#51351f" stroke-width="4"/><path d="M150 126v47m183-47v47M142 173h198" stroke="#57381f" stroke-width="7"/><path d="M151 114h180" stroke="#e0b773" stroke-width="3"/>${bear(82,183,.53,false,{})}<g transform="translate(15 10)"><rect width="130" height="22" rx="11" fill="#2d211acc"/><text x="65" y="15" fill="#fff0c9" text-anchor="middle" font-size="9" font-weight="900">СТАКАНЫ</text></g></svg>
+    <div class="thim-gem" aria-hidden="true">${ICO.crys}</div>
     <button type="button" class="thim-cup" style="--cup-x:54%" aria-label="Выбрать первый стакан" onclick="pickThimble(0)">${THIMBLE_ART}</button>
     <button type="button" class="thim-cup" style="--cup-x:70%" aria-label="Выбрать второй стакан" onclick="pickThimble(1)">${THIMBLE_ART}</button>
     <button type="button" class="thim-cup" style="--cup-x:86%" aria-label="Выбрать третий стакан" onclick="pickThimble(2)">${THIMBLE_ART}</button>
@@ -1367,8 +1372,9 @@ ${dartScene()}
 </div><button class="b exit-btn" onclick="go('world')">${ICO.tree} В лес</button>`},
 
 thimbles(){return `<div class="card" style="text-align:center;"><b>Стаканы</b>
-<div class="msg" id="thim-msg">Угадай, под каким стаканом спрятан алмаз (3 → 10)</div>
+<div class="msg" id="thim-msg">Запомни, где алмаз, и найди его после перемешивания (3 → 10)</div>
 ${thimbleScene()}
+<button class="b" id="thim-btn" onclick="startThimble()">Играть (3 ${ICO.crys})</button>
 </div><button class="b exit-btn" onclick="go('world')">В зал</button>`},
 
 slots(){ return `<div class="card slot-card" style="text-align:center;"><b style="font-size:18px">Автомат «Три ягоды»</b>
@@ -1706,37 +1712,97 @@ function throwDart(){
 }
 
 // ===== СТАКАНЫ =====
-let thimState = 0, thimIv = null, thimTmr = null; 
-function initThimbles(){ if(!checkState())return; thimState = 0; go('thimbles'); }
-function pickThimble(i){
+// thimState: 0 — ожидание, 1 — показ/перемешивание, 2 — выбор, 3 — результат
+const THIM_X = [54, 70, 86];
+let thimState = 0, thimIv = null, thimTmr = null, thimRun = 0, thimWin = 0, thimSlot = [0,1,2];
+const thimWait = ms => new Promise(res => { clearTimeout(thimTmr); thimTmr = setTimeout(res, ms); });
+const thimCups = () => Array.from(document.querySelectorAll(".thim-cup"));
+const thimRoom = () => document.querySelector(".thimble-room");
+function thimPlace(){
+    thimCups().forEach((c,i) => c.style.setProperty('--cup-x', THIM_X[thimSlot[i]] + '%'));
+    const g = document.querySelector(".thim-gem");
+    if(g) g.style.setProperty('--cup-x', THIM_X[thimSlot[thimWin]] + '%');
+}
+function initThimbles(){
+    if(!checkState()) return;
+    thimState = 0; thimRun++; thimSlot = [0,1,2];
+    go('thimbles');
+    setTimeout(thimPlace, 0);
+}
+async function startThimble(){
     if(thimState !== 0) return;
-    if(S.crys < 3) {boop(); hap('error'); return toast("Нужно 3 кристалла!");}
-    S.crys -= 3; S.gamesPlayed++; save(); hud(); thimState = 1;
-    const msgEl = $("#thim-msg"); if(msgEl) msgEl.textContent = "Перемешиваем стаканы…";
-    let ticks = 0;
-    thimIv = setInterval(()=>{
-        const cups = document.querySelectorAll(".thim-cup");
-        cups.forEach((c,idx) => { c.style.setProperty('--shake-x', `${Math.sin(ticks+idx)*18}px`); c.style.setProperty('--shake-y', `${idx%2?-10:10}px`); });
-        if(ticks % 3 === 0) sfx.cupSlide();
-        if(++ticks > 14) {
-            clearInterval(thimIv);
-            cups.forEach(c => { c.style.setProperty('--shake-x', '0px'); c.style.setProperty('--shake-y', '0px'); });
-            const winCup = R(3);
-            if(i === winCup) {
-                const rw = 10; S.crys += rw; popText("+10 кристаллов","#a882ba"); save(); hud(); sfx.win(); sparkleBurst(); hap('success');
-                if(msgEl) msgEl.innerHTML = `Угадал! Алмаз под №${i+1}! <b>+${rw}</b> ${ICO.crys}`;
-            } else {
-                boop(); hap('error');
-                if(msgEl) msgEl.innerHTML = `Пусто! Он был под №${winCup+1}.`;
-            }
-            if(cups[winCup]) cups[winCup].innerHTML = ICO.crys;
-            thimTmr = setTimeout(()=>{
-                thimState = 0;
-                document.querySelectorAll(".thim-cup").forEach(c => c.innerHTML = THIMBLE_ART);
-                if($("#thim-msg")) $("#thim-msg").textContent = "Выбери стакан (3 → 10)";
-            }, 1800);
-        }
-    }, 55);
+    if(S.crys < 3){ boop(); hap('error'); return toast("Нужно 3 кристалла!"); }
+    S.crys -= 3; S.gamesPlayed++; save(); hud();
+    thimState = 1;
+    const run = ++thimRun;
+    const alive = () => run === thimRun && thimRoom();
+    const msgEl = document.querySelector("#thim-msg"), btn = document.querySelector("#thim-btn");
+    const cups = thimCups(), gem = document.querySelector(".thim-gem"), room = thimRoom();
+    if(!cups.length || !gem || !room){ thimState = 0; return; }
+    if(btn){ btn.disabled = true; btn.textContent = "Смотри внимательно…"; }
+    thimWin = R(3); thimPlace();
+    if(msgEl) msgEl.textContent = "Запоминай, где алмаз…";
+    room.style.setProperty('--dur', '.35s');
+    // показываем алмаз
+    cups[thimWin].style.setProperty('--lift', '-36px'); gem.classList.add('show');
+    try{ sfx.cupSlide(); }catch(_){}
+    await thimWait(1100); if(!alive()) return;
+    cups[thimWin].style.setProperty('--lift', '0px');
+    await thimWait(450); if(!alive()) return;
+    gem.classList.remove('show');
+    if(msgEl) msgEl.textContent = "Перемешиваем стаканы…";
+    await thimWait(250); if(!alive()) return;
+    // перемешивание: стаканы меняются местами по дуге
+    const swaps = 10;
+    for(let k = 0; k < swaps; k++){
+        const dur = Math.max(190, 360 - k * 18);
+        room.style.setProperty('--dur', dur + 'ms');
+        const sa = R(3); let sb = R(3); while(sb === sa) sb = R(3);
+        const ca = thimSlot.indexOf(sa), cb = thimSlot.indexOf(sb);
+        cups[ca].style.zIndex = 4; cups[cb].style.zIndex = 3;
+        cups[ca].style.setProperty('--lift', '16px');
+        cups[cb].style.setProperty('--lift', '-14px');
+        thimSlot[ca] = sb; thimSlot[cb] = sa;
+        thimPlace();
+        try{ sfx.cupSlide(); }catch(_){}
+        await thimWait(dur + 30); if(!alive()) return;
+        cups[ca].style.setProperty('--lift', '0px'); cups[cb].style.setProperty('--lift', '0px');
+        await thimWait(Math.min(120, dur * 0.5)); if(!alive()) return;
+        cups[ca].style.zIndex = ''; cups[cb].style.zIndex = '';
+    }
+    thimState = 2;
+    if(msgEl) msgEl.textContent = "Где алмаз? Выбери стакан!";
+    if(btn) btn.textContent = "Выбери стакан";
+}
+async function pickThimble(i){
+    if(thimState === 0) return toast("Нажми «Играть» (3 кристалла)");
+    if(thimState !== 2) return;
+    thimState = 3;
+    const run = thimRun;
+    const alive = () => run === thimRun && thimRoom();
+    const msgEl = document.querySelector("#thim-msg"), btn = document.querySelector("#thim-btn");
+    const cups = thimCups(), gem = document.querySelector(".thim-gem"), room = thimRoom();
+    if(!cups.length || !gem || !room){ thimState = 0; return; }
+    room.style.setProperty('--dur', '.35s');
+    cups[i].style.setProperty('--lift', '-36px');
+    const won = (i === thimWin);
+    if(won){
+        gem.classList.add('show');
+        const rw = 10; S.crys += rw; popText("+10 кристаллов", "#a882ba"); save(); hud(); sfx.win(); sparkleBurst(); hap('success');
+        if(msgEl) msgEl.innerHTML = `Угадал! Алмаз под №${thimSlot[i]+1}! <b>+${rw}</b> ${ICO.crys}`;
+    } else {
+        boop(); hap('error');
+        await thimWait(500); if(!alive()) return;
+        cups[thimWin].style.setProperty('--lift', '-36px'); gem.classList.add('show');
+        if(msgEl) msgEl.innerHTML = `Пусто! Алмаз был под №${thimSlot[thimWin]+1}.`;
+    }
+    await thimWait(1900); if(!alive()) return;
+    cups.forEach(c => c.style.setProperty('--lift', '0px'));
+    gem.classList.remove('show');
+    await thimWait(400); if(!alive()) return;
+    thimState = 0;
+    if(btn){ btn.disabled = false; btn.innerHTML = `Играть (3 ${ICO.crys})`; }
+    if(msgEl) msgEl.textContent = "Запомни, где алмаз, и найди его после перемешивания (3 → 10)";
 }
 
 // ===== АВТОМАТ ТРИ ЯГОДЫ =====
@@ -2988,21 +3054,82 @@ const BERRIES = [
     {n:"Арбуз", r:70, c1:"#8EAA31", c2:"#375E4C", pts:80, svg: "<svg width=\"751\" height=\"592\" viewBox=\"0 0 751 592\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<ellipse cx=\"406\" cy=\"295.588\" rx=\"319.5\" ry=\"265.5\" transform=\"rotate(-174.365 406 295.588)\" fill=\"#8EAA31\"/>\n<ellipse cx=\"403.416\" cy=\"321.785\" rx=\"319.5\" ry=\"239.175\" transform=\"rotate(-174.365 403.416 321.785)\" fill=\"#375E4C\"/>\n<ellipse cx=\"402.908\" cy=\"326.936\" rx=\"319.5\" ry=\"164\" transform=\"rotate(-174.365 402.908 326.936)\" fill=\"#8EAA31\"/>\n<ellipse cx=\"402.445\" cy=\"331.625\" rx=\"319.5\" ry=\"71.2875\" transform=\"rotate(-174.365 402.445 331.625)\" fill=\"#375E4C\"/>\n<path d=\"M90.9995 266.939L12.3967 250.276C6.63607 249.054 1.07265 253.05 0.390287 258.899L0.0678334 261.663C-0.465447 266.235 2.18985 270.579 6.50092 272.19L79.1323 299.323C83.9926 301.139 89.4344 298.936 91.6626 294.25L97.9565 281.016C100.733 275.178 97.3236 268.279 90.9995 266.939Z\" fill=\"#2A3B1A\"/>\n</svg>"},
     {n:"Банка варенья", r:82, c1:"#A54141", c2:"#672525", pts:150, src:"Frame 50.svg", svg: "<svg width=\"1225\" height=\"1237\" viewBox=\"0 0 1225 1237\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"> <rect x=\"65.082\" y=\"195.246\" width=\"1096.38\" height=\"993.754\" rx=\"123\" fill=\"#A54141\"/> <rect x=\"147\" y=\"1141\" width=\"931.175\" height=\"95.12\" rx=\"47.56\" fill=\"#672525\"/> <path d=\"M638.305 591.997C423.387 592.189 66.3335 510.645 66.3335 493.123V414.5L638.305 220.278L1162.21 377C1162.21 377 1162.57 474.349 1161.21 490.619C1159.86 506.89 851.769 591.807 638.305 591.997Z\" fill=\"white\"/> <path d=\"M1221.97 321.352C1211.61 284.889 1097.65 201.327 1097.65 201.327C1097.65 201.327 132.32 181.651 109 220C85.6801 258.348 24.5696 285.747 9.80198 321.352C-4.91386 356.833 -4.55187 357.576 21.1852 410.431L21.4576 410.991C47.4644 464.401 143.982 397.596 204.06 391.24C266.977 384.583 282.57 474.415 345.221 483.917C427.371 496.377 465.661 391.24 542.069 391.24C618.477 391.24 635.27 500.16 710.427 500.63C791.87 501.139 815.326 374.528 889.144 374.528C962.962 374.528 991.454 483.917 1063.98 483.917C1136.5 483.917 1119.66 407.952 1161.11 391.24C1202.55 374.528 1232.33 357.815 1221.97 321.352Z\" fill=\"#FFC8CD\"/> <rect x=\"117.648\" y=\"167.712\" width=\"991.251\" height=\"52.5663\" rx=\"26.2832\" fill=\"#C69A9E\"/> <rect x=\"92.6167\" width=\"1038.81\" height=\"185.234\" rx=\"37\" fill=\"#FFE3E6\"/> <path d=\"M529.725 1026.99C626.257 1026.99 717.69 1043.18 765.434 899.95C765.434 808.874 699.252 716.657 602.72 716.657C506.188 716.657 456.462 754.819 456.462 845.895C456.462 936.972 433.192 1026.99 529.725 1026.99Z\" fill=\"#EB4455\"/> <path d=\"M512.445 719.675C564.569 694.022 613.952 686.596 673.513 726.342C673.513 726.342 691.604 689.803 717.412 692.104C743.961 694.471 753.187 700.872 750.617 726.342C748.355 748.751 717.412 758.067 717.412 758.067C773.622 800.848 778.974 833.747 766.178 888.425C723.573 851.041 722.095 854.331 715.775 863.293C718.966 877.047 716.363 888.165 703.666 914.492C686.855 881.404 682.608 859.49 660.068 847.541C649.088 854.978 635.425 860.209 592.973 872.042C581.953 847.863 587.346 836.408 598.055 802.816C562.263 803.621 541.956 798.531 527.256 784.766C543.382 768.891 561.001 763.874 576.378 758.067C567.644 730.522 541.248 740.799 512.445 719.675Z\" fill=\"#73A86F\"/> <ellipse cx=\"550.647\" cy=\"997.288\" rx=\"23.0888\" ry=\"12.1076\" transform=\"rotate(-12.2123 550.647 997.288)\" fill=\"#F5E9C1\"/> <ellipse cx=\"635.953\" cy=\"909.379\" rx=\"23.0888\" ry=\"12.1076\" transform=\"rotate(-52.2441 635.953 909.379)\" fill=\"#F5E9C1\"/> <ellipse cx=\"555.423\" cy=\"853.628\" rx=\"23.0888\" ry=\"12.1076\" transform=\"rotate(-70.7573 555.423 853.628)\" fill=\"#F5E9C1\"/> <ellipse cx=\"489.372\" cy=\"881.274\" rx=\"23.0888\" ry=\"12.1076\" transform=\"rotate(-87.8265 489.372 881.274)\" fill=\"#F5E9C1\"/> <ellipse cx=\"501.891\" cy=\"801.833\" rx=\"23.0888\" ry=\"12.1076\" transform=\"rotate(-52.4226 501.891 801.833)\" fill=\"#F5E9C1\"/> <ellipse cx=\"707.591\" cy=\"953.784\" rx=\"23.0888\" ry=\"12.1076\" transform=\"rotate(-73.4065 707.591 953.784)\" fill=\"#F5E9C1\"/> <ellipse cx=\"492.12\" cy=\"959.665\" rx=\"23.0888\" ry=\"12.1076\" transform=\"rotate(-99.0663 492.12 959.665)\" fill=\"#F5E9C1\"/> <ellipse cx=\"551.332\" cy=\"930.013\" rx=\"23.0888\" ry=\"12.1076\" transform=\"rotate(-49.9601 551.332 930.013)\" fill=\"#F5E9C1\"/> <ellipse cx=\"635.764\" cy=\"984.293\" rx=\"23.0888\" ry=\"12.1076\" transform=\"rotate(-36.3302 635.764 984.293)\" fill=\"#F5E9C1\"/> <ellipse cx=\"1066\" cy=\"976.5\" rx=\"12\" ry=\"21.5\" fill=\"#F7BFBF\"/> <ellipse cx=\"159\" cy=\"618.5\" rx=\"12\" ry=\"21.5\" fill=\"#F7BFBF\"/> <ellipse cx=\"250\" cy=\"780.5\" rx=\"12\" ry=\"21.5\" fill=\"#F7BFBF\"/> <ellipse cx=\"330\" cy=\"639.5\" rx=\"12\" ry=\"21.5\" fill=\"#F7BFBF\"/> <ellipse cx=\"318\" cy=\"1073.5\" rx=\"12\" ry=\"21.5\" fill=\"#F7BFBF\"/> <ellipse cx=\"159\" cy=\"978.5\" rx=\"12\" ry=\"21.5\" fill=\"#F7BFBF\"/> <ellipse cx=\"378\" cy=\"892.5\" rx=\"12\" ry=\"21.5\" fill=\"#F7BFBF\"/> <ellipse cx=\"1097\" cy=\"596.5\" rx=\"12\" ry=\"21.5\" fill=\"#F7BFBF\"/> <ellipse cx=\"889\" cy=\"639.5\" rx=\"12\" ry=\"21.5\" fill=\"#F7BFBF\"/> <ellipse cx=\"841\" cy=\"883.5\" rx=\"12\" ry=\"21.5\" fill=\"#F7BFBF\"/> <ellipse cx=\"1003\" cy=\"781.5\" rx=\"12\" ry=\"21.5\" fill=\"#F7BFBF\"/> <ellipse cx=\"889\" cy=\"1073.5\" rx=\"12\" ry=\"21.5\" fill=\"#F7BFBF\"/> </svg>"}];
 
+// Тёмный оттенок основного цвета SVG-спрайта (для окантовки шарика)
+const BERRY_RIM = [];
+function berryRim(lv, img){
+    if(BERRY_RIM[lv]) return BERRY_RIM[lv];
+    const hex = BERRIES[lv].c1;
+    let r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+    let sure = false;
+    if(img && img.complete && img.naturalWidth > 0){
+        try{
+            const N = 24, cv = document.createElement('canvas'); cv.width = cv.height = N;
+            const x = cv.getContext('2d'); x.drawImage(img, 0, 0, N, N);
+            const d = x.getImageData(0, 0, N, N).data, bk = {};
+            for(let i = 0; i < d.length; i += 4){
+                if(d[i+3] < 200) continue;
+                const k = ((d[i]>>4)<<8) | ((d[i+1]>>4)<<4) | (d[i+2]>>4);
+                const o = bk[k] || (bk[k] = {n:0, r:0, g:0, b:0});
+                o.n++; o.r += d[i]; o.g += d[i+1]; o.b += d[i+2];
+            }
+            let best = null;
+            for(const k in bk) if(!best || bk[k].n > best.n) best = bk[k];
+            if(best){ r = best.r / best.n; g = best.g / best.n; b = best.b / best.n; sure = true; }
+        }catch(_){ sure = true; }
+    } else if(img && !img.complete){ sure = false; } else { sure = true; }
+    const q = Math.round, lt = v => q(v + (255 - v) * 0.12);
+    const res = {
+        rim: `rgba(${q(r*0.45)},${q(g*0.45)},${q(b*0.45)},0.8)`,
+        fill: `rgba(${lt(r)},${lt(g)},${lt(b)},0.5)`
+    };
+    if(sure) BERRY_RIM[lv] = res;
+    return res;
+}
+
+// Подгонка спрайта под круг: центр по реальным пикселям и масштаб, чтобы ничего не торчало
+const BERRY_FIT = [];
+function berryFit(lv, img){
+    if(BERRY_FIT[lv]) return BERRY_FIT[lv];
+    const def = {f:1, dx:0, dy:0};
+    if(!img || !img.complete || !img.naturalWidth) return def;
+    let res = def;
+    try{
+        const N = 64, cv = document.createElement('canvas'); cv.width = cv.height = N;
+        const x = cv.getContext('2d');
+        const k = N / Math.max(img.naturalWidth, img.naturalHeight);
+        const w = img.naturalWidth * k, h = img.naturalHeight * k;
+        x.drawImage(img, (N - w) / 2, (N - h) / 2, w, h);
+        const d = x.getImageData(0, 0, N, N).data;
+        let x0 = N, y0 = N, x1 = -1, y1 = -1;
+        for(let j = 0; j < N; j++) for(let i = 0; i < N; i++){
+            if(d[(j * N + i) * 4 + 3] > 40){ if(i < x0) x0 = i; if(i > x1) x1 = i; if(j < y0) y0 = j; if(j > y1) y1 = j; }
+        }
+        if(x1 >= 0){
+            const cx = (x0 + x1 + 1) / 2, cy = (y0 + y1 + 1) / 2;
+            let md = 0;
+            for(let j = 0; j < N; j++) for(let i = 0; i < N; i++){
+                if(d[(j * N + i) * 4 + 3] > 40){
+                    const dd = Math.max(Math.hypot(i - cx, j - cy), Math.hypot(i + 1 - cx, j + 1 - cy));
+                    if(dd > md) md = dd;
+                }
+            }
+            const f = md > 0 ? Math.min(1, (N / 2) / md) : 1;
+            res = {f, dx: (cx - N / 2) / N, dy: (cy - N / 2) / N};
+        }
+    }catch(_){
+        const nw = img.naturalWidth, nh = img.naturalHeight;
+        res = {f: Math.min(1, Math.max(nw, nh) / Math.hypot(nw, nh)), dx: 0, dy: 0};
+    }
+    BERRY_FIT[lv] = res;
+    return res;
+}
+
 function getBerrySprites(){
     if(BERRY_SPR) return BERRY_SPR;
     BERRY_SPR = BERRIES.map(b => {
         const img = new Image();
-        if(b.src){
-            img.src = b.src;
-            if(b.svg){
-                img.onerror = () => {
-                    img.onerror = null;
-                    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(b.svg);
-                };
-            }
-        } else if(b.svg){
-            img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(b.svg);
-        }
+        if(b.svg) img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(b.svg);
+        else if(b.src) img.src = b.src;
         return img;
     });
     return BERRY_SPR;
@@ -3066,24 +3193,37 @@ function initBerry(){
     function drawBerryBall(x, y, lv, customR=null, sc=1){
         const r = ((customR || BERRIES[lv].r) + 2) * sc;
         const img = bSpr[lv];
-        if(img && img.complete && img.naturalWidth > 0){
-            ctx.drawImage(img, x - r, y - r, r * 2, r * 2);
+        const ok = img && img.complete && img.naturalWidth > 0;
+        const col = berryRim(lv, img);
+        const lw = Math.max(2.5, r * 0.08);
+
+        // Полупрозрачная заливка круга (цвет ягоды, чуть светлее) — видна там, где спрайт прозрачный
+        ctx.fillStyle = col.fill;
+        ctx.beginPath(); ctx.arc(x, y, r - lw / 2, 0, Math.PI * 2); ctx.fill();
+
+        if(ok){
+            // Спрайт вписываем с сохранением пропорций, без растягивания
+            const fit = berryFit(lv, img);
+            const k = ((r - lw * 0.5) * 2 / Math.max(img.naturalWidth, img.naturalHeight)) * fit.f;
+            const w = img.naturalWidth * k, h = img.naturalHeight * k;
+            const ox = fit.dx * (r - lw * 0.5) * 2 * fit.f, oy = fit.dy * (r - lw * 0.5) * 2 * fit.f;
+            ctx.drawImage(img, x - w / 2 - ox, y - h / 2 - oy, w, h);
         } else {
-            const b = BERRIES[lv];
-            ctx.fillStyle = b.c1;
-            ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+            ctx.fillStyle = BERRIES[lv].c1;
+            ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
         }
 
-        // Прозрачная окантовка и блик
-        ctx.strokeStyle = '#ffffff55';
-        ctx.lineWidth = Math.max(1.5, r * 0.05);
+        // Ровная тёмная полупрозрачная окантовка строго внутри круга
+        ctx.strokeStyle = col.rim;
+        ctx.lineWidth = lw;
         ctx.beginPath();
-        ctx.arc(x, y, r, 0, 7);
+        ctx.arc(x, y, r - lw / 2, 0, Math.PI * 2);
         ctx.stroke();
 
+        // Блик
         ctx.fillStyle = '#ffffff38';
         ctx.beginPath();
-        ctx.arc(x - r * 0.32, y - r * 0.32, r * 0.24, 0, 7);
+        ctx.arc(x - r * 0.32, y - r * 0.32, r * 0.2, 0, Math.PI * 2);
         ctx.fill();
     }
 
